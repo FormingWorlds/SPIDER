@@ -87,7 +87,7 @@ PetscErrorCode EOSSetUpFromOptions(EOS eos, const char *prefix, const Fundamenta
 
   /* conductivity (w/m/K) */
   ierr = PetscSNPrintf(buf,sizeof(buf),"%s%s%s","-",prefix,"_cond");CHKERRQ(ierr);
-  eos->cond = 4.0; 
+  eos->cond = 4.0;
   ierr = PetscOptionsGetScalar(NULL,NULL,buf,&eos->cond,NULL);CHKERRQ(ierr);
   eos->cond /= SC->COND;
 
@@ -266,9 +266,9 @@ static PetscErrorCode LookupFilenameSet( const char* property, const char* prefi
     PetscFunctionBeginUser;
 
     /* Based on input options, determine which files to load.  Options ending
-       with _rel_to_src indicate a path relative to the source code. In this 
+       with _rel_to_src indicate a path relative to the source code. In this
        case we prepend a string, SPIDER_ROOT_DIR_STR, and /. The corresponding
-       option without this overrides. */     
+       option without this overrides. */
 
     /* check for relative path name */
     ierr = PetscSNPrintf(buf1,sizeof(buf1),"%s%s%s%s","-",prefix,property,"_filename_rel_to_src");CHKERRQ(ierr);

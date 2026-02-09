@@ -25,7 +25,7 @@ static PetscErrorCode EOSDestroy_Composite(EOS eos)
   PetscErrorCode  ierr;
 
   PetscFunctionBegin;
-  /* Note that we do NOT destroy the sub-EOSs. That must be done 
+  /* Note that we do NOT destroy the sub-EOSs. That must be done
      by whoever supplied them */
   ierr = PetscFree(eos->impl_data);CHKERRQ(ierr);
   eos->impl_data = NULL;
@@ -174,7 +174,7 @@ static PetscErrorCode EOSCompositeGetTwoPhaseSolidus(EOS eos, PetscScalar P, Pet
   PetscFunctionReturn(0);
 }
 
-static PetscErrorCode EOSEval_Composite_TwoPhase(EOS eos, PetscScalar P, PetscScalar S, EOSEvalData *eval) 
+static PetscErrorCode EOSEval_Composite_TwoPhase(EOS eos, PetscScalar P, PetscScalar S, EOSEvalData *eval)
 {
   PetscErrorCode     ierr;
   data_EOSComposite *composite = (data_EOSComposite*) eos->impl_data;
@@ -182,7 +182,7 @@ static PetscErrorCode EOSEval_Composite_TwoPhase(EOS eos, PetscScalar P, PetscSc
   EOSEvalData        eval_melt, eval_solid;
   PetscScalar        gphi, smth, liquidus, solidus, fwt;
 
-  /* this function is called alot, if we have two phases.  Is it therefore better to store all 
+  /* this function is called alot, if we have two phases.  Is it therefore better to store all
      the EOSEvalData in Ctx?  Or isn't this really a speed issue? (prob not in comparison to the
      re-evaluation of functions as described below */
 
@@ -216,6 +216,9 @@ static PetscErrorCode EOSEval_Composite_TwoPhase(EOS eos, PetscScalar P, PetscSc
   ierr = EOSEval( composite->eos[composite->liquidus_slot], P, liquidus, &eval_melt );CHKERRQ(ierr);
   ierr = EOSEval( composite->eos[composite->solidus_slot], P, solidus, &eval_solid );CHKERRQ(ierr);
 
+  // printf("P = %.4e , S = %.4e , ff = %.4f \n", eval->P, eval->S, eval->phase_fraction);
+
+
   /* linear temperature between liquidus and solidus */
   eval->T = eval->phase_fraction * eval_melt.T;
   eval->T += (1-eval->phase_fraction) * eval_solid.T;
@@ -223,7 +226,11 @@ static PetscErrorCode EOSEval_Composite_TwoPhase(EOS eos, PetscScalar P, PetscSc
   /* Cp */
   eval->Cp = eval_melt.S - eval_solid.S;
   eval->Cp /= eval_melt.T - eval_solid.T;
+
+  // printf("     ==> meltT = %.2f  ,  solidT = %.2f \n", eval_melt.T , eval_solid.T);
+
   eval->Cp *= eval_solid.T + 0.5 * (eval_melt.T - eval_solid.T);
+
 
   /* Rho */
   eval->rho = eval->phase_fraction * (1.0/eval_melt.rho) + (1-eval->phase_fraction) * (1.0/eval_solid.rho);
@@ -276,6 +283,8 @@ static PetscErrorCode EOSEval_Composite_TwoPhase(EOS eos, PetscScalar P, PetscSc
   eval->dTdPs = combine_matprop( smth, eval->dTdPs, eval2.dTdPs );
   eval->cond = combine_matprop( smth, eval->cond, eval2.cond );
   eval->log10visc = combine_matprop( smth, eval->log10visc, eval2.log10visc );
+
+  // printf("     ==> Cp = %.4e \n", eval->Cp);
 
   PetscFunctionReturn(0);
 }
