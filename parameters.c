@@ -415,6 +415,21 @@ PetscErrorCode ParametersSetFromOptions(Parameters P)
   ierr = PetscOptionsGetScalar(NULL,NULL,"-grain",&P->grain,NULL);CHKERRQ(ierr);
   P->grain /= SC->RADIUS;
 
+  // Tidal heating rate (W kg-1)
+  P->HTIDAL = 0;
+  ierr = PetscOptionsGetInt(NULL,NULL,"-HTIDAL",&P->HTIDAL,NULL);CHKERRQ(ierr);
+  // defaults
+  ierr = PetscStrcpy(P->htidal_filename,"_unset");CHKERRQ(ierr);
+  P->htidal_value = 0.0;
+  // scalar
+  if (P->HTIDAL == 1) {
+    ierr = PetscOptionsGetScalar(NULL,NULL,"-htidal_value",&P->htidal_value,NULL);CHKERRQ(ierr);
+    P->htidal_value /= SC->HEATGEN;
+  // from file
+  } else if (P->HTIDAL == 2) {
+    ierr = PetscOptionsGetString(NULL,NULL,"-htidal_filename",P->htidal_filename,PETSC_MAX_PATH_LEN,NULL);CHKERRQ(ierr);
+  }
+
   /* only allow energy transport upwards due to melt/solid separation if the cell below
      the cell interface contains melt/solid.  Otherwise, you can (unphysically) cool
      a cell due to melt migration even though it contains no melt.  For middle-out or
@@ -546,7 +561,7 @@ PetscErrorCode ParametersSetFromOptions(Parameters P)
     PetscBool set;
 
     ierr = PetscOptionsGetStringArray(NULL,NULL,"-radionuclide_names",prefixes,&n_radionuclides,&set);CHKERRQ(ierr);
-    if (set) { 
+    if (set) {
       PetscInt r;
 
       P->n_radionuclides = n_radionuclides;
@@ -571,7 +586,7 @@ PetscErrorCode ParametersSetFromOptions(Parameters P)
     ierr = PetscOptionsGetStringArray(NULL,NULL,"-phase_names",prefixes,&n_phases,&set);CHKERRQ(ierr);
     /* If there is a single phase, use this "pure" EOS. If there are two phases,
        form a composite, assuming melt,solid ordering */
-    if (set) { 
+    if (set) {
       P->n_phases = n_phases;
       if (P->n_phases > SPIDER_MAX_PHASES) SETERRQ2(PETSC_COMM_WORLD,PETSC_ERR_SUP,"%D phases specified, but the maximum is %D",P->n_phases,SPIDER_MAX_PHASES);
       for (PetscInt r=0; r<P->n_phases; ++r) {
@@ -604,8 +619,6 @@ PetscErrorCode ParametersSetFromOptions(Parameters P)
   ierr = PetscOptionsGetBool(NULL,NULL,"-CONDUCTION",&P->CONDUCTION,NULL);CHKERRQ(ierr);
   P->CONVECTION = PETSC_TRUE;
   ierr = PetscOptionsGetBool(NULL,NULL,"-CONVECTION",&P->CONVECTION,NULL);CHKERRQ(ierr);
-  P->HTIDAL = PETSC_FALSE;
-  ierr = PetscOptionsGetBool(NULL,NULL,"-HTIDAL",&P->HTIDAL,NULL);CHKERRQ(ierr);
   P->MIXING = PETSC_TRUE;
   ierr = PetscOptionsGetBool(NULL,NULL,"-MIXING",&P->MIXING,NULL);CHKERRQ(ierr);
   P->SEPARATION = 1;
@@ -854,7 +867,7 @@ PetscErrorCode PrintParameters(Parameters const P)
   ierr = PetscPrintf(PETSC_COMM_WORLD,"%-15s %-15s %-15.6g %-6s\n"             ,"Mass"    ,"",(double)SC->MASS            ,"kg"      );CHKERRQ(ierr);
   ierr = PetscPrintf(PETSC_COMM_WORLD,"%-15s %-15s %-15.6g %-6s\n"             ,"Volatile"    ,"",(double)SC->VOLATILE            ,"mass fraction"      );CHKERRQ(ierr);
   ierr = PetscPrintf(PETSC_COMM_WORLD,"%-15s %-15s %-15.6g %-6s (%.6g years)\n","Time"       ,"",(double)SC->TIME               ,"s",(double)SC->TIMEYRS);CHKERRQ(ierr);
-  /* next are derived from primary scalings and are useful for analysing the 
+  /* next are derived from primary scalings and are useful for analysing the
      scaling of the numerical system of equations */
 // ierr = PetscPrintf(PETSC_COMM_WORLD,"--------------------------------------------------------\n"                                                 );CHKERRQ(ierr);
   ierr = PetscPrintf(PETSC_COMM_WORLD,"%-28s %-2s %-15.6g %-6s\n"             ,"dS/dr (entropy gradient)"    ,"",(double)SC->DSDR,"J/kg/K/m"       );CHKERRQ(ierr);

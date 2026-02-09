@@ -47,7 +47,7 @@ PetscErrorCode set_Htot( Ctx *E, PetscReal time )
     if (P->n_radionuclides>0){
       ierr = append_Hradio( E, time ); CHKERRQ(ierr);
     }
-    if (P->HTIDAL){
+    if (P->HTIDAL > 0){
       ierr = append_Htidal( E, time ); CHKERRQ(ierr);
     }
 
@@ -82,23 +82,18 @@ static PetscErrorCode append_Hradio( Ctx *E, PetscReal time )
 
 static PetscErrorCode append_Htidal( Ctx *E, PetscReal tyrs )
 {
-    /* tidal heat generation */
+    /* Tidal heat generation implemented by Harrison Nicholls*/
 
-    /* template code snippets below, but tidal heating is
-       currently not implemented */
-
-    //PetscErrorCode ierr;
-    //Solution       *S = &E->solution;
+    PetscErrorCode ierr;
+    Solution       *S = &E->solution;
+    Parameters const P = E->parameters;
 
     PetscFunctionBeginUser;
     (void) E; // unused for now
     (void) tyrs; // unused for now
 
-    /* do stuff here */
-    //ierr = VecSet( S->Htidal_s, 0.0 ); CHKERRQ(ierr);
-
     // final command is always an append call to the Htot_s array
-    //ierr = VecAXPY( S->Htot_s, 1.0, S->Htidal_s ); CHKERRQ(ierr);
+    ierr = VecAXPY( S->Htot_s, 1.0, S->Htidal_s ); CHKERRQ(ierr);
 
     PetscFunctionReturn(0);
 }
@@ -286,8 +281,8 @@ PetscScalar GetMixingHeatFlux( Ctx *E, PetscInt * ind_ptr )
 
     /* no energy transport by mixing at boundaries since no mass transfer */
     if( (!*ind_ptr) || (*ind_ptr == ihi_b-1) ){
-        return 0.0; 
-    }   
+        return 0.0;
+    }
 
     /* Jmix requires two phases */
     ierr = EOSCompositeGetSubEOS(P->eos, &sub_eos, &should_be_two);CHKERRQ(ierr);
@@ -320,9 +315,9 @@ PetscScalar GetMixingHeatFlux( Ctx *E, PetscInt * ind_ptr )
 
     /* (optional) smoothing across phase boundaries for two phase composite */
     ierr = EOSCompositeGetTwoPhasePhaseFractionNoTruncation(P->eos, pres, Sval, &gphi);CHKERRQ(ierr);
-    { 
+    {
       PetscScalar matprop_smooth_width;
-      
+
       ierr = EOSCompositeGetMatpropSmoothWidth(P->eos, &matprop_smooth_width);CHKERRQ(ierr);
       smth = get_smoothing(matprop_smooth_width, gphi );
     }
@@ -540,7 +535,7 @@ PetscScalar GetGravitationalHeatFlux( Ctx *E, PetscInt * ind_ptr )
     return Jgrav;
 }
 
-PetscErrorCode solve_for_surface_radiation_balance( Ctx *E, PetscReal t ) 
+PetscErrorCode solve_for_surface_radiation_balance( Ctx *E, PetscReal t )
 {
     /* to formally balance radiation with the interior heat flux at the surface,
        we must solve a coupled system for the surface entropy gradient and
@@ -588,14 +583,14 @@ PetscErrorCode solve_for_surface_radiation_balance( Ctx *E, PetscReal t )
     ierr = PetscOptionsSetValue(NULL,"-surfrad_ksp_atol","1.0E-9");CHKERRQ(ierr);
 
     /* For solver analysis/debugging/tuning, activate a custom monitor with a flag */
-    {   
+    {
       PetscBool flg = PETSC_FALSE;
 
       ierr = PetscOptionsGetBool(NULL,NULL,"-surfrad_snes_verbose_monitor",&flg,NULL);CHKERRQ(ierr);
       if (flg) {
         ierr = SNESMonitorSet(snes,SNESMonitorVerbose,NULL,NULL);CHKERRQ(ierr);
-      }   
-    }   
+      }
+    }
 
     /* Solve */
     ierr = SNESSetFromOptions(snes);CHKERRQ(ierr); /* Picks up any additional options (note prefix) */
@@ -656,7 +651,7 @@ static PetscErrorCode objective_function_surface_radiation_balance( SNES snes, V
     ierr = VecGetArrayRead(x,&xx);CHKERRQ(ierr);
     ierr = VecGetArray(f,&ff);CHKERRQ(ierr);
 
-    /* conform entropy Vecs in struct to our current guess of the 
+    /* conform entropy Vecs in struct to our current guess of the
        entropy gradient at the surface */
     dSdxi0 = xx[ind0];
     ierr = VecSetValue( S->dSdxi, ind0, dSdxi0, INSERT_VALUES );CHKERRQ(ierr);
@@ -684,12 +679,12 @@ static PetscErrorCode objective_function_surface_radiation_balance( SNES snes, V
     PetscFunctionReturn(0);
 }
 
-PetscErrorCode solve_for_steady_state_energy_interior( Ctx *E, PetscReal t ) 
+PetscErrorCode solve_for_steady_state_energy_interior( Ctx *E, PetscReal t )
 {
     /* solve for dS/dxi in the interior to adhere to a constant flow of energy,
        based on the energy leaving from the top surface.  This solves for the
        steady-state solution, but can often result in noise blowing up when
-       the RHS is computed.  Only used for the initial condition */ 
+       the RHS is computed.  Only used for the initial condition */
 
     PetscErrorCode             ierr;
     SNES                       snes;
@@ -729,14 +724,14 @@ PetscErrorCode solve_for_steady_state_energy_interior( Ctx *E, PetscReal t )
     ierr = PetscOptionsSetValue(NULL,"-steadyint_ksp_atol","1.0E-9");CHKERRQ(ierr);
 
     /* For solver analysis/debugging/tuning, activate a custom monitor with a flag */
-    {   
+    {
       PetscBool flg = PETSC_FALSE;
 
       ierr = PetscOptionsGetBool(NULL,NULL,"-steadyint_snes_verbose_monitor",&flg,NULL);CHKERRQ(ierr);
       if (flg) {
         ierr = SNESMonitorSet(snes,SNESMonitorVerbose,NULL,NULL);CHKERRQ(ierr);
-      }   
-    }   
+      }
+    }
 
     /* Solve */
     ierr = SNESSetFromOptions(snes);CHKERRQ(ierr); /* Picks up any additional options (note prefix) */
@@ -803,7 +798,7 @@ static PetscErrorCode objective_function_steady_state_energy_interior( SNES snes
     ierr = VecScale( S->Etot, 1.0/E0 );CHKERRQ(ierr);
     /* but second part adds a perturbation, otherwise the calculation
        of the RHS blows up noise since we are at steady-state */
-    /* add a linear decrease in energy of 10% (arbitrary choice) 
+    /* add a linear decrease in energy of 10% (arbitrary choice)
        from 1 at the surface to 0.9 at the CMB */
     fac = 0.0; /* 10% decrease across mantle */
     fac2 = 1.0-fac;
@@ -816,7 +811,7 @@ static PetscErrorCode objective_function_steady_state_energy_interior( SNES snes
     ierr = VecScale( scale_b, fac );CHKERRQ(ierr);
     ierr = VecShift( scale_b, fac2 );CHKERRQ(ierr);
 
-    ierr = VecPointwiseMult( S->Etot, S->Etot, scale_b );CHKERRQ(ierr); 
+    ierr = VecPointwiseMult( S->Etot, S->Etot, scale_b );CHKERRQ(ierr);
 
     /* set residual of fluxes */
     ierr = VecCopy( S->Etot, f );CHKERRQ(ierr);
@@ -936,7 +931,7 @@ PetscErrorCode set_current_state_from_solution( Ctx *E, PetscReal t, Vec sol_in 
     }
     /* otherwise, use the extrapolated surface conditions to determine
        A->Fatm, which is then later imposed as the flux at the surface.
-       Hence here we can directly compute the current state without 
+       Hence here we can directly compute the current state without
        the need to solve */
     else{
         ierr = set_current_state( E, t);CHKERRQ(ierr);

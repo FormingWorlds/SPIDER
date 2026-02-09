@@ -82,6 +82,9 @@ static PetscErrorCode set_ic_interior( Ctx *E, Vec sol)
 {
     PetscErrorCode ierr;
     Parameters const P = E->parameters;
+    ScalingConstants const SC = P->scaling_constants;
+    Solution *S = &E->solution;
+    Interp1d itp_tidal;
 
     PetscFunctionBeginUser;
 
@@ -99,6 +102,29 @@ static PetscErrorCode set_ic_interior( Ctx *E, Vec sol)
     else{
         SETERRQ1(PETSC_COMM_WORLD,PETSC_ERR_SUP,"Unsupported IC_INTERIOR value %d provided",P->IC_INTERIOR);
     }
+
+    /* Set tidal heating array (scalar or from file) */
+    ierr = VecSet( S->Htidal_s, 0.0 ); CHKERRQ(ierr);
+    if (P->HTIDAL == 1) {
+        // set scalar from command line argument (scalar)
+        ierr = VecSet( S->Htidal_s, P->htidal_value ); CHKERRQ(ierr);
+    }
+    else if (P->HTIDAL == 2) {
+        // read array from file (path provided by command line argument)
+        ierr = Interp1dCreateAndSet(P->htidal_filename, &itp_tidal, SC->PRESSURE, SC->HEATGEN );CHKERRQ(ierr);
+        // check length
+        if (itp_tidal->NX != P->numpts_s) {
+            SETERRQ1(PETSC_COMM_WORLD,PETSC_ERR_FILE_UNEXPECTED,"Tidal heating file has invalid length (%d, should be %d)",itp_tidal->NX, P->numpts_s);
+            PetscFunctionReturn(1);
+        }
+        // read data
+        for (int i = 0; i < P->numpts_s; i++) {
+            VecSetValue(S->Htidal_s, i, itp_tidal->ya[i], INSERT_VALUES);
+        }
+        // free
+        ierr = Interp1dDestroy(&itp_tidal);CHKERRQ(ierr);
+    }
+
 
     /* this copies the sol Vecs to E */
     /* the reason we set sol above, rather than Vecs in struct, is
@@ -375,7 +401,7 @@ static PetscErrorCode set_ic_from_file( Ctx *E, Vec sol, const char * filename, 
 
 static PetscErrorCode set_ic_interior_from_phase_boundary( Ctx *E, Vec sol )
 {
- 
+
     /* entropy tracks a phase boundary (usually the solidus) below a cutoff value, and is
        equal to the cutoff value above */
 
@@ -490,9 +516,9 @@ static PetscErrorCode set_ic_atmosphere( Ctx *E, Vec sol )
         }
 
         /* all of the above are guaranteed to set Vec sol, for the
-           partial pressures and the mass reaction terms.  Now also 
+           partial pressures and the mass reaction terms.  Now also
            ensure that A->volatiles[i].p and A->mass_reaction[i]
-           conform to the Vec sol, since these are subsequently 
+           conform to the Vec sol, since these are subsequently
            used to "correct" the mass reaction to zero */
         ierr = set_partial_pressures_from_solution( E, sol );CHKERRQ(ierr);
 
@@ -706,7 +732,7 @@ static PetscErrorCode print_ocean_masses( Ctx *E )
            molar mass for H2 and H2O, such that by construction, the ocean mass estimates from
            both H2 and H2O are identical */
         tmass_H2O /= 1.385185824553049e+21;
-        p_H2O *= SC->PRESSURE / 1.0E5; /* to bar */ 
+        p_H2O *= SC->PRESSURE / 1.0E5; /* to bar */
         ierr = PetscPrintf(PETSC_COMM_WORLD,"%-30s %-15.6g\n","Equivalent present-day mass of ocean water from H2O (non-dimensional)",(double)tmass_H2O);CHKERRQ(ierr);
         ierr = PetscPrintf(PETSC_COMM_WORLD,"%-30s %-15.6g\n","Equivalent atmospheric pressure of H2O (bar)",(double)p_H2O);CHKERRQ(ierr);
     }
@@ -751,7 +777,7 @@ static PetscErrorCode print_ocean_masses( Ctx *E )
            molar mass for H2 and H2O, such that by construction, the ocean mass estimates from
            both H2 and H2O are identical */
         tmass_CO2 /= 3.383906780165486e+21;
-        p_CO2 *= SC->PRESSURE / 1.0E5; /* to bar */ 
+        p_CO2 *= SC->PRESSURE / 1.0E5; /* to bar */
         ierr = PetscPrintf(PETSC_COMM_WORLD,"%-30s %-15.6g\n","Equivalent present-day mass of ocean water from CO2 (non-dimensional)",(double)tmass_CO2);CHKERRQ(ierr);
         ierr = PetscPrintf(PETSC_COMM_WORLD,"%-30s %-15.6g\n","Equivalent atmospheric pressure of CO2 (bar)",(double)p_CO2);CHKERRQ(ierr);
     }

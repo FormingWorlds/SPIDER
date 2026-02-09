@@ -304,6 +304,8 @@ PetscErrorCode SetInterp2dValue( const Interp2d interp, PetscScalar x, PetscScal
        spaced so we use a faster lookup approach by computing
        indices directly rather than looping through data */
 
+    PetscErrorCode ierr;
+
     PetscScalar z1, z2, z3, z4;
     PetscScalar w1, w2, w3, w4; // weights
     PetscScalar const *xa, *ya;
@@ -358,7 +360,7 @@ PetscErrorCode SetInterp2dValue( const Interp2d interp, PetscScalar x, PetscScal
       y = ymin;
     }
     else if( y>ymax ){
-      //ierr = PetscPrintf(PETSC_COMM_WORLD,"Warning: get_val2d: y>ymax, %f>%f.  Truncating\n",(double)y,(double)ymax);CHKERRQ(ierr);
+    //   ierr = PetscPrintf(PETSC_COMM_WORLD,"Warning: get_val2d: y>ymax, %f>%f.  Truncating\n",(double)y,(double)ymax);CHKERRQ(ierr);
       indy = NY-2; // minimum index, max index is always +1
       y = ymax;
     }

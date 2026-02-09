@@ -53,9 +53,9 @@ typedef data_VolatileParameters* VolatileParameters;
 /*
 ReactionParameters: an object which describes a particular type of chemical equilibrium.
 
-Specifically, it represents the situation where two or more volatiles can be 
-converted (reversibly, unconditionally) to one another by means of chemical 
-reactions, and where these volatiles are in (instantaneous, quasi-static) 
+Specifically, it represents the situation where two or more volatiles can be
+converted (reversibly, unconditionally) to one another by means of chemical
+reactions, and where these volatiles are in (instantaneous, quasi-static)
 equilibrium, as described by some (time-and-state-dependent) function.
 
 Thus, the data are:
@@ -180,13 +180,15 @@ typedef struct {
     PetscBool MIXING;
     /* now an int to explore different separation schemes */
     PetscInt  SEPARATION;
-    PetscBool HTIDAL;
+    PetscInt HTIDAL; // 0 disabled, 1 scalar, 2 profile
     PetscInt mixing_length;
     PetscScalar mixing_length_a;
     PetscScalar mixing_length_b;
     PetscScalar layer_interface_radius;
     PetscInt IC_INTERIOR;
     char ic_interior_filename[PETSC_MAX_PATH_LEN];
+    PetscScalar htidal_value;
+    char htidal_filename[PETSC_MAX_PATH_LEN];
     PetscScalar ic_melt_pressure;
     PetscScalar ic_adiabat_entropy; // entropy at top of adiabat
     PetscScalar ic_surface_entropy; // initial entropy at surface
