@@ -81,6 +81,10 @@ extra_javascript:
 
 plugins:
 - search
+- tags
+- bibtex:
+      bib_file: "docs/refs.bib"
+
 - mkdocstrings:
     # https://mkdocstrings.github.io/usage/
     handlers:
@@ -114,4 +118,3 @@ use_directory_urls: false
 watch:
   - docs/
   - README.md
-  - CODE_OF_CONDUCT.md
