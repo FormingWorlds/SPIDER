@@ -1,7 +1,7 @@
 # SPIDER
 **Simulating Planetary Interior Dynamics with Extreme Rheology**
 
-![SPIDER Logo](notes/logo/spider.png)
+![SPIDER Logo](assets/spider.png)
 
 [![Build](https://github.com/FormingWorlds/SPIDER/actions/workflows/ci.yml/badge.svg)](https://github.com/FormingWorlds/SPIDER/actions)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.5682523.svg)](https://doi.org/10.5281/zenodo.5682523)
