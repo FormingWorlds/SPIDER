@@ -5,8 +5,15 @@ repo_name: GitHub
 
 nav:
   - Home: index.md
-  - Model description: model.md
-  - Installation: installation.md
+  - How-to guides:
+      - Installation: How-to/installation.md
+
+  - Explanations:
+      - Model overview: Explanations/model.md
+
+  - Reference:
+      - Publications: Reference/publications.md
+      
   - Code of Conduct: CODE_OF_CONDUCT.md
   - Source code: https://github.com/FormingWorlds/SPIDER
   - Issues page: https://github.com/FormingWorlds/SPIDER/issues
