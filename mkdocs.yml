@@ -36,6 +36,7 @@ theme:
   custom_dir: docs/overrides
   features:
   - content.code.copy
+  - navigation.expand
 
   # Default assets (used unless overridden per palette below)
   favicon: assets/PROTEUS_black_on_white_logo_only.png
@@ -85,7 +86,6 @@ plugins:
 - tags
 - bibtex:
       bib_file: "docs/refs.bib"
-      format: pandoc
 
 - mkdocstrings:
     # https://mkdocstrings.github.io/usage/
