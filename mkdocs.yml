@@ -74,6 +74,7 @@ markdown_extensions:
   - pymdownx.extra
   - pymdownx.arithmatex:
       generic: true
+  - footnotes
 
 extra_javascript:
   - https://polyfill.io/v3/polyfill.min.js?features=es6
@@ -84,6 +85,7 @@ plugins:
 - tags
 - bibtex:
       bib_file: "docs/refs.bib"
+      format: pandoc
 
 - mkdocstrings:
     # https://mkdocstrings.github.io/usage/
