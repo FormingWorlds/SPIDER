@@ -9,7 +9,7 @@ tags:
 
 Here you can find a detailed overview of the SPIDER formulation.
 
->**Note:** This model overview is taken from the [notes](https://github.com/FormingWorlds/SPIDER/notes) and contains an extended description of the equations and derivations related to the SPIDER code [BSW18]. It is still **work in progress.** 
+>**Note:** This model overview is taken from the [notes](https://github.com/FormingWorlds/SPIDER/notes) and contains an extended description of the equations and derivations related to the SPIDER code [@BSW18]. It is still **work in progress.** 
 
 ## Thermodynamic energy transport and enthalpy fluxes {#sect:thermodynamic}
 
@@ -26,7 +26,7 @@ $$
 \tag{1}\label{eq:ABE95_A2}
 $$
 
-Here I define $\mathcal{J}_j$ as the rate of reaction $j$ per unit mass (same as $w_j$ in [@ABE95] but this notation may be confused with mass fraction $\omega$ which is why I change the symbol). [@ABE95] defines *$\nu_{ij}$ as the mass of component $i$ formed by reaction $j$*. Note that [@DM62] use slightly different definitions of these quantities, since they define $\mathcal{J}$ as a mass per unit volume and unit time and omit the leading $\rho$ term.
+Here I define $\mathcal{J}_j$ as the rate of reaction $j$ per unit mass (same as $w_j$ in [@ABE95] but this notation may be confused with mass fraction $\omega$ which is why I change the symbol). [@ABE95] defines $\nu_{ij}$ as the mass of component $i$ formed by reaction $j$. Note that [@DM62] use slightly different definitions of these quantities, since they define $\mathcal{J}$ as a mass per unit volume and unit time and omit the leading $\rho$ term.
 
 Entropy balance ([@DM62 Eq. III.12], also [@ABE95 Eq. A4]):
 
@@ -92,7 +92,7 @@ $$
 \tag{9}\label{eq:DM62_ch3_eq26}
 $$
 
-where $s_i = -(\mu_i-h_i)/T$ is the partial specific entropy of component $i$. *Written in this way the entropy flux contains the heat flow $\vec{J}_q^\prime$ and a transport of partial entropies with respect to the barycentric velocity $v$.*
+where $s_i = -(\mu_i-h_i)/T$ is the partial specific entropy of component $i$. Written in this way the entropy flux contains the heat flow $\vec{J}_q^\prime$ and a transport of partial entropies with respect to the barycentric velocity $v$.
 
 The entropy production associated with this definition can be written as ([@DM62 Eq. III.25], also [@ABE95 Eq. A6]):
 
@@ -108,7 +108,7 @@ $$
 
 > “It is clear that the difference between $\vec{J}_q$ and $\vec{J}_q^\prime$ (Eq. $\ref{eq:Jqprime}$) represents a transfer of heat due to diffusion. Therefore the quantity $\vec{J}_q^\prime$ also represents an irreversible heat flow. In fact in diffusing mixtures the concept of heat flow can be defined in different ways. Obviously a different definition of the notion of heat flux leaves all physical results unchanged. But to any particular choice corresponds a special form of the entropy production $\sigma$. It is a matter of expediency which choice is the most suitable in a particular application of the theory. The freedom of defining the heat flow in various ways, of which the possibility was indicated here in the framework of a macroscopic treatment, exists also in the microscopic theories of transport phenomena in mixtures.”
 
-Abe chooses to model $J_q^\prime$ as a convective heat flux using mixing length theory. In this regard, [@ABE95 Eq. 47] *excludes the energetic contribution of the enthalpy transport of the components (but remember it appears later in Abe's formulation).* Now, using the above equations we can derive [@ABE95 Eq. A10] using several vector identities:
+Abe chooses to model $J_q^\prime$ as a convective heat flux using mixing length theory. In this regard, [@ABE95 Eq. 47] excludes the energetic contribution of the enthalpy transport of the components (but remember it appears later in Abe's formulation). Now, using the above equations we can derive [@ABE95 Eq. A10] using several vector identities:
 
 $$
 \begin{aligned}
