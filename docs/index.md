@@ -32,5 +32,5 @@ If you are running into problems, please do not hesitate to raise an [Issue](htt
 
 ## Copyright
 
-See [The included license](COPYING).
-Copyright 2021 Daniel J. Bower and Patrick Sanan
+See [the included license](COPYING).
+Copyright 2021 Daniel J. Bower and Patrick Sanan.
