@@ -17,7 +17,7 @@
 
 SPIDER is a 1-D parameterised interior dynamics code for rocky planets with molten and/or solid interiors and support for volatile cycling, redox reactions, and radiative transfer in the atmosphere.
 
-> **Note**: This documentation describes the version of SPIDER as part of the [PROTEUS Framework](proteus-framework.org/proteus). For the original SPIDER code, see [djbower/SPIDER](https://github.com/djbower/spider).
+> **Note**: This documentation describes the version of SPIDER as part of the [PROTEUS Framework](https://proteus-framework.org/proteus). For the original SPIDER code, see [djbower/SPIDER](https://github.com/djbower/spider).
 
 
 ## Getting started
