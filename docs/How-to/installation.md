@@ -41,7 +41,7 @@ Here we provide a short installation guide to get you up and running with SPIDER
     ```
     cd /somewhere/to/install
     git clone https://github.com/FormingWorlds/SPIDER.git
-    cd spider
+    cd SPIDER
     ```
 
 8. Make SPIDER:
