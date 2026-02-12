@@ -29,7 +29,7 @@ jobs:
           git clone https://gitlab.com/petsc/petsc.git
           cd petsc
           git checkout 63b725033a15f75ded7183cf5f88ec748e60783b
-          ./configure --with-fc=0 --with-cxx=0 --with-cc=gcc --download-sundials2 --download-mpich PETSC_ARCH=arch-test
+          ./configure --with-fc=0 --with-cxx=0 --with-cc=gcc --download-sundials2 --download-mpich --download-f2cblaslapack PETSC_ARCH=arch-test
           make all
     - name: make
       run: PETSC_DIR=petsc PETSC_ARCH=arch-test make
