@@ -114,7 +114,7 @@ static PetscErrorCode set_ic_interior( Ctx *E, Vec sol)
         ierr = Interp1dCreateAndSet(P->htidal_filename, &itp_tidal, SC->PRESSURE, SC->HEATGEN );CHKERRQ(ierr);
         // check length
         if (itp_tidal->NX != P->numpts_s) {
-            SETERRQ1(PETSC_COMM_WORLD,PETSC_ERR_FILE_UNEXPECTED,"Tidal heating file has invalid length (%d, should be %d)",itp_tidal->NX, P->numpts_s);
+            SETERRQ2(PETSC_COMM_WORLD,PETSC_ERR_FILE_UNEXPECTED,"Tidal heating file has invalid length (%d, should be %d)",itp_tidal->NX, P->numpts_s);
             PetscFunctionReturn(1);
         }
         // read data
