@@ -210,8 +210,8 @@ Note: specify the same C compiler you used to install PETSc (probably `gcc`):
 
     ```
     cd /somewhere/to/install
-    git clone https://github.com/djbower/spider.git
-    cd spider
+    git clone https://github.com/FormingWorlds/SPIDER.git
+    cd SPIDER
     ```
 
 11. Make SPIDER:
