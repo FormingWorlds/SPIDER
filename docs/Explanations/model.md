@@ -9,7 +9,7 @@ tags:
 
 Here you can find a detailed overview of the SPIDER formulation.
 
->**Note:** This model overview is taken from the [notes](https://github.com/FormingWorlds/SPIDER/notes) and contains an extended description of the equations and derivations related to the SPIDER code [@BSW18]. It is still **work in progress.** 
+>**Note:** This model overview is taken from the [notes](https://github.com/FormingWorlds/SPIDER/tree/main/notes/) and contains an extended description of the equations and derivations related to the SPIDER code [@BSW18]. It is still **work in progress.** 
 
 ## Thermodynamic energy transport and enthalpy fluxes {#sect:thermodynamic}
 
