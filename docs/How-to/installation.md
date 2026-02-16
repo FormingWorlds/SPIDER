@@ -1,5 +1,8 @@
 # SPIDER: installation
 
+!!! note
+    The standard way of installing this version of SPIDER is within the PROTEUS Framework, as described in the [PROTEUS installation guide](https://proteus-framework.org/PROTEUS/installation.html#11-setup-spider-interior-evolution-model). 
+
 ## 1. Quick Installation
 
 Here we provide a short installation guide to get you up and running with SPIDER.  First, we install PETSc which provides the solver library and then we install SPIDER.  Finally, we can (optionally) install a [test harness](https://github.com/sciath/sciath).
