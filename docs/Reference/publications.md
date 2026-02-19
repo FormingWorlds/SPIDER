@@ -11,3 +11,5 @@ Bower, D.J., Kitzmann, D., Wolf, A.S., Sanan, P., Dorn, C., and Oza, A.V. (2019)
 
 #### 4. Redox reactions
 Bower, D.J., Hakim, K., Sossi, P.A., and Sanan, P. (2022), Retention of water in terrestrial magma oceans and carbon-rich early atmospheres, Planet. Sci. J., 3, 93, doi: 10.3847/PSJ/ac5fb1, arXiv: <https://arxiv.org/abs/2110.08029>
+
+Additionally, SPIDER is part of all publications of the PROTEUS Framework, which can be found [here](https://scixplorer.org/public-libraries/EVAJ1UgWTCy2Z7TRoSmjtQ). 

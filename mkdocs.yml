@@ -1,5 +1,5 @@
 site_name: SPIDER
-site_url: https://proteus-framework.org/spider/
+site_url: https://proteus-framework.org/SPIDER/
 repo_url: https://github.com/FormingWorlds/SPIDER
 repo_name: GitHub
 
@@ -13,23 +13,29 @@ nav:
 
   - Reference:
       - Publications: Reference/publications.md
+
+  - Community:
+      - Code of Conduct: Community/CODE_OF_CONDUCT.md
+      - Developers: https://proteus-framework.org/people
+      - Contact: Community/contact.md
       
-  - Code of Conduct: CODE_OF_CONDUCT.md
   - Source code: https://github.com/FormingWorlds/SPIDER
   - Issues page: https://github.com/FormingWorlds/SPIDER/issues
-  - 🔗 PROTEUS:  https://proteus-framework.org/proteus/
-  - 🔗 MORS:  https://proteus-framework.org/mors/
-  - 🔗 JANUS: https://proteus-framework.org/janus/
-  - 🔗 ZEPHYRUS: https://proteus-framework.org/zephyrus/
-  - 🔗 CALLIOPE: https://proteus-framework.org/calliope/
-  - 🔗 AGNI: https://www.h-nicholls.space/AGNI/
-  - 🔗 Obliqua: https://proteus-framework.org/Obliqua/
-  - 🔗 VULCAN: https://proteus-framework.org/vulcan/
-  - 🔗 Zalmoxis: https://proteus-framework.org/zalmoxis/
-  - 🔗 Aragog: https://proteus-framework.org/aragog/
-  - 🔗 Atmodeller: https://atmodeller.readthedocs.io/en/latest/
-  - 🔗 FastChem: https://newstrangeworlds.github.io/FastChem/
-  - 🔗 PLATON: https://platon.readthedocs.io/en/latest/
+
+  - Other PROTEUS modules:
+      - 🔗 PROTEUS:  https://proteus-framework.org/PROTEUS/
+      - 🔗 MORS:  https://proteus-framework.org/MORS/
+      - 🔗 JANUS: https://proteus-framework.org/JANUS/
+      - 🔗 ZEPHYRUS: https://proteus-framework.org/ZEPHYRUS/
+      - 🔗 CALLIOPE: https://proteus-framework.org/CALLIOPE/
+      - 🔗 AGNI: https://www.h-nicholls.space/AGNI/
+      - 🔗 Obliqua: https://proteus-framework.org/Obliqua/
+      - 🔗 VULCAN: https://proteus-framework.org/VULCAN/
+      - 🔗 Zalmoxis: https://proteus-framework.org/Zalmoxis/
+      - 🔗 Aragog: https://proteus-framework.org/aragog/
+      - 🔗 Atmodeller: https://atmodeller.readthedocs.io/en/latest/
+      - 🔗 FastChem: https://newstrangeworlds.github.io/FastChem/
+      - 🔗 PLATON: https://platon.readthedocs.io/en/latest/
 
 theme:
   name: material
@@ -66,7 +72,7 @@ theme:
 
 extra_css:
   - stylesheets/extra.css
-
+ 
 markdown_extensions:
   - admonition
   - attr_list
@@ -78,8 +84,8 @@ markdown_extensions:
   - footnotes
 
 extra_javascript:
-  - https://polyfill.io/v3/polyfill.min.js?features=es6
   - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
+  - javascripts/header-links.js
 
 plugins:
 - search
