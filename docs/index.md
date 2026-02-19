@@ -26,8 +26,9 @@ SPIDER is a 1-D parameterised interior dynamics code for rocky planets with molt
 - [Publications](Reference/publications.md)
 - [Model overview](Explanations/model.md)
 - [Source code](https://github.com/FormingWorlds/SPIDER)
+- [Contact](Community/contact.md)
 
-If you plan to contribute to SPIDER, please read our [Code of Conduct](CODE_OF_CONDUCT.md).
+If you plan to contribute to SPIDER, please read our [Code of Conduct](Community/CODE_OF_CONDUCT.md).
 If you are running into problems, please do not hesitate to raise an [Issue](https://github.com/FormingWorlds/SPIDER/issues).
 
 ## Copyright
