@@ -5,5 +5,5 @@ We encourage you to reach out! Choose the most appropriate channel below.
 | Channel | Use for |
 |---------|---------|
 | [Forming Worlds Discussions](https://github.com/orgs/FormingWorlds/discussions) | Questions, installation help, feature suggestions |
-| [Issues](https://github.com/FormingWorlds/SPIDER/issues) | Bug reports, specific feature requests |
+| [GitHub Issues](https://github.com/FormingWorlds/SPIDER/issues) | Bug reports, specific feature requests |
 | [proteus_dev@formingworlds.space](mailto:proteus_dev@formingworlds.space) | General enquiries |
