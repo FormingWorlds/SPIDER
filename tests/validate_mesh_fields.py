@@ -9,6 +9,10 @@ Reads SPIDER JSON output and the input external mesh file, then verifies:
 5. mantle_mass = sum(mass_s) * 4*pi
 6. dxidr_b satisfies mass coordinate relation
 
+SPIDER JSON format: fields are in the "data" section with names like
+"radius_b", "pressure_b", etc. Each is {"scaling": X, "values": [...]}.
+The "atmosphere" section contains "mass_mantle".
+
 Exit code 0 if all within tolerance, 1 otherwise.
 """
 
@@ -39,6 +43,29 @@ def load_mesh_file(filename):
     return basic, staggered
 
 
+def get_json_field(section, name):
+    """Extract a dimensionalized array from SPIDER JSON.
+
+    Parameters
+    ----------
+    section : dict
+        A JSON sub-object (e.g. data["data"]).
+    name : str
+        Field name (e.g. "radius_b").
+
+    Returns
+    -------
+    ndarray or None
+        Values multiplied by scaling factor, or None if field absent.
+    """
+    field = section.get(name)
+    if field is None:
+        return None
+    scaling = float(field["scaling"])
+    values = np.array(field["values"], dtype=float)
+    return values * scaling
+
+
 def load_spider_json(filename):
     """Extract mesh data from SPIDER output JSON.
 
@@ -46,36 +73,26 @@ def load_spider_json(filename):
     -------
     mesh : dict
         Keys: radius_b, pressure_b, dPdr_b, mass_s, mantle_mass, dxidr_b, xi_b
-        Values are nondimensional floats with their scaling factors applied.
+        Values are SI (scaling applied).
     """
     with open(filename) as f:
-        data = json.load(f)
+        raw = json.load(f)
+
+    data_section = raw["data"]
+    atmos_section = raw["atmosphere"]
 
     mesh = {}
+    mesh["radius_b"] = get_json_field(data_section, "radius_b")
+    mesh["pressure_b"] = get_json_field(data_section, "pressure_b")
+    mesh["dPdr_b"] = get_json_field(data_section, "dPdr_b")
+    mesh["xi_b"] = get_json_field(data_section, "xi_b")
+    mesh["dxidr_b"] = get_json_field(data_section, "dxidr_b")
+    mesh["radius_s"] = get_json_field(data_section, "radius_s")
+    mesh["mass_s"] = get_json_field(data_section, "mass_s")
 
-    # Extract mesh fields from the 'mesh' section
-    mesh_data = data.get("mesh", {})
-    subdomain_b = mesh_data.get("basic nodes", [])
-    subdomain_s = mesh_data.get("staggered nodes", [])
-
-    def extract_field(subdomain_list, description):
-        for entry in subdomain_list:
-            if entry.get("description") == description:
-                scaling = float(entry["scaling"])
-                values = np.array([float(v) for v in entry["values"]])
-                return values * scaling
-        return None
-
-    mesh["radius_b"] = extract_field(subdomain_b, "radius")
-    mesh["pressure_b"] = extract_field(subdomain_b, "pressure")
-    mesh["dPdr_b"] = extract_field(subdomain_b, "dP/dr")
-    mesh["xi_b"] = extract_field(subdomain_b, "xi (mass coordinate)")
-    mesh["dxidr_b"] = extract_field(subdomain_b, "dxi/dr")
-
-    mesh["mass_s"] = extract_field(subdomain_s, "mass")
-    # mantle_mass is a scalar stored separately
-    mesh["mantle_mass"] = float(mesh_data.get("mantle_mass", {}).get("value", 0))
-    mesh["mantle_mass_scaling"] = float(mesh_data.get("mantle_mass", {}).get("scaling", 1))
+    # mantle_mass is a scalar in the atmosphere section
+    mm = get_json_field(atmos_section, "mass_mantle")
+    mesh["mantle_mass"] = float(mm[0]) if mm is not None else None
 
     return mesh
 
@@ -121,16 +138,13 @@ def main():
     rho_b_file = basic[:, 2]
     g_b_file = basic[:, 3]
 
-    r_s_file = staggered[:, 0]
-    p_s_file = staggered[:, 1]
     rho_s_file = staggered[:, 2]
-    g_s_file = staggered[:, 3]
 
-    # Verify hydrostatic relation in file: dPdr = rho * g
+    # Expected dPdr from hydrostatic relation: dP/dr = rho * g
+    # (gravity is already negative in the file, so dPdr < 0)
     dpdr_b_expected = rho_b_file * g_b_file
 
-    # Verify shell masses: mass_s[i] = rho_s[i] * (r_b[i]^3 - r_b[i+1]^3)/3
-    # SPIDER includes 4*pi in the dimensional output
+    # Expected shell masses: mass_s[i] = 4*pi * rho_s[i] * (r_b[i]^3 - r_b[i+1]^3)/3
     mass_s_expected = np.zeros(ns)
     for i in range(ns):
         vol = (r_b_file[i] ** 3 - r_b_file[i + 1] ** 3) / 3.0
@@ -138,31 +152,59 @@ def main():
 
     mantle_mass_expected = np.sum(mass_s_expected)
 
-    print("Validation results:")
+    # Load SPIDER JSON output
+    mesh = load_spider_json(json_file)
 
+    print("Validation results:")
     all_ok = True
 
-    # Note: JSON extraction may fail if the output format doesn't have mesh section.
-    # In that case, this script serves as a template for what to check.
-    try:
-        mesh = load_spider_json(json_file)
-    except (KeyError, json.JSONDecodeError) as e:
-        print(f"  WARNING: Could not parse JSON mesh data: {e}")
-        print("  Skipping JSON-based validation.")
-        print()
-        print("Basic file consistency checks:")
-        all_ok &= check_field("dPdr_b = rho*g (file)", dpdr_b_expected, rho_b_file * g_b_file)
-        print(f"  INFO mantle_mass (from file): {mantle_mass_expected:.6e} kg")
-        sys.exit(0 if all_ok else 1)
+    # 1. Radius matches input file
+    all_ok &= check_field("radius_b", mesh["radius_b"], r_b_file)
 
-    if mesh["radius_b"] is not None:
-        all_ok &= check_field("radius_b", mesh["radius_b"], r_b_file)
-    if mesh["pressure_b"] is not None:
-        all_ok &= check_field("pressure_b", mesh["pressure_b"], p_b_file)
-    if mesh["dPdr_b"] is not None:
-        all_ok &= check_field("dPdr_b", mesh["dPdr_b"], dpdr_b_expected)
-    if mesh["mass_s"] is not None:
-        all_ok &= check_field("mass_s", mesh["mass_s"], mass_s_expected)
+    # 2. Pressure matches input file
+    all_ok &= check_field("pressure_b", mesh["pressure_b"], p_b_file)
+
+    # 3. dPdr matches hydrostatic relation (rho * g from file)
+    all_ok &= check_field("dPdr_b = rho*g", mesh["dPdr_b"], dpdr_b_expected)
+
+    # 4. Shell masses match expected
+    all_ok &= check_field("mass_s", mesh["mass_s"], mass_s_expected)
+
+    # 5. Mantle mass matches sum of shell masses
+    if mesh["mantle_mass"] is not None:
+        mm_ok = np.isclose(mesh["mantle_mass"], mantle_mass_expected,
+                           rtol=RTOL, atol=ATOL)
+        status = "PASS" if mm_ok else "FAIL"
+        rel = abs(mesh["mantle_mass"] - mantle_mass_expected) / mantle_mass_expected
+        print(f"  {status} mantle_mass: json={mesh['mantle_mass']:.6e}, "
+              f"expected={mantle_mass_expected:.6e}, rel={rel:.3e}")
+        all_ok &= mm_ok
+    else:
+        print("  SKIP mantle_mass: not found in JSON")
+
+    # 6. dxidr satisfies mass coordinate relation:
+    #    dxi/dr = (rho / rho_avg) * (r / xi)^2
+    if (mesh["dxidr_b"] is not None and mesh["xi_b"] is not None
+            and mesh["radius_b"] is not None):
+        r_b = mesh["radius_b"]
+        xi_b = mesh["xi_b"]
+        # rho_avg = mantle_mass / (4/3 * pi * (r_surface^3 - r_cmb^3))
+        vol_mantle = 4.0 / 3.0 * np.pi * (r_b[0] ** 3 - r_b[-1] ** 3)
+        if mesh["mantle_mass"] is not None and vol_mantle > 0:
+            rho_avg = mesh["mantle_mass"] / vol_mantle
+            # Avoid division by zero at boundaries where xi might be 0
+            valid = xi_b > 0
+            dxidr_expected = np.where(
+                valid,
+                (rho_b_file / rho_avg) * (r_b / xi_b) ** 2,
+                mesh["dxidr_b"]  # use actual value where xi=0
+            )
+            all_ok &= check_field("dxidr_b (mass coord)", mesh["dxidr_b"],
+                                  dxidr_expected, rtol=1e-4)
+        else:
+            print("  SKIP dxidr_b: cannot compute rho_avg")
+    else:
+        print("  SKIP dxidr_b: fields not available")
 
     print()
     sys.exit(0 if all_ok else 1)
