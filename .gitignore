@@ -34,6 +34,9 @@ test_dir
 # generated test mesh files
 tests/data/*.dat
 
+# verification outputs (scripts are tracked, outputs are not)
+verification/
+
 # LaTeX related
 *.aux
 *.bbl
