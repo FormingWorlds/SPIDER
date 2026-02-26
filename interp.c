@@ -230,6 +230,12 @@ PetscErrorCode Interp2dCreateAndSet( const char * filename, Interp2d *interp_ptr
     interp->dx = interp->xa[1]-interp->xa[0];
     interp->dy = interp->ya[1]-interp->ya[0];
 
+    /* initialise out-of-range warning counters */
+    interp->warn_x_lo = 0;
+    interp->warn_x_hi = 0;
+    interp->warn_y_lo = 0;
+    interp->warn_y_hi = 0;
+
     PetscFunctionReturn(0);
 }
 
@@ -295,7 +301,7 @@ PetscErrorCode SetInterp1dValue( const Interp1d interp, PetscScalar x, PetscScal
 
 }
 
-PetscErrorCode SetInterp2dValue( const Interp2d interp, PetscScalar x, PetscScalar y, PetscScalar *val )
+PetscErrorCode SetInterp2dValue( Interp2d interp, PetscScalar x, PetscScalar y, PetscScalar *val )
 {
     /* wrapper for evaluating a 2-D lookup using bilinear
        interpolation.
@@ -335,12 +341,24 @@ PetscErrorCode SetInterp2dValue( const Interp2d interp, PetscScalar x, PetscScal
 
     /* for pressure (x), constant spacing assumed */
     if( x<xmin ){
-      //ierr = PetscPrintf(PETSC_COMM_WORLD,"Warning: get_val2d: x<xmin, %f<%f.  Truncating\n",(double)x,(double)xmin);CHKERRQ(ierr);
+      if( interp->warn_x_lo == 0 ){
+        ierr = PetscPrintf(PETSC_COMM_WORLD,
+          "WARNING [EOS table]: pressure below table range: P=%.4e < P_min=%.4e. "
+          "Clamping to table edge. Results at low pressures may be inaccurate.\n",
+          (double)x,(double)xmin);CHKERRQ(ierr);
+        interp->warn_x_lo = 1;
+      }
       indx = 0; // minimum index, max index is always +1
       x = xmin;
     }
     else if( x>xmax ){
-      //ierr = PetscPrintf(PETSC_COMM_WORLD,"Warning: get_val2d: x>xmax, %f>%f.  Truncating\n",(double)x,(double)xmax);CHKERRQ(ierr);
+      if( interp->warn_x_hi == 0 ){
+        ierr = PetscPrintf(PETSC_COMM_WORLD,
+          "WARNING [EOS table]: pressure above table range: P=%.4e > P_max=%.4e. "
+          "Clamping to table edge. Results at high pressures may be inaccurate.\n",
+          (double)x,(double)xmax);CHKERRQ(ierr);
+        interp->warn_x_hi = 1;
+      }
       indx = NX-2; // minimum index, max index is always +1
       x = xmax;
     }
@@ -355,12 +373,24 @@ PetscErrorCode SetInterp2dValue( const Interp2d interp, PetscScalar x, PetscScal
 
     /* for entropy (y), irregular spacing assumed */
     if( y<ymin ){
-      //ierr = PetscPrintf(PETSC_COMM_WORLD,"Warning: get_val2d: y<ymin, %f<%f.  Truncating\n",(double)y,(double)ymin);CHKERRQ(ierr);
+      if( interp->warn_y_lo == 0 ){
+        ierr = PetscPrintf(PETSC_COMM_WORLD,
+          "WARNING [EOS table]: entropy below table range: S=%.4e < S_min=%.4e. "
+          "Clamping to table edge. Results at low entropy may be inaccurate.\n",
+          (double)y,(double)ymin);CHKERRQ(ierr);
+        interp->warn_y_lo = 1;
+      }
       indy = 0; // minimum index, max index is always +1
       y = ymin;
     }
     else if( y>ymax ){
-    //   ierr = PetscPrintf(PETSC_COMM_WORLD,"Warning: get_val2d: y>ymax, %f>%f.  Truncating\n",(double)y,(double)ymax);CHKERRQ(ierr);
+      if( interp->warn_y_hi == 0 ){
+        ierr = PetscPrintf(PETSC_COMM_WORLD,
+          "WARNING [EOS table]: entropy above table range: S=%.4e > S_max=%.4e. "
+          "Clamping to table edge. Results at high entropy may be inaccurate.\n",
+          (double)y,(double)ymax);CHKERRQ(ierr);
+        interp->warn_y_hi = 1;
+      }
       indy = NY-2; // minimum index, max index is always +1
       y = ymax;
     }
