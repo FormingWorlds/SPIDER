@@ -43,11 +43,12 @@ def load_spider_json(path):
     result = {"time_years": raw.get("time_years", 0)}
 
     data = raw.get("data", {})
+    # SPIDER uses short field names: temp_s, S_s, phi_s, rho_s, etc.
     for field_name in ["radius_b", "radius_s", "pressure_b", "pressure_s",
-                       "entropy_b", "entropy_s", "temperature_b", "temperature_s",
-                       "dPdr_b", "melt_fraction_b", "melt_fraction_s",
-                       "dxidr_b", "xi_b", "mass_s", "S_s",
-                       "kappah_b", "Etot_b"]:
+                       "S_b", "S_s", "temp_b", "temp_s",
+                       "dPdr_b", "phi_b", "phi_s",
+                       "dxidr_b", "xi_b", "mass_s",
+                       "kappah_b", "Etot_b", "rho_b", "rho_s"]:
         entry = data.get(field_name)
         if entry:
             scaling = float(entry["scaling"])
@@ -86,9 +87,9 @@ def plot_round_trip(f1_dir, f2_dir):
 
     # Row 1: absolute values
     fields = [
-        ("temperature_s", "Temperature [K]", "T(r)"),
-        ("entropy_s", "Entropy [J/(kg K)]", "S(r)"),
-        ("melt_fraction_s", "Melt fraction", "phi(r)"),
+        ("temp_s", "Temperature [K]", "T(r)"),
+        ("S_s", "Entropy [J/(kg K)]", "S(r)"),
+        ("phi_s", "Melt fraction", "phi(r)"),
     ]
 
     for ax, (field, ylabel, title) in zip(axes[0], fields):
@@ -156,8 +157,8 @@ def plot_evolution_comparison(f1_dir, f2_dir, f3_dir, f6_dir):
         for jp in jsons:
             d = load_spider_json(jp)
             times.append(d["time_years"])
-            if "melt_fraction_s" in d:
-                phi_mean.append(np.mean(d["melt_fraction_s"]))
+            if "phi_s" in d:
+                phi_mean.append(np.mean(d["phi_s"]))
             if "S_top" in d:
                 s_top.append(d["S_top"])
 
@@ -291,9 +292,9 @@ def plot_high_res_profiles(f2_dir, f6_dir):
     fig, axes = plt.subplots(1, 3, figsize=(14, 4.5))
 
     fields = [
-        ("temperature_s", "Temperature [K]"),
-        ("entropy_s", "Entropy [J/(kg K)]"),
-        ("melt_fraction_s", "Melt fraction"),
+        ("temp_s", "Temperature [K]"),
+        ("S_s", "Entropy [J/(kg K)]"),
+        ("phi_s", "Melt fraction"),
     ]
 
     for ax, (field, ylabel) in zip(axes, fields):
