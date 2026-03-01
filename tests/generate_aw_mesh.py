@@ -23,7 +23,6 @@ File format (SI units):
 
 import argparse
 import numpy as np
-from scipy.optimize import fsolve
 
 
 def aw_pressure(r, R, rhos, beta, g):
@@ -103,6 +102,10 @@ def radius_from_mass_coordinate(xi_targets, R, R_core, rhos, beta, g, rho_avg):
         xi^3 = R_core^3 + (3/rho_avg) * M(R_core, r)
     where M is mass within shell.
 
+    Uses scalar Newton iteration (no scipy dependency). Each xi -> r
+    equation is independent and monotonic, so convergence is guaranteed
+    from the evenly-spaced initial guess.
+
     Parameters
     ----------
     xi_targets : array
@@ -119,21 +122,28 @@ def radius_from_mass_coordinate(xi_targets, R, R_core, rhos, beta, g, rho_avg):
     radii : array
         Corresponding physical radii.
     """
-    def objective(r_guess):
-        residuals = np.zeros_like(r_guess)
-        for i, r in enumerate(r_guess):
-            mass = aw_mass_within_shell(r, R_core, R, rhos, beta, g)
-            xi_computed = (mass * 3.0 / rho_avg + R_core**3) ** (1.0 / 3.0)
-            residuals[i] = xi_computed - xi_targets[i]
-        return residuals
-
-    # Initial guess: evenly spaced
     n = len(xi_targets)
-    dx = (R - R_core) / (n - 1) if n > 1 else 0
-    r0 = np.array([R - i * dx for i in range(n)])
+    radii = np.zeros(n)
+    dx_init = (R - R_core) / max(n - 1, 1)
 
-    result = fsolve(objective, r0, full_output=False)
-    return result
+    for i in range(n):
+        r = R - i * dx_init  # initial guess: evenly spaced
+        for _ in range(100):
+            mass = aw_mass_within_shell(r, R_core, R, rhos, beta, g)
+            xi_comp = (mass * 3.0 / rho_avg + R_core**3) ** (1.0 / 3.0)
+            residual = xi_comp - xi_targets[i]
+            if abs(residual) < 1e-12:
+                break
+            # Numerical derivative via forward difference
+            dr = max(abs(r) * 1e-8, 1e-2)
+            mass_p = aw_mass_within_shell(r + dr, R_core, R, rhos, beta, g)
+            xi_p = (mass_p * 3.0 / rho_avg + R_core**3) ** (1.0 / 3.0)
+            dxi_dr = (xi_p - xi_comp) / dr
+            if abs(dxi_dr) > 1e-30:
+                r -= residual / dxi_dr
+        radii[i] = r
+
+    return radii
 
 
 def main():
