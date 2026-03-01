@@ -125,7 +125,53 @@ You should now be ready to use the code.  Proceed to *Running a Model* to learn 
 
 ![Test output](tests/expected_output/blackbody50-interior.png)
 
-## 4. Detailed Installation
+## 4. External Mesh Input
+
+SPIDER can accept a pre-computed mesh from an external file instead of computing one internally from the Adams-Williamson equation of state. This enables coupling with structure solvers like [Zalmoxis](https://github.com/FormingWorlds/Zalmoxis) that provide more accurate density profiles for non-Earth-like compositions.
+
+### Options
+
+| Option | Type | Description |
+|--------|------|-------------|
+| `-MESH_SOURCE` | `int` | `0` (default): internal AW mesh. `1`: read from external file. |
+| `-mesh_external_filename` | `string` | Path to external mesh file (required when `MESH_SOURCE=1`). |
+
+### File format
+
+The external mesh file is a plain text file with SI units and surface-to-CMB ordering:
+
+```
+# <num_basic_nodes> <num_staggered_nodes>
+r_b[0] P_b[0] rho_b[0] g_b[0]      (surface)
+r_b[1] P_b[1] rho_b[1] g_b[1]
+...
+r_b[nb-1] P_b[nb-1] rho_b[nb-1] g_b[nb-1]  (CMB)
+r_s[0] P_s[0] rho_s[0] g_s[0]      (staggered nodes)
+...
+r_s[ns-1] P_s[ns-1] rho_s[ns-1] g_s[ns-1]
+```
+
+- **Columns**: radius [m], pressure [Pa], density [kg/m^3], gravity [m/s^2]
+- **Ordering**: surface (largest r) to CMB (smallest r)
+- **Gravity**: negative (inward-pointing)
+- **Staggered nodes**: `ns = nb - 1`, positioned at midpoints between basic nodes
+- **Header**: comment line starting with `#` containing `nb` and `ns` separated by whitespace
+
+### Example
+
+```bash
+# Generate an external mesh file from AW parameters (for testing)
+python tests/generate_aw_mesh.py -n 50 -o mesh.dat
+
+# Run SPIDER with external mesh
+./spider -options_file tests/opts/blackbody50.opts -MESH_SOURCE 1 -mesh_external_filename mesh.dat
+```
+
+### EOS out-of-range warnings
+
+When using EOS lookup tables (e.g., WolfBower2018), SPIDER now emits one-time warnings per table when queried pressure or entropy falls outside the tabulated range. The first occurrence per table per direction is logged; subsequent out-of-range queries are clamped silently. If thermal expansion coefficient alpha becomes negative (possible at EOS table edges), it is clamped to zero with a warning to prevent NaN propagation through the mixing length theory.
+
+## 5. Detailed Installation
 
 The following section provides more general information about the installation process, and in particular provides the steps for installing SPIDER with support for quadruple precision calculations.
 
@@ -274,10 +320,10 @@ Note: specify the same C compiler you used to install PETSc (probably `gcc`):
 
 You should now be ready to use the code!
 
-## 5. Other
+## 6. Other
 
 
-#### 5.1 Extended notes
+#### 6.1 Extended notes
 
 There are extended notes located in `notes/` that are useful for understanding the methodology and source code of SPIDER.  You can compile `notes.tex` using `pdflatexmk` or `pdflatex`.
 
