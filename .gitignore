@@ -34,6 +34,9 @@ test_dir
 # generated test mesh files
 tests/data/*.dat
 
+# validation plot scripts (generated, not tracked)
+tests/plot_validation_F.py
+
 # verification outputs (scripts are tracked, outputs are not)
 verification/
 
