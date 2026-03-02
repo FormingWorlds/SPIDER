@@ -196,9 +196,29 @@ PetscErrorCode set_matprop_basic( Ctx *E )
 PetscErrorCode GetEddyDiffusivity( const EOSEvalData eos_eval, const Parameters P, PetscScalar radius, PetscScalar dSdxi, PetscScalar dxidr, PetscScalar *kappah_ptr, PetscScalar *kappac_ptr, PetscScalar *regime_ptr )
 {
     PetscErrorCode ierr;
-    PetscScalar    visc, kvisc, gsuper, kh, crit, mix, kappah, kappac, regime;
+    PetscScalar    alpha, visc, kvisc, gsuper, kh, crit, mix, kappah, kappac, regime;
+    static PetscInt warn_alpha_neg = 0;
 
     PetscFunctionBeginUser;
+
+    /* Guard against negative thermal expansion coefficient.
+       This can occur when the EOS table is evaluated outside its valid
+       entropy range (e.g. solid-phase table clamped at high S), producing
+       unphysical mixed-phase alpha.  Clamping to zero disables convective
+       transport at these nodes, which is the physically safe fallback. */
+    alpha = eos_eval.alpha;
+    if( alpha < 0.0 ){
+      if( warn_alpha_neg == 0 ){
+        ierr = PetscPrintf(PETSC_COMM_WORLD,
+          "WARNING [EOS]: negative thermal expansion coefficient alpha=%.4e at "
+          "r=%.4e m. This indicates the EOS lookup is outside its valid range "
+          "(likely solid-phase table entropy limit exceeded). Clamping alpha to 0; "
+          "convective heat transport disabled at affected nodes.\n",
+          (double)alpha, (double)radius);CHKERRQ(ierr);
+        warn_alpha_neg = 1;
+      }
+      alpha = 0.0;
+    }
 
     visc = eos_eval.log10visc;
     ierr = apply_log10visc_cutoff( P, &visc );CHKERRQ(ierr);
@@ -208,7 +228,12 @@ PetscErrorCode GetEddyDiffusivity( const EOSEvalData eos_eval, const Parameters 
 
     crit = 81.0 * PetscPowScalar(kvisc,2);
     mix = GetMixingLength( P, radius);
-    crit /= 4.0 * eos_eval.alpha * PetscPowScalar(mix,4);
+    if( alpha > 0.0 ){
+      crit /= 4.0 * alpha * PetscPowScalar(mix,4);
+    } else {
+      /* alpha == 0: set crit to infinity so gsuper <= 0 branch is taken */
+      crit = PETSC_MAX_REAL;
+    }
 
     if( gsuper <= 0.0 ){
       /* no convection, subadiabatic */
@@ -216,11 +241,11 @@ PetscErrorCode GetEddyDiffusivity( const EOSEvalData eos_eval, const Parameters 
       regime = 0.0;
     } else if( gsuper > crit ){
       /* inviscid scaling from Vitense (1953) */
-      kh = 0.25 * PetscPowScalar(mix,2) * PetscSqrtScalar(eos_eval.alpha * gsuper);
+      kh = 0.25 * PetscPowScalar(mix,2) * PetscSqrtScalar(alpha * gsuper);
       regime = 2.0;
     } else{
       /* viscous scaling */
-      kh = eos_eval.alpha * gsuper * PetscPowScalar(mix,4) / ( 18.0 * kvisc );
+      kh = alpha * gsuper * PetscPowScalar(mix,4) / ( 18.0 * kvisc );
       regime = 1.0;
     }
 

@@ -175,6 +175,8 @@ typedef struct {
     PetscScalar core_bc_value;
 
     PetscBool MASS_COORDINATES;
+    PetscInt  MESH_SOURCE; /* 0: Adams-Williamson (default), 1: external file */
+    char mesh_external_filename[PETSC_MAX_PATH_LEN];
     PetscBool CONDUCTION;
     PetscBool CONVECTION;
     PetscBool MIXING;

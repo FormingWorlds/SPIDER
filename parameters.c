@@ -301,6 +301,25 @@ PetscErrorCode ParametersSetFromOptions(Parameters P)
   P->MASS_COORDINATES = PETSC_TRUE;
   ierr = PetscOptionsGetBool(NULL,NULL,"-MASS_COORDINATES",&P->MASS_COORDINATES,NULL);CHKERRQ(ierr);
 
+  /* mesh source: 0 = Adams-Williamson (default), 1 = external file */
+  P->MESH_SOURCE = 0;
+  ierr = PetscOptionsGetInt(NULL,NULL,"-MESH_SOURCE",&P->MESH_SOURCE,NULL);CHKERRQ(ierr);
+  if (P->MESH_SOURCE != 0 && P->MESH_SOURCE != 1) {
+    SETERRQ1(PETSC_COMM_WORLD,PETSC_ERR_ARG_OUTOFRANGE,
+             "MESH_SOURCE must be 0 (Adams-Williamson) or 1 (external file), got %d",
+             P->MESH_SOURCE);
+  }
+  ierr = PetscStrcpy(P->mesh_external_filename,"_unset");CHKERRQ(ierr);
+  if (P->MESH_SOURCE == 1) {
+    PetscBool meshFileSet = PETSC_FALSE;
+    ierr = PetscOptionsGetString(NULL,NULL,"-mesh_external_filename",
+        P->mesh_external_filename,PETSC_MAX_PATH_LEN,&meshFileSet);CHKERRQ(ierr);
+    if (!meshFileSet) {
+      SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_USER,
+              "-MESH_SOURCE 1 requires -mesh_external_filename <path>");
+    }
+  }
+
   /* RollBack and PostStep options */
   P->rollBackActive = PETSC_FALSE;
   ierr = PetscOptionsGetBool(NULL,NULL,"-activate_rollback",&P->rollBackActive,NULL);CHKERRQ(ierr);
@@ -407,8 +426,12 @@ PetscErrorCode ParametersSetFromOptions(Parameters P)
   }
 
   /* eos for determining mapping between radius and mass coordinate */
-  ierr = EOSCreate(&P->eos_mesh, SPIDER_EOS_ADAMSWILLIAMSON);CHKERRQ(ierr);
-  ierr = EOSSetUpFromOptions( P->eos_mesh, "adams_williamson", FC, SC );CHKERRQ(ierr);
+  if (P->MESH_SOURCE == 0) {
+    ierr = EOSCreate(&P->eos_mesh, SPIDER_EOS_ADAMSWILLIAMSON);CHKERRQ(ierr);
+    ierr = EOSSetUpFromOptions( P->eos_mesh, "adams_williamson", FC, SC );CHKERRQ(ierr);
+  } else {
+    P->eos_mesh = NULL;
+  }
 
   /* grain size (m) */
   P->grain = 1.0E-3;
@@ -1039,7 +1062,9 @@ PetscErrorCode ParametersDestroy( Parameters* parameters_ptr)
     P->n_radionuclides = 0;
 
     /* radius to mass coordinate eos */
-    ierr = EOSDestroy(&P->eos_mesh);
+    if (P->eos_mesh) {
+      ierr = EOSDestroy(&P->eos_mesh);CHKERRQ(ierr);
+    }
 
     /* EOS / phases */
     for (i=0; i<P->n_phases; ++i) {

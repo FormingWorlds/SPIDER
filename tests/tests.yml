@@ -22,3 +22,34 @@ tests:
         - HERE/../spider -options_file HERE/opts/blackbody50.opts -nstepsmacro 2
         - HERE/../py/plot_spider_lite.py
       type: exit_code
+    -
+      name: external_mesh_roundtrip
+      # Tolerance is 1e-3 (not 1e-5) because the external mesh pathway
+      # uses midpoint-rule quadrature for shell masses, while AW uses
+      # analytical integrals. For 50 nodes this gives ~2e-5 discretization
+      # error in dxidr that propagates through the time integration.
+      commands:
+        - python HERE/generate_aw_mesh.py -n 50 -radius 6371000.0 -coresize 0.55 -rhos 4078.95095544 -beta 1.1115348931000002e-07 -gravity -10.0 -o HERE/data/aw_mesh_50.dat
+        - HERE/../spider -options_file HERE/opts/blackbody50.opts -MESH_SOURCE 1 -mesh_external_filename HERE/data/aw_mesh_50.dat
+        - HERE/json_timestep_to_txt.py output/1200.json
+      expected: expected_output/expected_blackbody50.txt
+      comparison: 1200.txt
+      type: float_lines
+      rules:
+        -
+          key: val:
+          rtol: 2e-3
+          atol: 2e-3
+        -
+          key: scaling:
+          rtol: 1e-5
+          atol: 1e-5
+    -
+      name: non_aw_mesh
+      # Use Earth radius but a linear density profile (not AW) to verify
+      # SPIDER runs correctly with a non-AW mesh input. Keeps all other
+      # physical parameters from blackbody50.opts for consistency.
+      commands:
+        - python HERE/generate_super_earth_mesh.py -n 50 -radius 6371000.0 -coresize 0.55 -o HERE/data/non_aw_mesh_50.dat
+        - HERE/../spider -options_file HERE/opts/blackbody50.opts -MESH_SOURCE 1 -mesh_external_filename HERE/data/non_aw_mesh_50.dat -nstepsmacro 3
+      type: exit_code

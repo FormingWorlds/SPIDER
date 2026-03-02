@@ -26,6 +26,11 @@ typedef struct {
     PetscScalar ymax;
     PetscScalar dy;
     PetscScalar **za;
+    /* out-of-range warning counters (print only first occurrence) */
+    PetscInt    warn_x_lo;
+    PetscInt    warn_x_hi;
+    PetscInt    warn_y_lo;
+    PetscInt    warn_y_hi;
 } data_Interp2d;
 typedef data_Interp2d* Interp2d;
 
@@ -34,6 +39,6 @@ PetscErrorCode Interp1dDestroy( Interp1d * );
 PetscErrorCode Interp2dCreateAndSet( const char *, Interp2d *, PetscScalar, PetscScalar, PetscScalar );
 PetscErrorCode Interp2dDestroy( Interp2d * );
 PetscErrorCode SetInterp1dValue( Interp1d const, PetscScalar, PetscScalar *, PetscScalar * );
-PetscErrorCode SetInterp2dValue( Interp2d const, PetscScalar, PetscScalar, PetscScalar * );
+PetscErrorCode SetInterp2dValue( Interp2d, PetscScalar, PetscScalar, PetscScalar * );
 
 #endif
