@@ -70,6 +70,13 @@ static PetscErrorCode SetMeshFromExternalFile( Ctx *E )
     */
 
     PetscErrorCode  ierr;
+
+#if (defined PETSC_USE_REAL___FLOAT128)
+    SETERRQ(PETSC_COMM_WORLD, PETSC_ERR_SUP,
+            "SetMeshFromExternalFile uses fscanf(%%lf) which is incompatible "
+            "with quad-precision PetscScalar (__float128)");
+#endif
+
     Mesh            *M = &E->mesh;
     Parameters      P = E->parameters;
     ScalingConstants SC = P->scaling_constants;
@@ -140,21 +147,22 @@ static PetscErrorCode SetMeshFromExternalFile( Ctx *E )
 
     /* --- Validate file geometry against -radius and -coresize --- */
     /* Surface = index 0, CMB = index numpts_b-1 (file is surface-to-CMB) */
+    /* All comparisons in non-dimensional form; print dimensionalised for user */
     {
-        PetscScalar r_surface, r_cmb, file_coresize, rtol;
+        PetscScalar r_surface_nd, r_cmb_nd, file_coresize, rtol;
         ierr = DMDAVecGetArrayRead(E->da_b,M->radius_b,&arr_r);CHKERRQ(ierr);
-        r_surface = arr_r[0] * SC->RADIUS;          /* re-dimensionalize */
-        r_cmb     = arr_r[numpts_b-1] * SC->RADIUS;
+        r_surface_nd = arr_r[0];             /* non-dimensional */
+        r_cmb_nd     = arr_r[numpts_b-1];   /* non-dimensional */
         ierr = DMDAVecRestoreArrayRead(E->da_b,M->radius_b,&arr_r);CHKERRQ(ierr);
 
         rtol = 0.01;  /* 1% relative tolerance */
-        if (PetscAbsScalar(r_surface - P->radius) / P->radius > rtol) {
+        if (PetscAbsScalar(r_surface_nd - P->radius) / P->radius > rtol) {
             PetscPrintf(PETSC_COMM_WORLD,
                 "WARNING: external mesh surface radius (%.6e m) differs from "
                 "-radius (%.6e m) by >%.0f%%. Ensure -radius matches the file.\n",
-                r_surface, P->radius, rtol*100);
+                r_surface_nd * SC->RADIUS, P->radius * SC->RADIUS, rtol*100);
         }
-        file_coresize = r_cmb / r_surface;
+        file_coresize = r_cmb_nd / r_surface_nd;
         if (PetscAbsScalar(file_coresize - P->coresize) / P->coresize > rtol) {
             PetscPrintf(PETSC_COMM_WORLD,
                 "WARNING: external mesh coresize (%.6f = R_cmb/R_surface) differs from "
