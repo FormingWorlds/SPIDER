@@ -138,6 +138,31 @@ static PetscErrorCode SetMeshFromExternalFile( Ctx *E )
     ierr = DMDAVecRestoreArray(E->da_b,M->pressure_b,&arr_p);CHKERRQ(ierr);
     ierr = DMDAVecRestoreArray(E->da_b,M->dPdr_b,&arr_dpdr);CHKERRQ(ierr);
 
+    /* --- Validate file geometry against -radius and -coresize --- */
+    /* Surface = index 0, CMB = index numpts_b-1 (file is surface-to-CMB) */
+    {
+        PetscScalar r_surface, r_cmb, file_coresize, rtol;
+        ierr = DMDAVecGetArrayRead(E->da_b,M->radius_b,&arr_r);CHKERRQ(ierr);
+        r_surface = arr_r[0] * SC->RADIUS;          /* re-dimensionalize */
+        r_cmb     = arr_r[numpts_b-1] * SC->RADIUS;
+        ierr = DMDAVecRestoreArrayRead(E->da_b,M->radius_b,&arr_r);CHKERRQ(ierr);
+
+        rtol = 0.01;  /* 1% relative tolerance */
+        if (PetscAbsScalar(r_surface - P->radius) / P->radius > rtol) {
+            PetscPrintf(PETSC_COMM_WORLD,
+                "WARNING: external mesh surface radius (%.6e m) differs from "
+                "-radius (%.6e m) by >%.0f%%. Ensure -radius matches the file.\n",
+                r_surface, P->radius, rtol*100);
+        }
+        file_coresize = r_cmb / r_surface;
+        if (PetscAbsScalar(file_coresize - P->coresize) / P->coresize > rtol) {
+            PetscPrintf(PETSC_COMM_WORLD,
+                "WARNING: external mesh coresize (%.6f = R_cmb/R_surface) differs from "
+                "-coresize (%.6f) by >%.0f%%. Ensure -coresize matches the file.\n",
+                file_coresize, P->coresize, rtol*100);
+        }
+    }
+
     /* --- Read staggered node data --- */
     {
         PetscScalar *rho_s_tmp;
