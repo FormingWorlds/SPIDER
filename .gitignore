@@ -53,3 +53,6 @@ verification/
 
 # petsc directory 
 petsc-*/
+
+# site 
+site/
