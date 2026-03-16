@@ -3,10 +3,10 @@
 # get_petsc.sh — Download, configure, and compile PETSc for SPIDER
 # =============================================================================
 #
-# Downloads PETSc 3.19.0 from OSF and builds it with sundials2 support.
+# Downloads PETSc 3.24.5 and builds it with sundials2 support.
 # SPIDER is a pure C code, so C++ and Fortran compilers are disabled.
 #
-# This script lives inside the SPIDER repository: 
+# This script lives inside the SPIDER repository:
 #
 #   SPIDER/
 #   ├── tools/
@@ -14,14 +14,14 @@
 #   ├── Makefile
 #   └── ...
 #
-# By default, PETSc is installed into:
+# By default, PETSc is installed into a versioned source directory:
 #
-#   <SPIDER repo>/petsc/
+#   <SPIDER repo>/petsc-3.24.5/
 #
 # An optional first argument may be supplied to choose a different base path:
 #
-#   ./tools/get_petsc.sh           # install into ./petsc/
-#   ./tools/get_petsc.sh /path     # install into /path/petsc/
+#   bash tools/get_petsc.sh           # install into ./petsc-3.24.5/
+#   bash tools/get_petsc.sh /path     # install into /path/petsc-3.24.5/
 #
 # Supported platforms:
 #   - macOS 10.15 (Catalina) and later, Intel and Apple Silicon
@@ -30,17 +30,19 @@
 # Prerequisites:
 #   macOS:  brew install gcc open-mpi
 #           xcode-select --install
-#   Ubuntu: sudo apt install build-essential libopenmpi-dev unzip curl
+#   Ubuntu: sudo apt install build-essential libopenmpi-dev tar curl
 #   Fedora: sudo dnf install gcc openmpi openmpi-devel lapack lapack-devel \
-#               lapack-static f2c f2c-libs unzip curl
+#               lapack-static f2c f2c-libs tar curl
 #
 # Environment after completion:
-#   PETSC_DIR  = <install path>/petsc
+#   PETSC_DIR  = <install path>/petsc-3.24.5
 #   PETSC_ARCH = arch-{linux,darwin}-c-opt
 #
 # =============================================================================
 
-set -euo pipefail
+set -Eeuo pipefail
+
+petsc_version="3.24.5"
 
 # -----------------------------------------------------------------------------
 # Portable realpath: macOS <13 (Catalina through Monterey) does not ship
@@ -72,12 +74,12 @@ on_error() {
     case "$current_step" in
         *"Download"*)
             echo "   - Check your internet connection"
-            echo "   - Verify the OSF URL is accessible: $url"
-            echo "   - Try downloading manually: curl -LsS $url > petsc.zip"
+            echo "   - Verify the PETSc URL is accessible: $url"
+            echo "   - Try downloading manually: curl -LsS -o petsc.tar.gz $url"
             ;;
         *"Decompress"*)
             echo "   - The downloaded archive may be corrupted"
-            echo "   - Delete petsc/ and re-run this script"
+            echo "   - Delete any previous petsc-* source directory and re-run this script"
             ;;
         *"Configure"*)
             echo "   - Check PETSc configure output above for details"
@@ -126,8 +128,8 @@ current_step="Setting up working directory"
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 repo_root="$(dirname "$script_dir")"
 
-# Default: install PETSc into <repo_root>/petsc/.
-# Optional argument: install into <arg>/petsc/.
+# Default: install PETSc into <repo_root>/petsc-<version>/.
+# Optional argument: install into <arg>/petsc-<version>/.
 if [[ $# -ge 1 ]]; then
     mkdir -p "$1"
     install_base="$(portable_realpath "$1")"
@@ -135,31 +137,37 @@ else
     install_base="$repo_root"
 fi
 
-workpath="$install_base/petsc"
-
-export PETSC_DIR="$workpath"
-echo "PETSC_DIR  = $PETSC_DIR"
 echo "PETSC_ARCH = $PETSC_ARCH"
 
-# Clean previous installation
-rm -rf "$workpath"
-mkdir -p "$workpath"
-
 # -----------------------------------------------------------------------------
-# 3. Download PETSc 3.19.0 from OSF
+# 3. Download PETSc release tarball
 # -----------------------------------------------------------------------------
-current_step="Downloading PETSc archive from OSF"
+current_step="Downloading PETSc release tarball"
 
-zipfile="$workpath/petsc.zip"
-url="https://osf.io/download/p5vxq/"
-echo "Downloading PETSc archive from OSF..."
-echo "    $url -> $zipfile"
-curl -LsS "$url" > "$zipfile"
+archive="$install_base/petsc-${petsc_version}.tar.gz"
+srcdir="$install_base/petsc-${petsc_version}"
+url="https://web.cels.anl.gov/projects/petsc/download/release-snapshots/petsc-${petsc_version}.tar.gz"
+
+echo "Downloading PETSc ${petsc_version} release tarball..."
+echo "    $url -> $archive"
+
+rm -f "$archive"
+rm -rf "$srcdir"
+
+curl -LsS "$url" -o "$archive"
 
 current_step="Decompressing PETSc archive"
 echo "Decompressing..."
-unzip -qq "$zipfile" -d "$workpath"
-rm -f "$zipfile"
+tar -xzf "$archive" -C "$install_base"
+rm -f "$archive"
+
+# PETSc release tarballs extract into a versioned source directory.
+# Use that extracted directory as PETSC_DIR.
+workpath="$srcdir"
+export PETSC_DIR="$workpath"
+
+echo "PETSC_DIR  = $PETSC_DIR"
+echo "PETSC_ARCH = $PETSC_ARCH"
 
 # -----------------------------------------------------------------------------
 # 4. Determine platform-specific configure flags
