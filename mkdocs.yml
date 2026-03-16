@@ -4,7 +4,9 @@ repo_url: https://github.com/FormingWorlds/SPIDER
 repo_name: GitHub
 
 nav:
-  - Home: index.md
+  - Home: 
+    - About: index.md
+
   - How-to guides:
       - Installation: How-to/installation.md
 
@@ -16,13 +18,14 @@ nav:
 
   - Community:
       - Code of Conduct: Community/CODE_OF_CONDUCT.md
-      - Developers: https://proteus-framework.org/people
       - Contact: Community/contact.md
+      - Developers: https://proteus-framework.org/people
+      - Issues: https://github.com/FormingWorlds/SPIDER/issues
       
   - Source code: https://github.com/FormingWorlds/SPIDER
-  - Issues page: https://github.com/FormingWorlds/SPIDER/issues
 
   - Other PROTEUS modules:
+      - PROTEUS submodules: proteus_framework.md
       - 🔗 PROTEUS:  https://proteus-framework.org/PROTEUS/
       - 🔗 MORS:  https://proteus-framework.org/MORS/
       - 🔗 JANUS: https://proteus-framework.org/JANUS/
@@ -36,13 +39,17 @@ nav:
       - 🔗 Atmodeller: https://atmodeller.readthedocs.io/en/latest/
       - 🔗 FastChem: https://newstrangeworlds.github.io/FastChem/
       - 🔗 PLATON: https://platon.readthedocs.io/en/latest/
+      - 🔗 SOCRATES: https://github.com/FormingWorlds/SOCRATES/
 
 theme:
   name: material
   custom_dir: docs/overrides
   features:
-  - content.code.copy
-  - navigation.expand
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.expand
+    - content.code.copy
+    - content.tabs.link
 
   # Default assets (used unless overridden per palette below)
   favicon: assets/PROTEUS_black_on_white_logo_only.png
@@ -52,12 +59,12 @@ theme:
     # Auto: follow system preference (and show a toggle)
     - media: "(prefers-color-scheme: light)"
       scheme: default
-      primary: black
-      accent: deep orange
+      primary: custom
+      accent: custom
       favicon: assets/PROTEUS_black_on_white_logo_only.png
       logo: assets/PROTEUS_white_on_black.png
       toggle:
-        icon: material/weather-night
+        icon: lucide/moon
         name: Switch to dark mode
 
     - media: "(prefers-color-scheme: dark)"
@@ -67,11 +74,12 @@ theme:
       favicon: assets/PROTEUS_white_on_black_logo_only.png
       logo: assets/PROTEUS_white_on_black.png
       toggle:
-        icon: material/weather-sunny
+        icon: lucide/sun
         name: Switch to light mode
 
 extra_css:
   - stylesheets/extra.css
+  - stylesheets/footnotes.css
  
 markdown_extensions:
   - admonition
@@ -81,9 +89,19 @@ markdown_extensions:
   - pymdownx.extra
   - pymdownx.arithmatex:
       generic: true
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.details
+  - md_in_html
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
   - footnotes
 
 extra_javascript:
+  - https://unpkg.com/katex@0/dist/katex.min.js
+  - https://unpkg.com/katex@0/dist/contrib/auto-render.min.js
+  - javascripts/katex.js
   - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
   - javascripts/header-links.js
 
