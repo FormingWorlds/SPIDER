@@ -1,27 +1,10 @@
 #!/usr/bin/env bash
 # =============================================================================
-# get_petsc.sh — Download, configure, and compile PETSc for SPIDER
+# get_petsc.sh — Download, configure, and compile PETSc for PROTEUS/SPIDER
 # =============================================================================
 #
-# Downloads PETSc 3.24.5 and builds it with sundials2 support.
+# Downloads PETSc 3.19.0 from OSF and builds it with sundials2 support.
 # SPIDER is a pure C code, so C++ and Fortran compilers are disabled.
-#
-# This script lives inside the SPIDER repository:
-#
-#   SPIDER/
-#   ├── tools/
-#   │   └── get_petsc.sh
-#   ├── Makefile
-#   └── ...
-#
-# By default, PETSc is installed into a versioned source directory:
-#
-#   <SPIDER repo>/petsc-3.24.5/
-#
-# An optional first argument may be supplied to choose a different base path:
-#
-#   bash tools/get_petsc.sh           # install into ./petsc-3.24.5/
-#   bash tools/get_petsc.sh /path     # install into /path/petsc-3.24.5/
 #
 # Supported platforms:
 #   - macOS 10.15 (Catalina) and later, Intel and Apple Silicon
@@ -30,23 +13,26 @@
 # Prerequisites:
 #   macOS:  brew install gcc open-mpi
 #           xcode-select --install
-#   Ubuntu: sudo apt install build-essential libopenmpi-dev tar curl
+#   Ubuntu: sudo apt install build-essential libopenmpi-dev
 #   Fedora: sudo dnf install gcc openmpi openmpi-devel lapack lapack-devel \
-#               lapack-static f2c f2c-libs tar curl
+#               lapack-static f2c f2c-libs
+#
+# Usage:
+#   ./tools/get_petsc.sh           # install into ./petsc/
+#   ./tools/get_petsc.sh /path     # install into /path/petsc/
 #
 # Environment after completion:
-#   PETSC_DIR  = <install path>/petsc-3.24.5
+#   PETSC_DIR  = <install path>/petsc
 #   PETSC_ARCH = arch-{linux,darwin}-c-opt
 #
 # =============================================================================
 
-set -Eeuo pipefail
-
-petsc_version="3.24.5"
+set -e
 
 # -----------------------------------------------------------------------------
 # Portable realpath: macOS <13 (Catalina through Monterey) does not ship
-# GNU coreutils realpath. Fall back to python3, which is commonly available.
+# GNU coreutils realpath. Fall back to python3, which is always available
+# in PROTEUS's conda environment.
 # -----------------------------------------------------------------------------
 portable_realpath() {
     if command -v realpath >/dev/null 2>&1; then
@@ -74,30 +60,32 @@ on_error() {
     case "$current_step" in
         *"Download"*)
             echo "   - Check your internet connection"
-            echo "   - Verify the PETSc URL is accessible: $url"
-            echo "   - Try downloading manually: curl -LsS -o petsc.tar.gz $url"
+            echo "   - Verify the OSF URL is accessible: $url"
+            echo "   - Try downloading manually: curl -LsS $url > petsc.zip"
             ;;
         *"Decompress"*)
             echo "   - The downloaded archive may be corrupted"
-            echo "   - Delete any previous petsc-* source directory and re-run this script"
+            echo "   - Delete petsc/ and re-run this script"
             ;;
         *"Configure"*)
-            echo "   - Check PETSc configure output above for details"
+            echo "   - Check petsc/configure.log for details"
             echo "   - On macOS: ensure Xcode CLI tools are installed (xcode-select --install)"
             echo "   - Verify MPI is installed (mpicc --version)"
+            echo "   - See PROTEUS docs/troubleshooting.md for platform-specific fixes"
             ;;
         *"Build"*)
-            echo "   - Check PETSc build output above for compiler errors"
+            echo "   - Check petsc/make.log for compiler errors"
             echo "   - Ensure your C compiler is working (mpicc --version)"
             echo "   - On macOS: verify SDKROOT is set (xcrun --show-sdk-path)"
             ;;
         *"Test"*)
             echo "   - PETSc built but tests failed"
-            echo "   - Check the test output above for details"
+            echo "   - Check petsc/make.log for details"
             echo "   - On macOS: check /etc/hosts for localhost entry"
+            echo "     (see docs/troubleshooting.md: PETSc tests error)"
             ;;
         *)
-            echo "   - Review the output above for the failing command"
+            echo "   - See docs/troubleshooting.md for platform-specific advice"
             ;;
     esac
     echo "========================================"
@@ -119,55 +107,44 @@ else
 fi
 
 # -----------------------------------------------------------------------------
-# 2. Determine SPIDER repo root and set up working directory
+# 2. Set up working directory
 # -----------------------------------------------------------------------------
 current_step="Setting up working directory"
 
-# Derive the repo root from this script's location (tools/get_petsc.sh).
-# This avoids dependence on the caller's current working directory.
-script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-repo_root="$(dirname "$script_dir")"
-
-# Default: install PETSc into <repo_root>/petsc-<version>/.
-# Optional argument: install into <arg>/petsc-<version>/.
-if [[ $# -ge 1 ]]; then
+# Default: ./petsc/ relative to current directory; override via first argument.
+# When called from data.py:get_petsc(), the full path is passed as $1.
+if [[ -n "$1" ]]; then
     mkdir -p "$1"
-    install_base="$(portable_realpath "$1")"
+    workpath=$(portable_realpath "$1")
 else
-    install_base="$repo_root"
+    mkdir -p petsc
+    workpath=$(portable_realpath petsc)
 fi
 
+export PETSC_DIR="$workpath"
+echo "PETSC_DIR  = $PETSC_DIR"
 echo "PETSC_ARCH = $PETSC_ARCH"
 
+# Clean previous installation
+rm -rf "$workpath"
+mkdir "$workpath"
+
 # -----------------------------------------------------------------------------
-# 3. Download PETSc release tarball
+# 3. Download PETSc 3.19.0 from OSF
 # -----------------------------------------------------------------------------
-current_step="Downloading PETSc release tarball"
+current_step="Downloading PETSc archive from OSF"
 
-archive="$install_base/petsc-${petsc_version}.tar.gz"
-srcdir="$install_base/petsc-${petsc_version}"
-url="https://web.cels.anl.gov/projects/petsc/download/release-snapshots/petsc-${petsc_version}.tar.gz"
-
-echo "Downloading PETSc ${petsc_version} release tarball..."
-echo "    $url -> $archive"
-
-rm -f "$archive"
-rm -rf "$srcdir"
-
-curl -LsS "$url" -o "$archive"
+zipfile="$workpath/petsc.zip"
+url="https://osf.io/download/p5vxq/"
+echo "Downloading PETSc archive from OSF..."
+echo "    $url -> $zipfile"
+sleep 1
+curl -LsS "$url" > "$zipfile"
 
 current_step="Decompressing PETSc archive"
 echo "Decompressing..."
-tar -xzf "$archive" -C "$install_base"
-rm -f "$archive"
-
-# PETSc release tarballs extract into a versioned source directory.
-# Use that extracted directory as PETSC_DIR.
-workpath="$srcdir"
-export PETSC_DIR="$workpath"
-
-echo "PETSC_DIR  = $PETSC_DIR"
-echo "PETSC_ARCH = $PETSC_ARCH"
+unzip -qq "$zipfile" -d "$workpath"
+rm "$zipfile"
 
 # -----------------------------------------------------------------------------
 # 4. Determine platform-specific configure flags
@@ -184,19 +161,19 @@ cflags=""
 # ---- Linux special cases ----------------------------------------------------
 if [[ "$OSTYPE" == "linux"* ]]; then
 
-    host="$(hostname -f 2>/dev/null || hostname)"
+    host=$(hostname -f 2>/dev/null)
 
     # Snellius HPC cluster: use the cluster's MPI (loaded via module)
     if [[ "$host" == *"snellius"* ]]; then
         echo "    Detected Snellius cluster — using system MPI"
         mpi_flag=""
 
-    # Habrok cluster: keep default behavior and download both MPI and BLAS/LAPACK.
     elif [[ "$host" == *"hpc.rug.nl" ]]; then
-        echo "    Detected Habrok cluster — downloading BLAS and MPI"
+        echo "    Detected Habrok cluster - downloading BLAS and MPI"
 
-    # Fedora / RHEL / Rocky: system packages often provide MPI and BLAS/LAPACK.
-    # Only skip MPI download if mpicc is actually available on PATH.
+    # Fedora / RHEL / Rocky: system packages may provide MPI and BLAS/LAPACK.
+    # Only skip downloads if the tools are actually on PATH (some RHEL systems
+    # install MPI via RPM but require "module load" to make mpicc visible).
     elif [[ -f "/etc/fedora-release" || -f "/etc/redhat-release" ]]; then
         echo "    Detected Fedora/RHEL"
         if command -v mpicc >/dev/null 2>&1; then
@@ -206,19 +183,20 @@ if [[ "$OSTYPE" == "linux"* ]]; then
             echo "    mpicc not in PATH — will download MPICH"
         fi
         blas_flag=""
-
-        # RHEL/Rocky toolchains may enable warnings that break sundials2 or
-        # PETSc configure tests. Suppress the problematic ones.
+        # RHEL 9+ / Rocky 9+ GCC enables -Werror=format-security by default,
+        # which breaks sundials 2.5. LTO type-mismatch warnings also cause
+        # PETSc's library probe to fail. Suppress both.
         cflags="-fPIC -Wno-error=format-security -Wno-lto-type-mismatch -Wno-stringop-overflow"
 
-    # Generic Linux: if mpicc is available, prefer system MPI over download.
-    elif command -v mpicc >/dev/null 2>&1; then
+
+    # Generic Linux: if mpicc is available, prefer system MPI over download
+    elif [[ -n "$mpi_flag" ]] && command -v mpicc >/dev/null 2>&1; then
         echo "    Found system MPI ($(which mpicc)) — skipping mpich download"
         mpi_flag=""
     fi
 fi
 
-# ---- macOS ------------------------------------------------------------------
+# ---- macOS -------------------------------------------------------------------
 if [[ "$OSTYPE" == "darwin"* ]]; then
 
     # Verify Xcode Command Line Tools are installed (provides system headers)
@@ -231,7 +209,7 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
     # Set SDKROOT so the compiler can find macOS system headers.
     # Required on Catalina+ where headers are no longer in /usr/include.
     export SDKROOT
-    SDKROOT="$(xcrun --show-sdk-path)"
+    SDKROOT=$(xcrun --show-sdk-path)
     echo "    SDKROOT = $SDKROOT"
 
     # Use Homebrew's MPI if available (both Intel and Apple Silicon paths)
@@ -241,13 +219,13 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
     else
         echo "WARNING: mpicc not found. Install MPI via Homebrew:"
         echo "    brew install open-mpi"
-        echo "Falling back to --download-mpich"
+        echo "Falling back to --download-mpich (may fail on Apple Silicon)"
     fi
 
     # macOS provides Accelerate framework with BLAS/LAPACK; no download needed
     blas_flag=""
 
-    # Suppress deprecated linker warnings that can break PETSc configure checks.
+    # Suppress deprecated linker warnings that break PETSc configure checks.
     # macOS 13+ / Xcode 15+ deprecated -bind_at_load and -multiply_defined;
     # macOS 26+ / clang 17+ treats these warnings as errors in PETSc's
     # configure runtime tests (checkStdC). The -Wl,-w flag suppresses all
@@ -260,7 +238,7 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
     else
         default_brew_prefix="/usr/local"
     fi
-    brew_prefix="$(brew --prefix 2>/dev/null || echo "$default_brew_prefix")"
+    brew_prefix=$(brew --prefix 2>/dev/null || echo "$default_brew_prefix")
     ldflags="-L${brew_prefix}/lib -Wl,-w"
 fi
 
@@ -276,19 +254,20 @@ fi
 # -----------------------------------------------------------------------------
 # Key flags:
 #   --with-fc=0   : disable Fortran (SPIDER does not use Fortran)
-#   --with-cxx=0  : disable C++ (SPIDER is pure C)
+#   --with-cxx=0  : disable C++ (SPIDER is pure C; also avoids clang 17+
+#                    errors in PETSc 3.19's CUDA/CUPM template headers)
 #   --download-sundials2 : required by SPIDER for ODE integration
 #   --COPTFLAGS   : optimization flags for the C compiler
 current_step="Configuring PETSc (./configure)"
 
 echo ""
 echo "Configuring PETSc..."
-echo "    MPI:     ${mpi_flag:-system}"
-echo "    BLAS:    ${blas_flag:-system}"
-echo "    CFLAGS:  ${cflags:-<none>}"
+echo "    MPI:    ${mpi_flag:-system}"
+echo "    BLAS:   ${blas_flag:-system}"
+echo "    CFLAGS: ${cflags:-<none>}"
 echo "    LDFLAGS: ${ldflags:-<none>}"
 
-olddir="$(pwd)"
+olddir=$(pwd)
 cd "$workpath"
 
 ./configure \
@@ -312,7 +291,7 @@ ncpu=4
 
 echo ""
 echo "Building PETSc with $ncpu CPUs..."
-make PETSC_DIR="$PETSC_DIR" PETSC_ARCH="$PETSC_ARCH" -j "$ncpu" all
+make PETSC_DIR="$PETSC_DIR" PETSC_ARCH="$PETSC_ARCH" -j $ncpu all
 
 # -----------------------------------------------------------------------------
 # 7. Run PETSc self-tests
