@@ -13,7 +13,9 @@ nav:
       - Installation: How-to/installation.md
 
   - Explanations:
-      - Model overview: Explanations/model.md
+      - Model overview:
+        - Thermodynamics: Explanations/basic_thermodynamics.md
+        - Conservation of chemical species: Explanations/transport.md
 
   - Reference:
       - Publications: Reference/publications.md
