@@ -16,6 +16,9 @@ nav:
         - Quadruple precision: How-to/quadruple_installation.md
       - Testing: How-to/test.md
 
+  - Tutorials:
+      - First run: Tutorials/first_run.md
+
   - Explanations:
       - Model overview:
         - Thermodynamics: Explanations/basic_thermodynamics.md
