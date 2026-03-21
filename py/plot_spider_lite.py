@@ -482,7 +482,11 @@ def figure_interior(indir="output", time=None):
     labels = ("{:.2e}".format(time) for time in myjson_o.time_l)
     axs[1][1].legend(handles, labels, ncol=2, title="Time (yrs)")
 
-    fig.savefig("interior.pdf")
+    # create output directory if it does not exist
+    os.makedirs("plots", exist_ok=True)
+
+    # save figure in plots directory
+    fig.savefig(os.path.join("plots", "interior.pdf"))
 
 
 # ===================================================================
