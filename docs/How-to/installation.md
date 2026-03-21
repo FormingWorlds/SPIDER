@@ -72,6 +72,9 @@ To ensure you have everything installed, run:
 
 ### 1. Create a Conda environment [optional]
 
+!!! warning "Python version"
+    PETSc requires Python <= 3.12. If you do not make use of Conda, make sure your active environment uses a compatible version.
+
 If you use Conda, it is recommended to build and run SPIDER inside a dedicated environment. This keeps the Python dependencies for SPIDER and optional tools such as SciATH separate from your base environment.
 
 Create and activate a Python 3.12 environment:
@@ -80,9 +83,6 @@ Create and activate a Python 3.12 environment:
 conda create -n spider python=3.12
 conda activate spider
 ``` 
-
-!!! Note
-    This Conda environment manages Python packages only. SPIDER itself is compiled with make, and PETSc is built by `./tools/get_spider.sh`.
 
 ### 2. Clone SPIDER
 
