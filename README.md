@@ -2,7 +2,7 @@
 **Simulating Planetary Interior Dynamics with Extreme Rheology**
 
 <p align="center">
-  <img src="assets/spider.png" style="max-width:40%; height:auto;" alt="SPIDER logo">
+  <img src="docs/assets/spider.png" style="max-width:40%; height:auto;" alt="SPIDER logo">
 </p>
 
 <p align="center">
