@@ -46,3 +46,19 @@ jobs:
       with:
         name: spider-sciath-test-dir
         path: test_dir
+
+  installer-smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Python requirements
+        run: pip install -r py/requirements.txt
+      - name: Run installer
+        run: ./tools/get_spider.sh
+      - name: Test with SciATH
+        run: |
+          cd tests && git clone https://github.com/sciath/sciath --depth=1 && cd -
+          export PYTHONPATH=$PYTHONPATH:$PWD/tests/sciath
+          mkdir -p test_dir && cd test_dir
+          python -m sciath -d -w pth.conf
+          python -m sciath -f -w pth.conf ../tests/tests.yml
