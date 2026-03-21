@@ -20,28 +20,6 @@ $$J_q = -\rho C_p \kappa \left( \frac{\partial T}{\partial r} \right)_S - \rho C
 
 where $\kappa$ is thermal diffusivity (conduction) and $\kappa_{\rm h}$ is eddy diffusivity (convection).
 
-The effective convective diffusivity is:
-
-$$\kappa_{\rm conv} = \begin{cases}
-  0 & \Delta(\delta_z T)_S \leq 0 \\
-  v_{\rm vis}l & 0 < {Re}_{\rm loc} < 9/8 \\
-  v_{\rm invis}l &  9/8 \leq { Re}_{\rm loc}
-\end{cases}$$
-
-Convective velocities are given by:
-
-$$v_{\rm vis} = \frac{\alpha |g| l^3}{18\nu}  \Delta(\delta_z T)_S$$
-
-$$v_{\rm invis} = \sqrt{\frac{\alpha |g| l^2}{16}  \Delta(\delta_z T)_S}$$
-
-To remain consistent with the entropy-pressure formulation, we rewrite in terms of entropy gradients:
-
-$$\Delta (\delta_r T)_S = \frac{T}{C_p} \frac{dS}{dr}$$
-
-$$J_q =-\rho C_p \kappa \left( \frac{\partial T}{\partial P}\right)_S \frac{dP}{dr} - \rho \kappa_{\rm h} T \frac{dS}{dr}$$
-
-## Mixing Length Theory
-
 The heat-transport diffusivity is a piecewise function depending on the heat-transport regime:
 
 $$\kappa_h= \begin{cases}
@@ -55,6 +33,20 @@ In either regime, the appropriate diffusivity is:
 $$\kappa_{\rm conv} \sim v_{\rm conv} l$$
 
 where $l$ is the convective mixing length.
+
+To remain consistent with the entropy-pressure formulation, we rewrite in terms of entropy gradients:
+
+$$\Delta (\delta_r T)_S = \frac{T}{C_p} \frac{dS}{dr}$$
+
+$$J_q =-\rho C_p \kappa \left( \frac{\partial T}{\partial P}\right)_S \frac{dP}{dr} - \rho \kappa_{\rm h} T \frac{dS}{dr}$$
+
+## Velocity scalings
+
+Convective velocities are given by:
+
+$$v_{\rm vis} = \frac{\alpha |g| l^3}{18\nu}  \Delta(\delta_z T)_S$$
+
+$$v_{\rm invis} = \sqrt{\frac{\alpha |g| l^2}{16}  \Delta(\delta_z T)_S}$$
 
 ### Viscous scaling
 
