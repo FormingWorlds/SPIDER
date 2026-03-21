@@ -6,7 +6,7 @@
 # Downloads PETSc 3.19.0 from OSF and builds it with sundials2 support.
 # SPIDER is a pure C code, so C++ and Fortran compilers are disabled.
 #
-# This script is intended to live inside the SPIDER repository:
+# This script lives inside the SPIDER repository:
 #
 #   SPIDER/
 #   ├── tools/
