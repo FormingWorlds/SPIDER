@@ -8,14 +8,18 @@ copyright: '© 2023-2026 <a href="https://formingworlds.space">Forming Worlds La
 nav:
   - Home: 
     - About: index.md
+    - Getting started: getting_started.md
 
   - How-to guides:
-      - Installation: How-to/installation.md
+      - Installation: 
+        - Quick installation: How-to/installation.md
+        - Quadruple precision: How-to/quadruple_installation.md
+      - Testing: How-to/test.md
 
   - Explanations:
       - Model overview:
         - Thermodynamics: Explanations/basic_thermodynamics.md
-        - Conservation of chemical species: Explanations/transport.md
+        - Mass conservation and energy transport: Explanations/transport.md
 
   - Reference:
       - Publications: Reference/publications.md
@@ -93,6 +97,7 @@ markdown_extensions:
   - pymdownx.extra
   - pymdownx.arithmatex:
       generic: true
+  - pymdownx.superfences
   - pymdownx.tabbed:
       alternate_style: true
   - pymdownx.details
