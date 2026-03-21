@@ -445,7 +445,7 @@ def set_xaxis_from_kwargs(ax, myjson_o=None, **kwargs):
         ax.set_xlim(np.min(xticks), np.max(xticks))
         ax.invert_xaxis()
         ax.xaxis.set_major_locator(ticker.FixedLocator(xticks))
-        ax.set_xlabel("Melt fraction (\%)")
+        ax.set_xlabel(r"Melt fraction (%)")
 
 
 # ====================================================================
