@@ -15,6 +15,7 @@ nav:
         - Quick installation: How-to/installation.md
         - Quadruple precision: How-to/quadruple_installation.md
       - Testing: How-to/test.md
+      - External mesh input: How-to/external_mesh_input.md
 
   - Tutorials:
       - First run: Tutorials/first_run.md
@@ -23,6 +24,15 @@ nav:
       - Model overview:
         - Thermodynamics: Explanations/basic_thermodynamics.md
         - Mass conservation and energy transport: Explanations/transport.md
+        - Material properties: Explanations/material_properties.md
+        - Mass coordinates: Explanations/mass_coordinates.md
+        - Parameterised fluxes: Explanations/parameterised_fluxes.md
+        - Phase separation and thermal evolution (Abe 1993): Explanations/abe1993.md
+        - Internal heating: Explanations/internal_heating.md
+        - Atmosphere: Explanations/atmosphere.md
+        - Boundary conditions: Explanations/boundary_conditions.md
+        - Hybrid equation of state: Explanations/hybrid_eos.md
+        - Toy model and numerical schemes: Explanations/toy_model.md
 
   - Reference:
       - Publications: Reference/publications.md
