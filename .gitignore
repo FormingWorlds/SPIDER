@@ -52,7 +52,7 @@ verification/
 *.toc
 
 # petsc directory 
-petsc-*/
+petsc*/
 
 # site 
 site/
