@@ -72,7 +72,11 @@ portable_realpath() {
 }
 
 portable_abspath() {
-    python3 -c "import os,sys; print(os.path.abspath(sys.argv[1]))" "$1"
+    if command -v realpath >/dev/null 2>&1; then
+        realpath -m "$1" 2>/dev/null || python3 -c "import os,sys; print(os.path.abspath(sys.argv[1]))" "$1"
+    else
+        python3 -c "import os,sys; print(os.path.abspath(sys.argv[1]))" "$1"
+    fi
 }
 
 # -----------------------------------------------------------------------------
@@ -136,6 +140,10 @@ on_error() {
     console " Troubleshooting:"
 
     case "$current_step" in
+        *"required tools"*)
+            console "   - Install the missing prerequisite and re-run the script"
+            console "   - On minimal HPC/login nodes, load any needed modules first"
+            ;;
         *"PETSc"*)
             console "   - Check the PETSc installer output above for errors"
             console "   - Re-run ./tools/get_petsc.sh manually if needed"
@@ -179,7 +187,26 @@ else
 fi
 
 # -----------------------------------------------------------------------------
-# 2. Locate SPIDER checkout to build
+# 2. Verify required tools are available
+# -----------------------------------------------------------------------------
+current_step="Verifying required tools"
+
+for cmd in make; do
+    if ! command -v "$cmd" >/dev/null 2>&1; then
+        echo "ERROR: Required command '$cmd' not found in PATH." >&2
+        exit 1
+    fi
+done
+
+# portable_abspath / portable_realpath need either realpath or python3
+if ! command -v realpath >/dev/null 2>&1 && ! command -v python3 >/dev/null 2>&1; then
+    echo "ERROR: Neither 'realpath' nor 'python3' was found in PATH." >&2
+    echo "Install one of them so the script can resolve paths correctly." >&2
+    exit 1
+fi
+
+# -----------------------------------------------------------------------------
+# 3. Locate SPIDER checkout to build
 # -----------------------------------------------------------------------------
 current_step="Locating SPIDER checkout"
 
@@ -212,7 +239,7 @@ fi
 workpath="$(portable_realpath "$workpath")"
 
 # -----------------------------------------------------------------------------
-# 3. Set up logging
+# 4. Set up logging
 # -----------------------------------------------------------------------------
 current_step="Setting up logging"
 
@@ -226,7 +253,7 @@ exec >>"$logfile" 2>&1
 announce "Logging SPIDER build to: $logfile"
 
 # -----------------------------------------------------------------------------
-# 4. Locate or bootstrap PETSc installation
+# 5. Locate or bootstrap PETSc installation
 # -----------------------------------------------------------------------------
 current_step="Validating PETSc installation"
 
@@ -258,7 +285,7 @@ announce "PETSC_DIR  = $PETSC_DIR"
 announce "PETSC_ARCH = $PETSC_ARCH"
 
 # -----------------------------------------------------------------------------
-# 5. macOS-specific environment setup
+# 6. macOS-specific environment setup
 # -----------------------------------------------------------------------------
 if [[ "$OSTYPE" == darwin* ]]; then
     if command -v xcrun >/dev/null 2>&1; then
@@ -269,16 +296,9 @@ if [[ "$OSTYPE" == darwin* ]]; then
 fi
 
 # -----------------------------------------------------------------------------
-# 6. Verify build tools are available
+# 7. Verify build tools are available
 # -----------------------------------------------------------------------------
 current_step="Verifying build tools"
-
-for cmd in python3 make; do
-    if ! command -v "$cmd" >/dev/null 2>&1; then
-        echo "ERROR: Required command '$cmd' not found in PATH." >&2
-        exit 1
-    fi
-done
 
 if ! command -v mpicc >/dev/null 2>&1; then
     announce "WARNING: mpicc not found in PATH."
@@ -287,7 +307,7 @@ if ! command -v mpicc >/dev/null 2>&1; then
 fi
 
 # -----------------------------------------------------------------------------
-# 7. Build SPIDER
+# 8. Build SPIDER
 # -----------------------------------------------------------------------------
 current_step="Building SPIDER (make)"
 
@@ -307,7 +327,7 @@ cd "$workpath"
 make -j "$njobs"
 
 # -----------------------------------------------------------------------------
-# 8. Verify the build produced the SPIDER binary
+# 9. Verify the build produced the SPIDER binary
 # -----------------------------------------------------------------------------
 current_step="Verifying SPIDER binary"
 
@@ -323,7 +343,7 @@ announce ""
 announce "Build successful: $spider_version"
 
 # -----------------------------------------------------------------------------
-# 9. Done
+# 10. Done
 # -----------------------------------------------------------------------------
 cd "$olddir"
 
