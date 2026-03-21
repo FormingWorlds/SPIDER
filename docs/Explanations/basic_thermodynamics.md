@@ -105,7 +105,7 @@ $$
 \tag{10}\label{eq:DM62_ch3_eq25}
 $$
 
-### Quoted from [^cite-DM62]
+**Quoted from [^cite-DM62]**
 
 > “It is clear that the difference between $\vec{J}_q$ and $\vec{J}_q^\prime$ (Eq. $\ref{eq:Jqprime}$) represents a transfer of heat due to diffusion. Therefore the quantity $\vec{J}_q^\prime$ also represents an irreversible heat flow. In fact in diffusing mixtures the concept of heat flow can be defined in different ways. Obviously a different definition of the notion of heat flux leaves all physical results unchanged. But to any particular choice corresponds a special form of the entropy production $\sigma$. It is a matter of expediency which choice is the most suitable in a particular application of the theory. The freedom of defining the heat flow in various ways, of which the possibility was indicated here in the framework of a macroscopic treatment, exists also in the microscopic theories of transport phenomena in mixtures.”
 
