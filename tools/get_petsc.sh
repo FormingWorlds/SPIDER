@@ -50,8 +50,6 @@ set -euo pipefail
 # -----------------------------------------------------------------------------
 # Console stream setup
 # -----------------------------------------------------------------------------
-# Keep a handle to the terminal when possible so we can show concise progress
-# messages there while redirecting the noisy command output to a log file.
 if tty -s 2>/dev/null && [[ -w /dev/tty ]]; then
     exec 3>/dev/tty
     exec 4>/dev/tty
@@ -106,7 +104,7 @@ url="https://osf.io/download/p5vxq/"
 logfile=""
 
 on_error() {
-    local rc=$?  # must be first line — captures the failing command's exit code
+    local rc=$?
 
     console ""
     console "========================================"
@@ -122,6 +120,10 @@ on_error() {
     console " Troubleshooting:"
 
     case "$current_step" in
+        *"required tools"*)
+            console "   - Install the missing prerequisite and re-run the script"
+            console "   - On minimal HPC/login nodes, load any needed modules first"
+            ;;
         *"Download"*)
             console "   - Check your internet connection"
             console "   - Verify the OSF URL is accessible: $url"
@@ -170,7 +172,27 @@ else
 fi
 
 # -----------------------------------------------------------------------------
-# 2. Determine SPIDER repo root and target PETSc directory
+# 2. Verify required tools are available
+# -----------------------------------------------------------------------------
+current_step="Verifying required tools"
+
+for cmd in curl unzip make; do
+    if ! command -v "$cmd" >/dev/null 2>&1; then
+        echo "ERROR: Required command '$cmd' not found in PATH." >&2
+        echo "Install it first and re-run this script." >&2
+        exit 1
+    fi
+done
+
+# realpath is optional, but python3 is required as the fallback
+if ! command -v realpath >/dev/null 2>&1 && ! command -v python3 >/dev/null 2>&1; then
+    echo "ERROR: Neither 'realpath' nor 'python3' was found in PATH." >&2
+    echo "Install one of them so the script can resolve paths correctly." >&2
+    exit 1
+fi
+
+# -----------------------------------------------------------------------------
+# 3. Determine SPIDER repo root and target PETSc directory
 # -----------------------------------------------------------------------------
 current_step="Setting up working directory"
 
@@ -188,7 +210,7 @@ fi
 export PETSC_DIR="$workpath"
 
 # -----------------------------------------------------------------------------
-# 3. Set up logging
+# 4. Set up logging
 # -----------------------------------------------------------------------------
 current_step="Setting up logging"
 
@@ -197,8 +219,6 @@ mkdir -p "$log_dir"
 timestamp="$(date +%Y%m%d-%H%M%S)"
 logfile="$log_dir/get_petsc-$timestamp.log"
 
-# Redirect normal stdout/stderr to the logfile. High-level user messages still
-# go to the terminal via fd 3.
 exec >>"$logfile" 2>&1
 
 announce "Logging PETSc build to: $logfile"
@@ -211,7 +231,7 @@ rm -rf "$workpath"
 mkdir -p "$workpath"
 
 # -----------------------------------------------------------------------------
-# 4. Download PETSc 3.19.0 from OSF
+# 5. Download PETSc 3.19.0 from OSF
 # -----------------------------------------------------------------------------
 current_step="Downloading PETSc archive from OSF"
 
@@ -227,7 +247,7 @@ unzip -qq "$zipfile" -d "$workpath"
 rm -f "$zipfile"
 
 # -----------------------------------------------------------------------------
-# 5. Determine platform-specific configure flags
+# 6. Determine platform-specific configure flags
 # -----------------------------------------------------------------------------
 current_step="Determining platform-specific flags"
 
@@ -301,7 +321,7 @@ if [[ -z "$mpi_flag" ]] && ! command -v mpirun >/dev/null 2>&1; then
 fi
 
 # -----------------------------------------------------------------------------
-# 6. Configure PETSc
+# 7. Configure PETSc
 # -----------------------------------------------------------------------------
 current_step="Configuring PETSc (./configure)"
 
@@ -339,7 +359,7 @@ fi
 ./configure "${configure_args[@]}"
 
 # -----------------------------------------------------------------------------
-# 7. Build PETSc
+# 8. Build PETSc
 # -----------------------------------------------------------------------------
 current_step="Building PETSc (make all)"
 
@@ -349,7 +369,7 @@ announce "Building PETSc with $ncpu CPUs..."
 make PETSC_DIR="$PETSC_DIR" PETSC_ARCH="$PETSC_ARCH" -j "$ncpu" all
 
 # -----------------------------------------------------------------------------
-# 8. Run PETSc self-tests
+# 9. Run PETSc self-tests
 # -----------------------------------------------------------------------------
 current_step="Testing PETSc (make check)"
 
@@ -358,7 +378,7 @@ announce "Testing PETSc..."
 make PETSC_DIR="$PETSC_DIR" PETSC_ARCH="$PETSC_ARCH" check
 
 # -----------------------------------------------------------------------------
-# 9. Done
+# 10. Done
 # -----------------------------------------------------------------------------
 cd "$olddir"
 
