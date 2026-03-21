@@ -8,12 +8,16 @@
 Here is the quickest path to getting started:
 
 1. **Install SPIDER**  
-   Follow the installation steps and download necessary data. <br>
+   Follow the installation steps. <br>
    → [Installation guide](How-to/installation.md)
 
 2. **Test SPIDER** <br>
     Test the basic functionality of SPIDER. <br>
     → [Test guide](How-to/test.md)
+
+3. **Run your first model** <br>
+    Follow a minimal example run and generate a quick plot. <br>
+    → [First run tutorial](Tutorials/first_run.md)
 
 ---
 
@@ -25,15 +29,21 @@ Here is the quickest path to getting started:
 
     [Go to installation guide](How-to/installation.md)
 
+-   :material-test-tube: **Test SPIDER**
 
--   :material-rocket-launch: **Test SPIDER**
+    [Go to testing guide](How-to/test.md)
 
-    [Go to usage](How-to/test.md)
+-   :material-rocket-launch: **Run SPIDER**
+
+    [Go to tutorials](Tutorials/first_run.md)
 
 -   :material-book-open-variant: **Understand the model**
 
     [Go to model overview](Explanations/basic_thermodynamics.md)
 
+-   :material-bookshelf: **Check SPIDER publications**
+
+    [Go to publications](Reference/publications.md)
 
 -   :material-github: **Contribute / browse code**
 
