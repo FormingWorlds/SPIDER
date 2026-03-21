@@ -29,16 +29,39 @@
 #   ./tools/get_spider.sh                    # build the current checkout in place
 #   ./tools/get_spider.sh /path/to/SPIDER    # build a different cloned checkout
 #
+# Logs:
+#   Full build logs are written to:
+#     <SPIDER checkout>/logs/get_spider-YYYYmmdd-HHMMSS.log
+#
 # The script is suitable for standalone SPIDER installs, and still behaves
 # nicely inside a PROTEUS/SPIDER checkout by installing PETSc in PROTEUS/petsc.
 #
 # =============================================================================
 
-set -e
+set -euo pipefail
 
 # -----------------------------------------------------------------------------
-# Portable path helpers: macOS <13 (Catalina through Monterey) does not ship
-# GNU coreutils realpath. Fall back to python3.
+# Console stream setup
+# -----------------------------------------------------------------------------
+if tty -s 2>/dev/null && [[ -w /dev/tty ]]; then
+    exec 3>/dev/tty
+    exec 4>/dev/tty
+else
+    exec 3>&1
+    exec 4>&2
+fi
+
+console() {
+    printf '%s\n' "$*" >&3
+}
+
+announce() {
+    printf '%s\n' "$*" >&3
+    printf '%s\n' "$*"
+}
+
+# -----------------------------------------------------------------------------
+# Portable path helpers
 # -----------------------------------------------------------------------------
 portable_realpath() {
     if command -v realpath >/dev/null 2>&1; then
@@ -94,42 +117,50 @@ petsc_built_ok() {
 # Error handling: report which step failed on any non-zero exit
 # -----------------------------------------------------------------------------
 current_step="initialising"
+logfile=""
+
 on_error() {
-    local rc=$?  # must be first line — captures the failing command's exit code
-    echo ""
-    echo "========================================"
-    echo " ERROR: SPIDER installation failed"
-    echo ""
-    echo " Step that failed: $current_step"
-    echo " Command:          $BASH_COMMAND"
-    echo " Exit code:        $rc"
-    echo ""
-    echo " Troubleshooting:"
+    local rc=$?
+
+    console ""
+    console "========================================"
+    console " ERROR: SPIDER installation failed"
+    console ""
+    console " Step that failed: $current_step"
+    console " Command:          $BASH_COMMAND"
+    console " Exit code:        $rc"
+    if [[ -n "${logfile:-}" ]]; then
+        console " Log file:         $logfile"
+    fi
+    console ""
+    console " Troubleshooting:"
+
     case "$current_step" in
         *"PETSc"*)
-            echo "   - Check the PETSc installer output above for errors"
-            echo "   - Try running ./tools/get_petsc.sh manually first"
+            console "   - Check the PETSc installer output above for errors"
+            console "   - Re-run ./tools/get_petsc.sh manually if needed"
             ;;
         *"Building"*)
-            echo "   - Check the compiler output above for errors"
-            echo "   - Verify mpicc is working: mpicc --version"
-            echo "   - Verify PETSc is intact: ls \$PETSC_DIR/\$PETSC_ARCH/lib/libpetsc.*"
-            echo "   - On macOS: ensure SDKROOT is set (xcrun --show-sdk-path)"
+            console "   - Check the compiler output in the log file"
+            console "   - Verify mpicc is working: mpicc --version"
+            console "   - Verify PETSc is intact: ls \$PETSC_DIR/\$PETSC_ARCH/lib/libpetsc.*"
+            console "   - On macOS: ensure SDKROOT is set (xcrun --show-sdk-path)"
             ;;
         *"Verif"*)
-            echo "   - The build completed without make errors but no binary was produced"
-            echo "   - This usually indicates a linker failure that was suppressed"
-            echo "   - Try rebuilding with verbose output: make V=1"
+            console "   - The build completed without make errors but no binary was produced"
+            console "   - This usually indicates a linker failure that was suppressed"
+            console "   - Try rebuilding with verbose output: make V=1"
             ;;
         *)
-            echo "   - See your platform-specific troubleshooting notes"
+            console "   - Review the log file for the failing command"
             ;;
     esac
-    echo ""
-    echo " PETSc environment used:"
-    echo "   PETSC_DIR  = ${PETSC_DIR:-<not set>}"
-    echo "   PETSC_ARCH = ${PETSC_ARCH:-<not set>}"
-    echo "========================================"
+
+    console ""
+    console " PETSc environment used:"
+    console "   PETSC_DIR  = ${PETSC_DIR:-<not set>}"
+    console "   PETSC_ARCH = ${PETSC_ARCH:-<not set>}"
+    console "========================================"
 }
 trap on_error ERR
 
@@ -143,7 +174,7 @@ if [[ "$OSTYPE" == linux* ]]; then
 elif [[ "$OSTYPE" == darwin* ]]; then
     PETSC_ARCH=arch-darwin-c-opt
 else
-    echo "ERROR: Unsupported OS type '$OSTYPE'. Only Linux and macOS are supported."
+    echo "ERROR: Unsupported OS type '$OSTYPE'. Only Linux and macOS are supported." >&2
     exit 1
 fi
 
@@ -152,11 +183,9 @@ fi
 # -----------------------------------------------------------------------------
 current_step="Locating SPIDER checkout"
 
-# Derive the current repository root from this script's location.
 script_dir="$(cd "$(dirname "$0")" && pwd)"
 default_repo_root="$(dirname "$script_dir")"
 
-# Default build target is the current checkout; override via first argument.
 if [[ -n "${1:-}" ]]; then
     workpath="$(portable_abspath "$1")"
 else
@@ -164,137 +193,146 @@ else
 fi
 
 if [[ ! -d "$workpath" ]]; then
-    echo "ERROR: SPIDER directory not found at $workpath."
+    echo "ERROR: SPIDER directory not found at $workpath." >&2
     exit 1
 fi
 
 if [[ ! -f "$workpath/Makefile" ]]; then
-    echo "ERROR: No Makefile found in $workpath."
-    echo "Expected an already-cloned SPIDER checkout."
+    echo "ERROR: No Makefile found in $workpath." >&2
+    echo "Expected an already-cloned SPIDER checkout." >&2
     exit 1
 fi
 
 if [[ ! -x "$workpath/tools/get_petsc.sh" ]]; then
-    echo "ERROR: Could not find executable PETSc installer at $workpath/tools/get_petsc.sh."
-    echo "Ensure this script lives inside the SPIDER checkout."
+    echo "ERROR: Could not find executable PETSc installer at $workpath/tools/get_petsc.sh." >&2
+    echo "Ensure this script lives inside the SPIDER checkout." >&2
     exit 1
 fi
 
 workpath="$(portable_realpath "$workpath")"
 
 # -----------------------------------------------------------------------------
-# 3. Locate or bootstrap PETSc installation
+# 3. Set up logging
+# -----------------------------------------------------------------------------
+current_step="Setting up logging"
+
+log_dir="$workpath/logs"
+mkdir -p "$log_dir"
+timestamp="$(date +%Y%m%d-%H%M%S)"
+logfile="$log_dir/get_spider-$timestamp.log"
+
+exec >>"$logfile" 2>&1
+
+announce "Logging SPIDER build to: $logfile"
+
+# -----------------------------------------------------------------------------
+# 4. Locate or bootstrap PETSc installation
 # -----------------------------------------------------------------------------
 current_step="Validating PETSc installation"
 
-# Honour PETSC_DIR if the user already exported it; otherwise derive a sensible
-# default from the repository layout.
 if [[ -n "${PETSC_DIR:-}" ]]; then
     petsc_path="$PETSC_DIR"
 else
     petsc_path="$(default_petsc_path_for_repo "$workpath")"
 fi
 
-# If PETSc is missing or incomplete, install it automatically first.
 if ! petsc_built_ok "$petsc_path" "$PETSC_ARCH"; then
     current_step="Installing PETSc via tools/get_petsc.sh"
-    echo "PETSc not found (or incomplete) at $petsc_path"
-    echo "Bootstrapping PETSc first..."
+    announce "PETSc not found (or incomplete) at $petsc_path"
+    announce "Bootstrapping PETSc first..."
+    announce "The PETSc installer will create its own log file."
     "$workpath/tools/get_petsc.sh" "$petsc_path"
     current_step="Validating PETSc installation"
 fi
 
 if ! petsc_built_ok "$petsc_path" "$PETSC_ARCH"; then
-    echo "ERROR: PETSc library/configuration files not found after installation."
-    echo "Checked: $petsc_path"
+    echo "ERROR: PETSc library/configuration files not found after installation." >&2
+    echo "Checked: $petsc_path" >&2
     exit 1
 fi
 
 export PETSC_DIR="$(portable_realpath "$petsc_path")"
 export PETSC_ARCH
 
-echo "PETSC_DIR  = $PETSC_DIR"
-echo "PETSC_ARCH = $PETSC_ARCH"
+announce "PETSC_DIR  = $PETSC_DIR"
+announce "PETSC_ARCH = $PETSC_ARCH"
 
 # -----------------------------------------------------------------------------
-# 4. macOS-specific environment setup
+# 5. macOS-specific environment setup
 # -----------------------------------------------------------------------------
 if [[ "$OSTYPE" == darwin* ]]; then
-    # Set SDKROOT so the compiler can find macOS system headers.
-    # Required on Catalina+ where headers are no longer in /usr/include.
     if command -v xcrun >/dev/null 2>&1; then
         export SDKROOT
-        SDKROOT=$(xcrun --show-sdk-path)
-        echo "SDKROOT    = $SDKROOT"
+        SDKROOT="$(xcrun --show-sdk-path)"
+        announce "SDKROOT    = $SDKROOT"
     fi
 fi
 
 # -----------------------------------------------------------------------------
-# 5. Verify build tools are available
+# 6. Verify build tools are available
 # -----------------------------------------------------------------------------
 current_step="Verifying build tools"
 
 for cmd in python3 make; do
     if ! command -v "$cmd" >/dev/null 2>&1; then
-        echo "ERROR: Required command '$cmd' not found in PATH."
+        echo "ERROR: Required command '$cmd' not found in PATH." >&2
         exit 1
     fi
 done
 
 if ! command -v mpicc >/dev/null 2>&1; then
-    echo "WARNING: mpicc not found in PATH."
-    echo "         This is fine if PETSc was built with downloaded MPICH and the"
-    echo "         wrapper is available through PETSc's build rules during make."
+    announce "WARNING: mpicc not found in PATH."
+    announce "         This is fine if PETSc was built with downloaded MPICH and the"
+    announce "         wrapper is available through PETSc's build rules during make."
 fi
 
 # -----------------------------------------------------------------------------
-# 6. Build SPIDER
+# 7. Build SPIDER
 # -----------------------------------------------------------------------------
 current_step="Building SPIDER (make)"
 
-# Determine number of parallel jobs.
-# Uses nproc (Linux) or sysctl (macOS) to detect available CPU cores.
 if command -v nproc >/dev/null 2>&1; then
-    njobs=$(nproc)
+    njobs="$(nproc)"
 elif command -v sysctl >/dev/null 2>&1; then
-    njobs=$(sysctl -n hw.ncpu)
+    njobs="$(sysctl -n hw.ncpu)"
 else
     njobs=2
 fi
 
-echo ""
-echo "Building SPIDER in $workpath ($njobs parallel jobs)..."
-olddir=$(pwd)
+announce ""
+announce "Building SPIDER in $workpath ($njobs parallel jobs)..."
+olddir="$(pwd)"
 cd "$workpath"
 
 make -j "$njobs"
 
 # -----------------------------------------------------------------------------
-# 7. Verify the build produced the SPIDER binary
+# 8. Verify the build produced the SPIDER binary
 # -----------------------------------------------------------------------------
 current_step="Verifying SPIDER binary"
 
 if [[ ! -x "$workpath/spider" ]]; then
-    echo "ERROR: SPIDER binary not found after build."
-    echo "Check the build output above for compilation errors."
+    echo "ERROR: SPIDER binary not found after build." >&2
+    echo "Check the build output in the log file." >&2
     cd "$olddir"
     exit 1
 fi
 
-spider_version=$("$workpath/spider" --help 2>&1 | head -1 || true)
-echo ""
-echo "Build successful: $spider_version"
+spider_version="$("$workpath/spider" --help 2>&1 | head -1 || true)"
+announce ""
+announce "Build successful: $spider_version"
 
 # -----------------------------------------------------------------------------
-# 8. Done
+# 9. Done
 # -----------------------------------------------------------------------------
 cd "$olddir"
 
-echo ""
-echo "========================================"
-echo " SPIDER installation complete."
-echo ""
-echo " Binary: $(portable_realpath "$workpath/spider")"
-echo " PETSC_DIR  = $PETSC_DIR"
-echo " PETSC_ARCH = $PETSC_ARCH"
-echo "========================================"
+announce ""
+announce "========================================"
+announce " SPIDER installation complete."
+announce ""
+announce " Binary: $(portable_realpath "$workpath/spider")"
+announce " PETSC_DIR  = $PETSC_DIR"
+announce " PETSC_ARCH = $PETSC_ARCH"
+announce " Log file:  $logfile"
+announce "========================================"

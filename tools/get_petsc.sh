@@ -24,6 +24,10 @@
 #   ./tools/get_petsc.sh
 #   ./tools/get_petsc.sh /path/to/petsc
 #
+# Logs:
+#   Full build logs are written to:
+#     <parent of PETSc dir>/logs/get_petsc-YYYYmmdd-HHMMSS.log
+#
 # Supported platforms:
 #   - macOS 10.15 (Catalina) and later, Intel and Apple Silicon
 #   - Linux (Ubuntu, Debian, Fedora/RHEL, HPC clusters)
@@ -42,6 +46,28 @@
 # =============================================================================
 
 set -euo pipefail
+
+# -----------------------------------------------------------------------------
+# Console stream setup
+# -----------------------------------------------------------------------------
+# Keep a handle to the terminal when possible so we can show concise progress
+# messages there while redirecting the noisy command output to a log file.
+if tty -s 2>/dev/null && [[ -w /dev/tty ]]; then
+    exec 3>/dev/tty
+    exec 4>/dev/tty
+else
+    exec 3>&1
+    exec 4>&2
+fi
+
+console() {
+    printf '%s\n' "$*" >&3
+}
+
+announce() {
+    printf '%s\n' "$*" >&3
+    printf '%s\n' "$*"
+}
 
 # -----------------------------------------------------------------------------
 # Portable path helpers
@@ -77,48 +103,55 @@ default_petsc_path_for_repo() {
 # -----------------------------------------------------------------------------
 current_step="initialising"
 url="https://osf.io/download/p5vxq/"
+logfile=""
 
 on_error() {
     local rc=$?  # must be first line — captures the failing command's exit code
-    echo ""
-    echo "========================================"
-    echo " ERROR: PETSc installation failed"
-    echo ""
-    echo " Step that failed: $current_step"
-    echo " Command:          $BASH_COMMAND"
-    echo " Exit code:        $rc"
-    echo ""
-    echo " Troubleshooting:"
+
+    console ""
+    console "========================================"
+    console " ERROR: PETSc installation failed"
+    console ""
+    console " Step that failed: $current_step"
+    console " Command:          $BASH_COMMAND"
+    console " Exit code:        $rc"
+    if [[ -n "${logfile:-}" ]]; then
+        console " Log file:         $logfile"
+    fi
+    console ""
+    console " Troubleshooting:"
+
     case "$current_step" in
         *"Download"*)
-            echo "   - Check your internet connection"
-            echo "   - Verify the OSF URL is accessible: $url"
-            echo "   - Try downloading manually: curl -LsS $url > petsc.zip"
+            console "   - Check your internet connection"
+            console "   - Verify the OSF URL is accessible: $url"
+            console "   - Try downloading manually: curl -fLsS \"$url\" -o petsc.zip"
             ;;
         *"Decompress"*)
-            echo "   - The downloaded archive may be corrupted"
-            echo "   - Delete the PETSc directory and re-run this script"
+            console "   - The downloaded archive may be corrupted"
+            console "   - Delete the PETSc directory and re-run this script"
             ;;
         *"Configure"*)
-            echo "   - Check PETSc configure output above for details"
-            echo "   - On macOS: ensure Xcode CLI tools are installed (xcode-select --install)"
-            echo "   - Verify MPI is installed (mpicc --version)"
+            console "   - Check PETSc configure output in the log file"
+            console "   - On macOS: ensure Xcode CLI tools are installed (xcode-select --install)"
+            console "   - Verify MPI is installed (mpicc --version)"
             ;;
         *"Build"*)
-            echo "   - Check PETSc build output above for compiler errors"
-            echo "   - Ensure your C compiler is working (mpicc --version)"
-            echo "   - On macOS: verify SDKROOT is set (xcrun --show-sdk-path)"
+            console "   - Check PETSc build output in the log file"
+            console "   - Ensure your C compiler is working (mpicc --version)"
+            console "   - On macOS: verify SDKROOT is set (xcrun --show-sdk-path)"
             ;;
         *"Test"*)
-            echo "   - PETSc built but tests failed"
-            echo "   - Check the test output above for details"
-            echo "   - On macOS: check /etc/hosts for localhost entry"
+            console "   - PETSc built but tests failed"
+            console "   - Check the test output in the log file"
+            console "   - On macOS: check /etc/hosts for localhost entry"
             ;;
         *)
-            echo "   - Review the output above for the failing command"
+            console "   - Review the log file for the failing command"
             ;;
     esac
-    echo "========================================"
+
+    console "========================================"
 }
 trap on_error ERR
 
@@ -132,7 +165,7 @@ if [[ "$OSTYPE" == "linux"* ]]; then
 elif [[ "$OSTYPE" == "darwin"* ]]; then
     export PETSC_ARCH=arch-darwin-c-opt
 else
-    echo "ERROR: Unsupported OS type '$OSTYPE'. Only Linux and macOS are supported."
+    echo "ERROR: Unsupported OS type '$OSTYPE'. Only Linux and macOS are supported." >&2
     exit 1
 fi
 
@@ -141,7 +174,6 @@ fi
 # -----------------------------------------------------------------------------
 current_step="Setting up working directory"
 
-# Derive the repo root from this script's location (tools/get_petsc.sh).
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 repo_root="$(dirname "$script_dir")"
 
@@ -154,34 +186,51 @@ else
 fi
 
 export PETSC_DIR="$workpath"
-echo "PETSC_DIR  = $PETSC_DIR"
-echo "PETSC_ARCH = $PETSC_ARCH"
+
+# -----------------------------------------------------------------------------
+# 3. Set up logging
+# -----------------------------------------------------------------------------
+current_step="Setting up logging"
+
+log_dir="$(dirname "$workpath")/logs"
+mkdir -p "$log_dir"
+timestamp="$(date +%Y%m%d-%H%M%S)"
+logfile="$log_dir/get_petsc-$timestamp.log"
+
+# Redirect normal stdout/stderr to the logfile. High-level user messages still
+# go to the terminal via fd 3.
+exec >>"$logfile" 2>&1
+
+announce "Logging PETSc build to: $logfile"
+announce "PETSC_DIR  = $PETSC_DIR"
+announce "PETSC_ARCH = $PETSC_ARCH"
 
 # Clean previous installation
+current_step="Preparing PETSc directory"
 rm -rf "$workpath"
 mkdir -p "$workpath"
 
 # -----------------------------------------------------------------------------
-# 3. Download PETSc 3.19.0 from OSF
+# 4. Download PETSc 3.19.0 from OSF
 # -----------------------------------------------------------------------------
 current_step="Downloading PETSc archive from OSF"
 
 zipfile="$workpath/petsc.zip"
-echo "Downloading PETSc archive from OSF..."
-echo "    $url -> $zipfile"
-curl -LsS "$url" > "$zipfile"
+announce ""
+announce "Downloading PETSc archive from OSF..."
+announce "    $url -> $zipfile"
+curl -fLsS "$url" -o "$zipfile"
 
 current_step="Decompressing PETSc archive"
-echo "Decompressing..."
+announce "Decompressing..."
 unzip -qq "$zipfile" -d "$workpath"
 rm -f "$zipfile"
 
 # -----------------------------------------------------------------------------
-# 4. Determine platform-specific configure flags
+# 5. Determine platform-specific configure flags
 # -----------------------------------------------------------------------------
 current_step="Determining platform-specific flags"
 
-# Defaults assume a generic Linux system without system MPI or BLAS/LAPACK.
 mpi_flag="--download-mpich"
 blas_flag="--download-f2cblaslapack"
 ldflags=""
@@ -191,30 +240,23 @@ cflags=""
 if [[ "$OSTYPE" == "linux"* ]]; then
     host="$(hostname -f 2>/dev/null || hostname)"
 
-    # Snellius HPC cluster: use the cluster's MPI (loaded via module)
     if [[ "$host" == *"snellius"* ]]; then
-        echo "    Detected Snellius cluster — using system MPI"
+        announce "    Detected Snellius cluster — using system MPI"
         mpi_flag=""
-
-    # Habrok / RUG cluster
     elif [[ "$host" == *"hpc.rug.nl" ]]; then
-        echo "    Detected Habrok cluster"
-
-    # Fedora / RHEL / Rocky
+        announce "    Detected Habrok cluster"
     elif [[ -f "/etc/fedora-release" || -f "/etc/redhat-release" ]]; then
-        echo "    Detected Fedora/RHEL"
+        announce "    Detected Fedora/RHEL"
         if command -v mpicc >/dev/null 2>&1; then
-            echo "    Found system MPI ($(command -v mpicc)) — skipping mpich download"
+            announce "    Found system MPI ($(command -v mpicc)) — skipping mpich download"
             mpi_flag=""
         else
-            echo "    mpicc not in PATH — will download MPICH"
+            announce "    mpicc not in PATH — will download MPICH"
         fi
         blas_flag=""
         cflags="-fPIC -Wno-error=format-security -Wno-lto-type-mismatch -Wno-stringop-overflow"
-
-    # Generic Linux
     elif command -v mpicc >/dev/null 2>&1; then
-        echo "    Found system MPI ($(command -v mpicc)) — skipping mpich download"
+        announce "    Found system MPI ($(command -v mpicc)) — skipping mpich download"
         mpi_flag=""
     fi
 fi
@@ -222,22 +264,22 @@ fi
 # ---- macOS ------------------------------------------------------------------
 if [[ "$OSTYPE" == "darwin"* ]]; then
     if ! command -v xcrun >/dev/null 2>&1; then
-        echo "ERROR: xcrun not found. Install Xcode Command Line Tools:"
-        echo "    xcode-select --install"
+        echo "ERROR: xcrun not found. Install Xcode Command Line Tools:" >&2
+        echo "    xcode-select --install" >&2
         exit 1
     fi
 
     export SDKROOT
     SDKROOT="$(xcrun --show-sdk-path)"
-    echo "    SDKROOT = $SDKROOT"
+    announce "    SDKROOT = $SDKROOT"
 
     if command -v mpicc >/dev/null 2>&1; then
-        echo "    Found system MPI ($(command -v mpicc)) — skipping mpich download"
+        announce "    Found system MPI ($(command -v mpicc)) — skipping mpich download"
         mpi_flag=""
     else
-        echo "WARNING: mpicc not found. Install MPI via Homebrew:"
-        echo "    brew install open-mpi"
-        echo "Falling back to --download-mpich"
+        announce "WARNING: mpicc not found. Install MPI via Homebrew:"
+        announce "    brew install open-mpi"
+        announce "Falling back to --download-mpich"
     fi
 
     # macOS provides Accelerate framework with BLAS/LAPACK
@@ -252,73 +294,84 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
     ldflags="-L${brew_prefix}/lib -Wl,-w"
 fi
 
-# Final check: if we skipped mpich download, mpicc/mpirun must be available
 if [[ -z "$mpi_flag" ]] && ! command -v mpirun >/dev/null 2>&1; then
-    echo "ERROR: MPI not found and --download-mpich was disabled."
-    echo "Install MPI first (e.g. 'brew install open-mpi' or 'apt install libopenmpi-dev')."
+    echo "ERROR: MPI not found and --download-mpich was disabled." >&2
+    echo "Install MPI first (e.g. 'brew install open-mpi' or 'apt install libopenmpi-dev')." >&2
     exit 1
 fi
 
 # -----------------------------------------------------------------------------
-# 5. Configure PETSc
+# 6. Configure PETSc
 # -----------------------------------------------------------------------------
 current_step="Configuring PETSc (./configure)"
 
-echo ""
-echo "Configuring PETSc..."
-echo "    MPI:     ${mpi_flag:-system}"
-echo "    BLAS:    ${blas_flag:-system}"
-echo "    CFLAGS:  ${cflags:-<none>}"
-echo "    LDFLAGS: ${ldflags:-<none>}"
+announce ""
+announce "Configuring PETSc..."
+announce "    MPI:     ${mpi_flag:-system}"
+announce "    BLAS:    ${blas_flag:-system}"
+announce "    CFLAGS:  ${cflags:-<none>}"
+announce "    LDFLAGS: ${ldflags:-<none>}"
 
 olddir="$(pwd)"
 cd "$workpath"
 
-./configure \
-    --with-debugging=0 \
-    --with-fc=0 \
-    --with-cxx=0 \
-    --download-sundials2 \
-    --COPTFLAGS="-g -O3" \
-    $mpi_flag \
-    $blas_flag \
-    ${cflags:+"CFLAGS=$cflags"} \
-    ${ldflags:+"LDFLAGS=$ldflags"}
+configure_args=(
+    --with-debugging=0
+    --with-fc=0
+    --with-cxx=0
+    --download-sundials2
+    "--COPTFLAGS=-g -O3"
+)
+
+if [[ -n "$mpi_flag" ]]; then
+    configure_args+=("$mpi_flag")
+fi
+if [[ -n "$blas_flag" ]]; then
+    configure_args+=("$blas_flag")
+fi
+if [[ -n "$cflags" ]]; then
+    configure_args+=("CFLAGS=$cflags")
+fi
+if [[ -n "$ldflags" ]]; then
+    configure_args+=("LDFLAGS=$ldflags")
+fi
+
+./configure "${configure_args[@]}"
 
 # -----------------------------------------------------------------------------
-# 6. Build PETSc
+# 7. Build PETSc
 # -----------------------------------------------------------------------------
 current_step="Building PETSc (make all)"
 
 ncpu=4
-
-echo ""
-echo "Building PETSc with $ncpu CPUs..."
+announce ""
+announce "Building PETSc with $ncpu CPUs..."
 make PETSC_DIR="$PETSC_DIR" PETSC_ARCH="$PETSC_ARCH" -j "$ncpu" all
 
 # -----------------------------------------------------------------------------
-# 7. Run PETSc self-tests
+# 8. Run PETSc self-tests
 # -----------------------------------------------------------------------------
 current_step="Testing PETSc (make check)"
 
-echo ""
-echo "Testing PETSc..."
+announce ""
+announce "Testing PETSc..."
 make PETSC_DIR="$PETSC_DIR" PETSC_ARCH="$PETSC_ARCH" check
 
 # -----------------------------------------------------------------------------
-# 8. Done
+# 9. Done
 # -----------------------------------------------------------------------------
 cd "$olddir"
 
-echo ""
-echo "========================================"
-echo " PETSc installation complete."
-echo ""
-echo " PETSC_DIR  = $PETSC_DIR"
-echo " PETSC_ARCH = $PETSC_ARCH"
-echo ""
-echo " Add these to your shell config if you"
-echo " need to rebuild SPIDER manually:"
-echo "   export PETSC_DIR=$PETSC_DIR"
-echo "   export PETSC_ARCH=$PETSC_ARCH"
-echo "========================================"
+announce ""
+announce "========================================"
+announce " PETSc installation complete."
+announce ""
+announce " PETSC_DIR  = $PETSC_DIR"
+announce " PETSC_ARCH = $PETSC_ARCH"
+announce " Log file:  $logfile"
+announce ""
+announce " Add these to your shell config if you"
+announce " need to rebuild SPIDER manually:"
+announce "   export PETSC_DIR=$PETSC_DIR"
+announce "   export PETSC_ARCH=$PETSC_ARCH"
+announce "========================================"
