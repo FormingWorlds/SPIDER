@@ -81,7 +81,7 @@ ccmake .
 In `ccmake`, set values similar to:
 
 !!! note "Using the ccmake interface"
-    When using the ``ccmake` interface, make sure you type "c" to configure once you have entered these values, then "g" to generate and exit.
+    When using the `ccmake` interface, make sure you type "c" to configure once you have entered these values, then "g" to generate and exit.
 
 ```
 CMAKE_C_COMPILER: gcc
