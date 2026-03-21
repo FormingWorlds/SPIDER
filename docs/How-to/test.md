@@ -74,6 +74,8 @@ The test suite (defined in `tests/tests.yml`) runs several checks:
 | `external_mesh_roundtrip` | Verifies SPIDER accepts external mesh files and produces correct results. |
 | `non_aw_mesh` | Confirms SPIDER works with non-Adams-Williamson density profiles. |
 
+For setup details and file format requirements, see [External Mesh Input](external_mesh_input.md).
+
 Each test runs one or more commands and compares output against expected values with specified tolerances.
 
 ## Common test issues
