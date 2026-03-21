@@ -34,7 +34,7 @@ export PETSC_ARCH=arch-xxx-yyy
 !!! info "What to set for `PETSC_DIR` and `PETSC_ARCH?`"   
     The SPIDER installer automatically reports the `PETSC_ARCH` and `PETSC_DIR` that PETSc was built against. To see what you need to set for these variables, run the installer again:
     ```bash
-    .tools/get_spider.sh
+    ./tools/get_spider.sh
     ```
 
 ## 3. Test
