@@ -36,47 +36,52 @@ def format_entry(entry):
     parts = [authors, f"*{title}*", journal, address, year]
     return ", ".join(p for p in parts if p) + "."
 
-with open(BIB_FILE, "r", encoding="utf-8") as f:
-    bib_db = bibtexparser.load(f)
+def main():
+    with open(BIB_FILE, "r", encoding="utf-8") as f:
+        bib_db = bibtexparser.load(f)
 
-bib_map = {e["ID"]: format_entry(e) for e in bib_db.entries if "ID" in e}
+    bib_map = {e["ID"]: format_entry(e) for e in bib_db.entries if "ID" in e}
 
-for md_file in DOCS_DIR.rglob("*.md"):
-    text = md_file.read_text(encoding="utf-8")
+    for md_file in DOCS_DIR.rglob("*.md"):
+        text = md_file.read_text(encoding="utf-8")
 
-    # Skip files that do not contain raw citation syntax.
-    if not CITE_PATTERN.search(text):
-        print(f"Skipped {md_file} (no [@...] citations found)")
-        continue
+        # Skip files that do not contain raw citation syntax.
+        if not CITE_PATTERN.search(text):
+            print(f"Skipped {md_file} (no [@...] citations found)")
+            continue
 
-    used = {}
+        used = {}
 
-    def repl(match):
-        key = match.group(1)
-        suffix = match.group(2).strip()
-        used[key] = bib_map.get(key, f"Missing bibliography entry for {key}.")
-        if suffix:
-            return f"[^cite-{key}], {suffix}"
-        return f"[^cite-{key}]"
+        def repl(match):
+            key = match.group(1)
+            suffix = match.group(2).strip()
+            used[key] = bib_map.get(key, f"Missing bibliography entry for {key}.")
+            if suffix:
+                return f"[^cite-{key}], {suffix}"
+            return f"[^cite-{key}]"
 
-    new_text = CITE_PATTERN.sub(repl, text)
+        new_text = CITE_PATTERN.sub(repl, text)
 
-    if used:
-        footnotes = "\n".join(
-            f"[^cite-{key}]: {value}" for key, value in used.items()
-        )
+        if used:
+            footnotes = "\n".join(
+                f"[^cite-{key}]: {value}" for key, value in used.items()
+            )
 
-        # Remove an existing \bibliography line if present
-        new_text = re.sub(r"(?m)^\s*\\bibliography\s*$\n?", "", new_text)
+            # Remove an existing \bibliography line if present
+            new_text = re.sub(r"(?m)^\s*\\bibliography\s*$\n?", "", new_text)
 
-        # Remove any old generated cite footnotes before appending fresh ones
-        new_text = re.sub(
-            r"(?m)^\[\^cite-[A-Za-z0-9:_-]+\]:\s.*(?:\n(?!\[\^cite-).*)*",
-            "",
-            new_text
-        ).rstrip()
+            # Remove any old generated cite footnotes before appending fresh ones
+            new_text = re.sub(
+                r"(?m)^\[\^cite-[A-Za-z0-9:_-]+\]:\s.*(?:\n(?!\[\^cite-).*)*",
+                "",
+                new_text
+            ).rstrip()
 
-        new_text += "\n\n" + footnotes + "\n"
+            new_text += "\n\n" + footnotes + "\n"
 
-    md_file.write_text(new_text, encoding="utf-8")
-    print(f"Processed {md_file}")
+        md_file.write_text(new_text, encoding="utf-8")
+        print(f"Processed {md_file}")
+
+
+if __name__ == "__main__":
+    main()
