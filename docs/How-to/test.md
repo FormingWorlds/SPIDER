@@ -110,7 +110,7 @@ The `plot_test` checks that the Python plotting script runs without error. If it
 python py/plot_spider_lite.py -d test_dir/blackbody50_output/sandbox/output
 ```
 
-This generates a file called `interior.pdf` into the root directory. 
+This generates a file called `interior.pdf` into a `plots/` directory. 
 
 If need, install missing dependencies:
 
