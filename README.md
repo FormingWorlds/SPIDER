@@ -1,12 +1,18 @@
 # SPIDER
 **Simulating Planetary Interior Dynamics with Extreme Rheology**
 
-![SPIDER Logo](notes/logo/spider.png)
+<p align="center">
+  <img src="assets/spider.png" style="max-width:40%; height:auto;" alt="SPIDER logo">
+</p>
 
-[![Build](https://github.com/djbower/spider/actions/workflows/ci.yml/badge.svg)](https://github.com/djbower/spider/actions)
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.5682523.svg)](https://doi.org/10.5281/zenodo.5682523)
-
-
+<p align="center">
+  <a href="https://github.com/FormingWorlds/SPIDER/actions">
+    <img src="https://github.com/FormingWorlds/SPIDER/actions/workflows/ci.yml/badge.svg" alt="Build">
+  </a>
+  <a href="https://doi.org/10.5281/zenodo.5682523">
+    <img src="https://zenodo.org/badge/DOI/10.5281/zenodo.5682523.svg" alt="DOI">
+  </a>
+</p>
 
 A 1-D parameterised interior dynamics code for rocky planets with molten and/or solid interiors and support for volatile cycling, redox reactions, and radiative transfer in the atmosphere.
 
