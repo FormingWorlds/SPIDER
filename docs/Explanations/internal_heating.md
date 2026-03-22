@@ -14,7 +14,7 @@ Here you can find a detailed overview of the SPIDER formulation.
 
 ## Radioactive heating
 
-The concentration $X_i$ of a given isotope $i$ is [@TS14]:
+The concentration $X_i$ of a given isotope $i$ is [^cite-TS14]:
 
 $$X_i(t_\mathrm{age})= X_{i0} \exp{\left( \frac{t_\mathrm{age} \ln2}{T_{i1/2}} \right)}$$
 
@@ -47,4 +47,7 @@ Total heating rate is the sum:
 
 $$H(t) = \sum_i H_i(t)$$
 
-Note that [@RUE17] computes bulk element power ensuring internal consistency.
+Note that [^cite-RUE17] computes bulk element power ensuring internal consistency.
+
+[^cite-TS14]: Turcotte, D.; Schubert, G., *Geodynamics*, Cambridge University Press, 2014.
+[^cite-RUE17]: Thomas Ruedas, *Radioactive heat production of six geologically important nuclides*, Geochem. Geophy. Geosys., 2017.
