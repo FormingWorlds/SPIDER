@@ -1,6 +1,20 @@
+---
+tags:
+  - radiogenic heating
+  - radionuclides
+  - internal heat
+---
+
+# SPIDER: model overview
+
+Here you can find a detailed overview of the SPIDER formulation.
+
+!!! note 
+    This model overview is taken from the [notes](https://github.com/FormingWorlds/SPIDER/tree/main/notes/) and contains an extended description of the equations and derivations related to the SPIDER code. It is still **work in progress.** 
+
 ## Radioactive heating
 
-The concentration $X_i$ of a given isotope $i$ is [^cite-TS14]:
+The concentration $X_i$ of a given isotope $i$ is [@TS14]:
 
 $$X_i(t_\mathrm{age})= X_{i0} \exp{\left( \frac{t_\mathrm{age} \ln2}{T_{i1/2}} \right)}$$
 
@@ -33,7 +47,4 @@ Total heating rate is the sum:
 
 $$H(t) = \sum_i H_i(t)$$
 
-Note that [^cite-RUE17] computes bulk element power ensuring internal consistency.
-
-[^cite-TS14]: Turcotte, D.; Schubert, G., *Geodynamics*, Cambridge University Press, 2014.
-[^cite-RUE17]: Thomas Ruedas, *Radioactive heat production of six geologically important nuclides*, Geochem. Geophy. Geosys., 2017.
+Note that [@RUE17] computes bulk element power ensuring internal consistency.
