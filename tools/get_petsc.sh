@@ -112,9 +112,6 @@ safe_to_remove_dir() {
             ;;
     esac
 
-    # Refuse very short paths
-    [[ "${#resolved}" -ge 10 ]] || return 1
-
     # This installer should only ever remove a PETSc directory
     [[ "$(basename "$resolved")" == "petsc" ]] || return 1
 
