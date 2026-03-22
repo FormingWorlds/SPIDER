@@ -42,7 +42,7 @@ Repeat above steps for the solidus to obtain a solidus curve as entropy perturba
 
 ### Entropy of fusion
 
-The entropy difference between liquidus and solidus is constrained by entropy of melting. For MgSiO3, entropy of melting is constant to within ~3% across Earth's mantle pressure range [^cite-S09].
+The entropy difference between liquidus and solidus is constrained by entropy of melting. For MgSiO3, entropy of melting is constant to within ~3% across Earth's mantle pressure range [^cite-SKS09].
 
 Approaches:
 1. Modeler prescribes $\Delta S_{\rm fus}$ directly at $P_0$
@@ -83,4 +83,4 @@ $$T(P) = T_{\rm ad}(P) \exp{ \left( \frac{\Delta S(P)}{c_P(P)} \right) }$$
 
 where $T_{\rm ad}$ is reference adiabat temperature and $\Delta S$ is entropy perturbation from adiabat.
 
-[^cite-S09]: Missing bibliography entry for S09.
+[^cite-SKS09]: Lars Stixrude; Nico de Koker; Ni Sun; Mainak Mookherjee; Bijaya B. Karki, *Thermodynamics of silicate liquids in the deep Earth*, Earth Planet. Sci. Lett., 2009.
