@@ -125,7 +125,7 @@ pip install -r py/requirements.txt
 After a test run completes, you can manually compare your output against known good results. A quick way to check everything worked well, is by comparing plots. If you have VS Code's `code` installed:
 
 ```bash
-code test_dir/plot_test_output/sandbox/interior.pdf
+code test_dir/plot_test_output/sandbox/plots/interior.pdf
 code tests/expected_output/blackbody50-interior.png
 ```
 

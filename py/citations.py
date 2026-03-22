@@ -1,6 +1,13 @@
 import re
 from pathlib import Path
-import bibtexparser
+try:
+    import bibtexparser
+except ImportError as exc:
+    raise SystemExit(
+        "The 'bibtexparser' package is required to run py/citations.py. "
+        "Please install it (e.g., with 'pip install bibtexparser') and "
+        "ensure it is listed in py/requirements.txt."
+    ) from exc
 
 DOCS_DIR = Path("docs")
 BIB_FILE = DOCS_DIR / "refs.bib"
