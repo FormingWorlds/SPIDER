@@ -1,9 +1,6 @@
 # Installation with quadruple precision
 
-Quadruple precision is useful for numerically demanding cases, but it is not the default installation path.
-
-!!! warning
-    The `./tools/get_spider.sh` and `./tools/get_petsc.sh` workflow described above installs the standard double-precision version of SPIDER. To build SPIDER with quadruple precision, you currently need to install SUNDIALS and PETSc manually with quadruple-precision support first, and then build SPIDER against that installation.
+Quadruple precision is useful for numerically demanding cases, but it is not the default installation path. To build SPIDER with quadruple precision, you need to install SUNDIALS and PETSc manually with quadruple-precision support first, and then build SPIDER against that installation.
 
 ## What is different from the standard install?
 
