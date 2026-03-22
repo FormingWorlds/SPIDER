@@ -291,7 +291,5 @@ The two major steps that we now need to perform are:
 1. Recast the velocities in terms of relative velocities, often relative to the centre of mass (barycentric velocity).
 2. Parameterise the resulting fluxes that originate from considering relative velocities.
 
-\bibliography
-
 [^cite-ABE95]: Yutaka Abe, *Basic equations for evolution of partially molten mantle and core*, The Earth's Central Part: Its Structure and Dynamics, 1995.
 [^cite-DM62]: S. R. De Groot; P. Mazur, *Non-Equilibrium Thermodynamics*, North-Holland Publishing Company, Amsterdam, 1962.
