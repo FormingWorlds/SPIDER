@@ -6,7 +6,7 @@
 # Downloads PETSc 3.19.0 from OSF and builds it with sundials2 support.
 # SPIDER is a pure C code, so C++ and Fortran compilers are disabled.
 #
-# This script lives inside the SPIDER repository:
+# This script is intended to live inside the SPIDER repository:
 #
 #   SPIDER/
 #   ├── tools/
@@ -97,6 +97,31 @@ default_petsc_path_for_repo() {
 }
 
 # -----------------------------------------------------------------------------
+# Safety guard for destructive operations
+# -----------------------------------------------------------------------------
+safe_to_remove_dir() {
+    local target="$1"
+    local resolved
+
+    [[ -n "$target" ]] || return 1
+    resolved="$(portable_realpath "$target")"
+
+    case "$resolved" in
+        /|/home|/root|"${HOME}"|.)
+            return 1
+            ;;
+    esac
+
+    # Refuse very short paths
+    [[ "${#resolved}" -ge 10 ]] || return 1
+
+    # This installer should only ever remove a PETSc directory
+    [[ "$(basename "$resolved")" == "petsc" ]] || return 1
+
+    return 0
+}
+
+# -----------------------------------------------------------------------------
 # Error handling: report which step failed on any non-zero exit
 # -----------------------------------------------------------------------------
 current_step="initialising"
@@ -123,6 +148,11 @@ on_error() {
         *"required tools"*)
             console "   - Install the missing prerequisite and re-run the script"
             console "   - On minimal HPC/login nodes, load any needed modules first"
+            ;;
+        *"Preparing PETSc directory"*)
+            console "   - The target directory may have been rejected by the safety guard"
+            console "   - Check that the install path is correct and ends in 'petsc'"
+            console "   - Refused paths include '/', '$HOME', '.', and very short paths"
             ;;
         *"Download"*)
             console "   - Check your internet connection"
@@ -225,13 +255,22 @@ announce "Logging PETSc build to: $logfile"
 announce "PETSC_DIR  = $PETSC_DIR"
 announce "PETSC_ARCH = $PETSC_ARCH"
 
-# Clean previous installation
+# -----------------------------------------------------------------------------
+# 5. Prepare PETSc directory
+# -----------------------------------------------------------------------------
 current_step="Preparing PETSc directory"
-rm -rf "$workpath"
+
+if [[ -e "$workpath" ]]; then
+    if ! safe_to_remove_dir "$workpath"; then
+        echo "ERROR: Refusing to remove unsafe path: $workpath" >&2
+        exit 1
+    fi
+    rm -rf "$workpath"
+fi
 mkdir -p "$workpath"
 
 # -----------------------------------------------------------------------------
-# 5. Download PETSc 3.19.0 from OSF
+# 6. Download PETSc 3.19.0 from OSF
 # -----------------------------------------------------------------------------
 current_step="Downloading PETSc archive from OSF"
 
@@ -247,7 +286,7 @@ unzip -qq "$zipfile" -d "$workpath"
 rm -f "$zipfile"
 
 # -----------------------------------------------------------------------------
-# 6. Determine platform-specific configure flags
+# 7. Determine platform-specific configure flags
 # -----------------------------------------------------------------------------
 current_step="Determining platform-specific flags"
 
@@ -321,7 +360,7 @@ if [[ -z "$mpi_flag" ]] && ! command -v mpirun >/dev/null 2>&1; then
 fi
 
 # -----------------------------------------------------------------------------
-# 7. Configure PETSc
+# 8. Configure PETSc
 # -----------------------------------------------------------------------------
 current_step="Configuring PETSc (./configure)"
 
@@ -359,7 +398,7 @@ fi
 ./configure "${configure_args[@]}"
 
 # -----------------------------------------------------------------------------
-# 8. Build PETSc
+# 9. Build PETSc
 # -----------------------------------------------------------------------------
 current_step="Building PETSc (make all)"
 
@@ -369,7 +408,7 @@ announce "Building PETSc with $ncpu CPUs..."
 make PETSC_DIR="$PETSC_DIR" PETSC_ARCH="$PETSC_ARCH" -j "$ncpu" all
 
 # -----------------------------------------------------------------------------
-# 9. Run PETSc self-tests
+# 10. Run PETSc self-tests
 # -----------------------------------------------------------------------------
 current_step="Testing PETSc (make check)"
 
@@ -378,7 +417,7 @@ announce "Testing PETSc..."
 make PETSC_DIR="$PETSC_DIR" PETSC_ARCH="$PETSC_ARCH" check
 
 # -----------------------------------------------------------------------------
-# 10. Done
+# 11. Done
 # -----------------------------------------------------------------------------
 cd "$olddir"
 
