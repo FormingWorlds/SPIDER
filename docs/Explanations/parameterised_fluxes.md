@@ -66,7 +66,7 @@ $$v_{\rm invis} = \sqrt{\frac{\alpha g l^2}{16} \left( \frac{dT}{dz} - \left( \f
 
 ## Kamata and Wagner profile
 
-According to [^cite-KW18] and [^cite-W19], the classical mixing length profile is not able to reproduce realistic results with deviations up to 60% from 3D simulations. The profile can be characterized by two parameters: depth $a$ and size $b$, for mantle thickness $D$.
+According to [^cite-K18] and [^cite-W19], the classical mixing length profile is not able to reproduce realistic results with deviations up to 60% from 3D simulations. The profile can be characterized by two parameters: depth $a$ and size $b$, for mantle thickness $D$.
 
 ### Kamata's results
 
@@ -84,6 +84,5 @@ $$\beta = b_0 - b_1 \gamma - b_2 \log (\text{Ra})$$
 
 for stagnant lid regime, or more complex expressions for mobile and sluggish lids. Values are given in their Table 4.
 
-[^cite-KW18]: Missing bibliography entry for KW18.
 [^cite-W19]: Wang, Zaicong, *Earth’s volatile-element jigsaw*, Nat. Geosci., 2019.
 [^cite-K18]: Shunichi Kamata, *One-dimensional convective thermal evolution calculation using a modified mixing length theory: Application to Saturnian icy satellites*, J. Geophys. Res., 2018.
