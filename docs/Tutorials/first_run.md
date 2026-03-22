@@ -33,7 +33,7 @@ Expected signs of success:
 - Multiple text files are produced (for example, interior profile and time-series outputs).
 - No PETSc crash/solver error is printed to terminal.
 
-## 3. Make a quick plot
+## 2. Make a quick plot
 
 ```bash
 python py/plot_spider_lite.py -h
@@ -42,7 +42,7 @@ python py/plot_spider_lite.py -d output
 
 The plotting script generates a basic figure of interior profiles from your run output inside the directory `plots/`. 
 
-## 4. Next steps
+## 3. Next steps
 
 - Try a different options file in `tests/opts/`.
 - Compare your run output against files in `tests/expected_output/`.
