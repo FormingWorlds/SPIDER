@@ -20,6 +20,7 @@ PetscErrorCode RHSFunction(TS ts,PetscReal t,Vec sol_in,Vec rhs,void *ptr)
   Solution             *S = &E->solution;
   PetscScalar          *arr_dSdt_s, *arr_rhs_b;
   const PetscScalar    *arr_Etot, *arr_capacitance_s, *arr_temp_s, *arr_cp_s, *arr_Htot_s, *arr_xi_s;
+  PetscScalar          dSdt_s0;
   PetscMPIInt          rank,size;
   DM                   da_s = E->da_s, da_b=E->da_b;
   PetscInt             i,v,ihi_s,ilo_s,w_s,numpts_b;
@@ -60,7 +61,7 @@ PetscErrorCode RHSFunction(TS ts,PetscReal t,Vec sol_in,Vec rhs,void *ptr)
   arr_dSdt_s[0] = ( arr_Etot[1] - arr_Etot[0] ) / arr_capacitance_s[0];
   arr_dSdt_s[0] += arr_Htot_s[0] / arr_temp_s[0];
 
-  /* dSdt at staggered nodes and d/dt(dS/dr) at internal basic nodes */
+  /* dSdt at staggered nodes and d/dt(dS/dxi) at internal basic nodes */
   for(i=ilo_s+1; i<ihi_s; ++i){
     /* dSdt at staggered nodes */
     /* need this quantity for coupling to atmosphere evolution */
@@ -71,10 +72,13 @@ PetscErrorCode RHSFunction(TS ts,PetscReal t,Vec sol_in,Vec rhs,void *ptr)
     arr_rhs_b[i] /= arr_xi_s[i] - arr_xi_s[i-1]; // note dxi is negative
   }
 
+  /* Save before restoring PETSc arrays */
+  dSdt_s0 = arr_dSdt_s[0];
+
   /* dTsurf/dr */
   /* A->dtsurfdt already contains contribution of dTsurf/dT */
   /* By chain rule, just need dT/dt */
-  A->dtsurfdt *= arr_dSdt_s[0] * arr_temp_s[0] / arr_cp_s[0];
+  A->dtsurfdt *= dSdt_s0 * arr_temp_s[0] / arr_cp_s[0];
   /* add effect of gradient to above 0.5*d/dt (dS/dxi)? */
 
   ierr = DMDAVecRestoreArrayRead(da_s,M->xi_s,&arr_xi_s);CHKERRQ(ierr);
@@ -92,7 +96,7 @@ PetscErrorCode RHSFunction(TS ts,PetscReal t,Vec sol_in,Vec rhs,void *ptr)
   /* apply cmb boundary condition to rhs */
   ierr = set_cmb_entropy_gradient_update( E, rhs_b );CHKERRQ(ierr);
 
-  /* must be here since must be after dS/dt computation 
+  /* must be here since must be after dS/dt computation
      only relevant for 2 phases.  Perhaps need to tidy up similar
      functionality, like output of rheological front, etc. */
   if( P->n_phases == 2 ){
@@ -106,7 +110,7 @@ PetscErrorCode RHSFunction(TS ts,PetscReal t,Vec sol_in,Vec rhs,void *ptr)
   ierr = VecCopy(rhs_b,subVecs[E->solutionSlots[SPIDER_SOLUTION_FIELD_DSDXI_B]]);CHKERRQ(ierr);
 
   /* S0 */
-  ierr = VecSetValue(subVecs[E->solutionSlots[SPIDER_SOLUTION_FIELD_S0]],0,arr_dSdt_s[0],INSERT_VALUES);CHKERRQ(ierr);
+  ierr = VecSetValue(subVecs[E->solutionSlots[SPIDER_SOLUTION_FIELD_S0]],0,dSdt_s0,INSERT_VALUES);CHKERRQ(ierr);
 
   /* volatiles and reactions */
 

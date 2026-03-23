@@ -14,36 +14,36 @@ Here you can find a detailed overview of the SPIDER formulation.
 
 ## Thermodynamic energy transport and enthalpy fluxes {#sect:thermodynamic}
 
-**Goal:** Understand the origin of the energy transport associated with the enthalpy of chemical/phase components. This derives the energy equation for a multi-component system that appears in the appendix of [@ABE95].
+**Goal:** Understand the origin of the energy transport associated with the enthalpy of chemical/phase components. This derives the energy equation for a multi-component system that appears in the appendix of [^cite-ABE95].
 
-In the following section, I combine the notation from [@DM62] and [@ABE95] so beware of notation changes compared to the original papers. Where a choice can be made, I typically stick to the notation of [@ABE95].
+In the following section, I combine the notation from [^cite-DM62] and [^cite-ABE95] so beware of notation changes compared to the original papers. Where a choice can be made, I typically stick to the notation of [^cite-ABE95].
 
 ## Conservation and entropy balance
 
-Conservation of mass fraction ([@DM62 Eq. II.13], also [@ABE95 Eq. A2]), *where $i$ is a thermodynamic (chemical) component and $j$ refers to a reaction*:
+Conservation of mass fraction ([^cite-DM62], Eq. II.13, also [^cite-ABE95], Eq. A2), *where $i$ is a thermodynamic (chemical) component and $j$ refers to a reaction*:
 
 $$
 \rho \frac{D \omega_i}{Dt} = -\nabla \cdot \vec{J}_i + \rho \sum_{j=1}^r \nu_{ij} \mathcal{J}_j \qquad (i=1,\ n)
 \tag{1}\label{eq:ABE95_A2}
 $$
 
-Here I define $\mathcal{J}_j$ as the rate of reaction $j$ per unit mass (same as $w_j$ in [@ABE95] but this notation may be confused with mass fraction $\omega$ which is why I change the symbol). [@ABE95] defines $\nu_{ij}$ as the mass of component $i$ formed by reaction $j$. Note that [@DM62] use slightly different definitions of these quantities, since they define $\mathcal{J}$ as a mass per unit volume and unit time and omit the leading $\rho$ term.
+Here I define $\mathcal{J}_j$ as the rate of reaction $j$ per unit mass (same as $w_j$ in [^cite-ABE95] but this notation may be confused with mass fraction $\omega$ which is why I change the symbol). [^cite-ABE95] defines $\nu_{ij}$ as the mass of component $i$ formed by reaction $j$. Note that [^cite-DM62] use slightly different definitions of these quantities, since they define $\mathcal{J}$ as a mass per unit volume and unit time and omit the leading $\rho$ term.
 
-Entropy balance ([@DM62 Eq. III.12], also [@ABE95 Eq. A4]):
+Entropy balance ([^cite-DM62], Eq. III.12, also [^cite-ABE95], Eq. A4):
 
 $$
 \rho \frac{Ds}{Dt} = - \nabla \cdot \vec{J}_s + \sigma
 \tag{2}\label{eq:DM62_ch3_eq12}
 $$
 
-where the entropy flux $\vec{J}_s$ is the difference between the total entropy flux $\vec{J}_{s,\ tot}$ and a convective term $\rho s v$ ([@DM62 Eq. III.13]):
+where the entropy flux $\vec{J}_s$ is the difference between the total entropy flux $\vec{J}_{s,\ tot}$ and a convective term $\rho s v$ ([^cite-DM62], Eq. III.13):
 
 $$
 \vec{J}_s = \vec{J}_{s,\ tot} - \rho s v
 \tag{3}
 $$
 
-The entropy balance, *excluding viscous dissipation and external forces*, is ([@DM62 Eq. III.19]):
+The entropy balance, *excluding viscous dissipation and external forces*, is ([^cite-DM62], Eq. III.19):
 
 $$
 \rho \frac{Ds}{Dt} = - \nabla \cdot \left( \frac{\vec{J}_q - \sum_i \mu_i \vec{J}_i}{T} \right)
@@ -53,14 +53,14 @@ $$
 \tag{4}
 $$
 
-Where entropy flux is ([@DM62 Eq. III.20]):
+Where entropy flux is ([^cite-DM62], Eq. III.20):
 
 $$
 \vec{J}_s = \frac{1}{T} \left( \vec{J}_q - \sum_{i=1}^n \mu_i \vec{J}_i \right)
 \tag{5}
 $$
 
-and entropy production is ([@DM62 Eq. III.21]):
+and entropy production is ([^cite-DM62], Eq. III.21):
 
 $$
 \sigma =
@@ -70,23 +70,23 @@ $$
 \tag{6}
 $$
 
-By using the thermodynamic relation ([@DM62 Eq. III.23]):
+By using the thermodynamic relation ([^cite-DM62], Eq. III.23):
 
 $$
 T d \left( \frac{\mu_i}{T} \right) = \left( d \mu_i \right)_T - \frac{h_i}{T} dT
 \tag{7}
 $$
 
-we can define a new flux as ([@DM62 Eq. III.24]):
+we can define a new flux as ([^cite-DM62], Eq. III.24):
 
 $$
 \vec{J}_q^\prime = \vec{J}_q - \sum_{i=1}^n h_i \vec{J}_i
 \tag{8}\label{eq:Jqprime}
 $$
 
-*Eq. $\ref{eq:Jqprime}$ is the definition of heat flux used by [@ABE95] and therefore it removes the energetic contribution associated with the transport of enthalpy by the components. This term then reappears as an entropy source term, since of course the physics must remain the same!*
+*Eq. $\ref{eq:Jqprime}$ is the definition of heat flux used by [^cite-ABE95] and therefore it removes the energetic contribution associated with the transport of enthalpy by the components. This term then reappears as an entropy source term, since of course the physics must remain the same!*
 
-Then entropy flow is ([@DM62 Eq. III.26], also [@ABE95 Eq. A5]):
+Then entropy flow is ([^cite-DM62], Eq. III.26, also [^cite-ABE95], Eq. A5):
 
 $$
 \vec{J}_s = \frac{1}{T} \vec{J}_q^\prime + \sum_{i=1}^n s_i \vec{J}_i
@@ -95,7 +95,7 @@ $$
 
 where $s_i = -(\mu_i-h_i)/T$ is the partial specific entropy of component $i$. Written in this way the entropy flux contains the heat flow $\vec{J}_q^\prime$ and a transport of partial entropies with respect to the barycentric velocity $v$.
 
-The entropy production associated with this definition can be written as ([@DM62 Eq. III.25], also [@ABE95 Eq. A6]):
+The entropy production associated with this definition can be written as ([^cite-DM62], Eq. III.25, also [^cite-ABE95], Eq. A6):
 
 $$
 \sigma =
@@ -105,11 +105,11 @@ $$
 \tag{10}\label{eq:DM62_ch3_eq25}
 $$
 
-### Quoted from [@DM62]
+**Quoted from [^cite-DM62]**
 
 > “It is clear that the difference between $\vec{J}_q$ and $\vec{J}_q^\prime$ (Eq. $\ref{eq:Jqprime}$) represents a transfer of heat due to diffusion. Therefore the quantity $\vec{J}_q^\prime$ also represents an irreversible heat flow. In fact in diffusing mixtures the concept of heat flow can be defined in different ways. Obviously a different definition of the notion of heat flux leaves all physical results unchanged. But to any particular choice corresponds a special form of the entropy production $\sigma$. It is a matter of expediency which choice is the most suitable in a particular application of the theory. The freedom of defining the heat flow in various ways, of which the possibility was indicated here in the framework of a macroscopic treatment, exists also in the microscopic theories of transport phenomena in mixtures.”
 
-Abe chooses to model $J_q^\prime$ as a convective heat flux using mixing length theory. In this regard, [@ABE95 Eq. 47] excludes the energetic contribution of the enthalpy transport of the components (but remember it appears later in Abe's formulation). Now, using the above equations we can derive [@ABE95 Eq. A10] using several vector identities:
+Abe chooses to model $J_q^\prime$ as a convective heat flux using mixing length theory. In this regard, [^cite-ABE95], Eq. 47 excludes the energetic contribution of the enthalpy transport of the components (but remember it appears later in Abe's formulation). Now, using the above equations we can derive [^cite-ABE95], Eq. A10 using several vector identities:
 
 $$
 \begin{aligned}
@@ -148,7 +148,7 @@ $$
 \tag{13}
 $$
 
-Collect terms. *[@ABE95] missing $\rho$ on the RHS*:
+Collect terms. *[^cite-ABE95] missing $\rho$ on the RHS*:
 
 $$
 \rho \frac{Ds}{Dt}
@@ -169,7 +169,7 @@ $$
 \tag{15}
 $$
 
-Leading to [@ABE95 Eq. A10], *[@ABE95 Eq. A10] missing $\rho$*:
+Leading to [^cite-ABE95], Eq. A10, *[^cite-ABE95], Eq. A10 missing $\rho$*:
 
 $$
 \boxed{
@@ -180,7 +180,7 @@ $$
 \tag{16}
 $$
 
-How [@ABE95 Eq. 4] is derived from this point is confusing. It appears that if you literally swap out components and replace them with phases, where the two phases are melt and solid, you can reproduce [@ABE95 Eq. 4]. But then later, [@ABE95] states that this equation must be “modified for multi-component systems, because energy transport due to mass transport must be taken into account”. He then goes onto to derive the following equation, which makes sense based on [@ABE95 Eq. A10]. The transport of thermodynamic components can be divided between a melt and solid phase. *This is how the notion of phases is introduced into the formulation.*
+How [^cite-ABE95], Eq. 4 is derived from this point is confusing. It appears that if you literally swap out components and replace them with phases, where the two phases are melt and solid, you can reproduce [^cite-ABE95], Eq. 4. But then later, [^cite-ABE95] states that this equation must be “modified for multi-component systems, because energy transport due to mass transport must be taken into account”. He then goes onto to derive the following equation, which makes sense based on [^cite-ABE95], Eq. A10. The transport of thermodynamic components can be divided between a melt and solid phase. *This is how the notion of phases is introduced into the formulation.*
 
 ## Introducing phases (melt / solid)
 
@@ -252,7 +252,7 @@ This is helpful because the gravitational separation term (first term) can be pa
 
 ## Two-phase entropy equation
 
-For two phases ($n=2$) and $J_m=-J_s$, *[@ABE95 Eq. 4] missing $\rho$*:
+For two phases ($n=2$) and $J_m=-J_s$, *[^cite-ABE95], Eq. 4 missing $\rho$*:
 
 $$
 \boxed{
@@ -265,7 +265,7 @@ $$
 
 Note this contains a latent heat ($\Delta h$) associated with melt–solid separation ($\vec{J}_m$). At chemical equilibrium, which we always assume, $\mu_m=\mu_s$ and hence the last term is zero.
 
-Now, for multi-component systems, energy transport due to mass transport must be taken into account (*[@ABE95 Eq. 20] missing $\rho$*):
+Now, for multi-component systems, energy transport due to mass transport must be taken into account (*[^cite-ABE95], Eq. 20 missing $\rho$*):
 
 $$
 \begin{aligned}
@@ -291,4 +291,5 @@ The two major steps that we now need to perform are:
 1. Recast the velocities in terms of relative velocities, often relative to the centre of mass (barycentric velocity).
 2. Parameterise the resulting fluxes that originate from considering relative velocities.
 
-\bibliography
+[^cite-ABE95]: Yutaka Abe, *Basic equations for evolution of partially molten mantle and core*, The Earth's Central Part: Its Structure and Dynamics, 1995.
+[^cite-DM62]: S. R. De Groot; P. Mazur, *Non-Equilibrium Thermodynamics*, North-Holland Publishing Company, Amsterdam, 1962.

@@ -50,3 +50,9 @@ verification/
 *.lot
 *.synctex.gz
 *.toc
+
+# petsc directory 
+petsc*/
+
+# site 
+site/

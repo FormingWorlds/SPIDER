@@ -445,7 +445,7 @@ def set_xaxis_from_kwargs(ax, myjson_o=None, **kwargs):
         ax.set_xlim(np.min(xticks), np.max(xticks))
         ax.invert_xaxis()
         ax.xaxis.set_major_locator(ticker.FixedLocator(xticks))
-        ax.set_xlabel("Melt fraction (\%)")
+        ax.set_xlabel(r"Melt fraction (%)")
 
 
 # ====================================================================
@@ -482,7 +482,11 @@ def figure_interior(indir="output", time=None):
     labels = ("{:.2e}".format(time) for time in myjson_o.time_l)
     axs[1][1].legend(handles, labels, ncol=2, title="Time (yrs)")
 
-    fig.savefig("interior.pdf")
+    # create output directory if it does not exist
+    os.makedirs("plots", exist_ok=True)
+
+    # save figure in plots directory
+    fig.savefig(os.path.join("plots", "interior.pdf"))
 
 
 # ===================================================================
