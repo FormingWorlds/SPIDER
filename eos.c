@@ -88,7 +88,9 @@ PetscErrorCode EOSDestroy(EOS *p_eos)
   if (p_eos) {
     EOS eos = *p_eos;
 
-    ierr = (*eos->destroy)(eos);CHKERRQ(ierr);
+    if (eos->destroy) {
+      ierr = (*eos->destroy)(eos);CHKERRQ(ierr);
+    }
     if (eos->PHASE_BOUNDARY) {
       ierr = Interp1dDestroy(&eos->phase_boundary);CHKERRQ(ierr);
     }

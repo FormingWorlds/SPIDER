@@ -158,12 +158,15 @@ PetscErrorCode set_matprop_basic( Ctx *E )
     for(i=ilo_b; i<ihi_b; ++i){
       if( P->use_const_properties ){
         /* Constant material properties: bypass EOS tables */
+        PetscScalar log10v_clamped = P->const_log10visc;
         arr_phi[i] = 1.0; /* fully liquid */
         arr_rho[i] = P->const_rho;
         arr_cp[i] = P->const_Cp;
         arr_alpha[i] = P->const_alpha;
         arr_cond[i] = P->const_cond;
-        arr_visc[i] = PetscPowScalar( 10.0, P->const_log10visc );
+        /* Apply viscosity cutoff for consistency with the normal branch */
+        ierr = apply_log10visc_cutoff( P, &log10v_clamped );CHKERRQ(ierr);
+        arr_visc[i] = PetscPowScalar( 10.0, log10v_clamped );
         /* T from entropy: T = T_ref * exp((S - S_ref) / Cp) */
         arr_temp[i] = P->const_T_ref * PetscExpScalar(
             (arr_S_b[i] - P->const_S_ref) / P->const_Cp );

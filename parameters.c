@@ -561,6 +561,8 @@ PetscErrorCode ParametersSetFromOptions(Parameters P)
     /* Scale to non-dimensional units */
     P->const_rho /= SC->DENSITY;
     P->const_Cp /= (SC->ENTROPY);
+    /* alpha has units 1/K; its scale is 1/SC->TEMP, so dividing by
+       (1/SC->TEMP) is equivalent to multiplying by SC->TEMP */
     P->const_alpha /= (1.0 / SC->TEMP);
     P->const_cond /= SC->COND;
     P->const_log10visc -= SC->LOG10VISC;
@@ -680,14 +682,19 @@ PetscErrorCode ParametersSetFromOptions(Parameters P)
       P->n_phases = 1;
       ierr = EOSCreate(&P->eos_phases[0], SPIDER_EOS_LOOKUP);CHKERRQ(ierr);
       P->eos = P->eos_phases[0];
+      /* Free the data_EOSLookup that EOSCreate_Lookup allocated, to
+         prevent heap corruption when EOSDestroy_Lookup tries to free
+         it as lookup table memory. */
+      ierr = PetscFree(P->eos->impl_data);CHKERRQ(ierr);
       /* Mark as set up and install dummy eval to prevent segfaults */
       P->eos->is_setup = PETSC_TRUE;
-      P->eos->eval = NULL; /* will be bypassed in matprop.c */
-      /* Store reference to P in eos impl_data so the dummy eval can
-         access constant values if needed */
+      P->eos->eval = NULL; /* bypassed in eos.c EOSEval */
+      /* Store reference to P so EOSEval can access constant values */
       P->eos->impl_data = (void*)P;
-      /* Set conductivity and viscosity on the EOS object (used by some
-         code paths that read from eos->cond instead of the eval result) */
+      /* Install a no-op destroy to prevent EOSDestroy_Lookup from
+         trying to free the Parameters struct as lookup table data */
+      P->eos->destroy = NULL;
+      /* Set conductivity and viscosity on the EOS object */
       P->eos->cond = P->const_cond;
       P->eos->log10visc = P->const_log10visc;
       P->eos->PHASE_BOUNDARY = PETSC_FALSE;
