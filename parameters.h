@@ -243,6 +243,9 @@ typedef struct {
     EOS      eos_phases[SPIDER_MAX_PHASES];
     PetscInt n_phases;
 
+    /* Minimum eddy diffusivity floor (phase-dependent) */
+    PetscScalar kappah_floor;     /* m^2/s, applied as max(kh_MLT, floor*f(phi)) */
+
     /* Constant material properties mode (bypasses EOS tables for Levels 1-4
        of the standalone intercomparison).  When use_const_properties is true,
        EOSEval is skipped and these values are used instead.  Temperature is

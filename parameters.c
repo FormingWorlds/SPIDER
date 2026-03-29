@@ -531,6 +531,19 @@ PetscErrorCode ParametersSetFromOptions(Parameters P)
   }
   /* otherwise, we just scale the calculated eddy diffusivity by the user-specified constant */
 
+  /* Phase-dependent kappa_h floor.  Default 0 = no floor (standard MLT).
+     A positive value sets the liquid-regime floor in m^2/s.  The floor is
+     modulated by melt fraction: floor * 0.5*(1+tanh((phi-phi_crit)/phi_w))
+     so it vanishes in the solid regime. */
+  P->kappah_floor = 0.0;
+  ierr = PetscOptionsGetScalar(NULL,NULL,"-kappah_floor",&P->kappah_floor,NULL);CHKERRQ(ierr);
+  if( P->kappah_floor > 0.0 ){
+    P->kappah_floor /= SC->KAPPA;
+    ierr = PetscPrintf(PETSC_COMM_WORLD,
+      "Using kappa_h floor: %.4e m^2/s (non-dim: %.4e)\n",
+      P->kappah_floor * SC->KAPPA, P->kappah_floor);CHKERRQ(ierr);
+  }
+
   /* Constant material properties mode.
      When -use_const_properties is set, EOSEval is bypassed in matprop.c and
      constant values are used for rho, Cp, alpha, cond, visc.  Temperature is

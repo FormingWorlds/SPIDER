@@ -295,6 +295,25 @@ PetscErrorCode GetEddyDiffusivity( const EOSEvalData eos_eval, const Parameters 
       kappah = -P->eddy_diffusivity_thermal;
     }
 
+    /* Phase-dependent kappa_h floor: maintains convective coupling even
+       when the super-adiabatic gradient is numerically zero (e.g., on a
+       near-isentropic adiabat). The floor is modulated by the melt
+       fraction phi: full floor in the liquid regime (phi > phi_crit),
+       zero in the solid regime (phi < phi_solid), smooth tanh transition.
+       This represents the physical fact that a vigorously convecting
+       magma ocean (Ra ~ 10^27) always has enough turbulent mixing to
+       maintain an approximately adiabatic interior. */
+    if( P->kappah_floor > 0.0 ){
+      PetscScalar phi = eos_eval.phase_fraction;
+      PetscScalar phi_crit = 0.4;    /* rheological transition */
+      PetscScalar phi_width = 0.15;  /* transition width */
+      PetscScalar f_floor = 0.5 * (1.0 + PetscTanhScalar((phi - phi_crit) / phi_width));
+      PetscScalar kh_floor = P->kappah_floor * f_floor;
+      if( kappah < kh_floor ){
+        kappah = kh_floor;
+      }
+    }
+
     /* chemical eddy diffusivity */
     if (P->eddy_diffusivity_chemical > 0.0){
       /* scale */
