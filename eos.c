@@ -1,4 +1,5 @@
 #include "eos.h"
+#include "parameters.h"
 #include "util.h"
 
 /* Prototypes for helper functions used in interface functions */
@@ -49,6 +50,28 @@ PetscErrorCode EOSEval(const EOS eos, PetscScalar P , PetscScalar S, EOSEvalData
 
   PetscFunctionBeginUser;
   if (!eos->is_setup) SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_ARG_WRONGSTATE,"You must cannot evaluate the EOS before setting it up");
+
+  /* Constant-property mode: return fixed values without table lookup */
+  if (!eos->eval && eos->impl_data) {
+    Parameters const Pp = (Parameters) eos->impl_data;
+    if (Pp->use_const_properties) {
+      eval->P = P;
+      eval->S = S;
+      eval->rho = Pp->const_rho;
+      eval->Cp = Pp->const_Cp;
+      eval->alpha = Pp->const_alpha;
+      eval->cond = Pp->const_cond;
+      eval->log10visc = Pp->const_log10visc;
+      /* T = T_ref * exp((S - S_ref) / Cp) */
+      eval->T = Pp->const_T_ref * PetscExpScalar(
+          (S - Pp->const_S_ref) / Pp->const_Cp);
+      eval->dTdPs = Pp->const_alpha * eval->T / (Pp->const_rho * Pp->const_Cp);
+      eval->phase_fraction = 1.0;
+      eval->porosity = 1.0;
+      eval->fusion = 0.0;
+      PetscFunctionReturn(0);
+    }
+  }
 
   /* Implementation-specific logic */
   if (!eos->eval) SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_ARG_WRONGSTATE,"Incomplete EOS object: no implementation for EOSEval has been provided");

@@ -1,0 +1,47 @@
+# Level 1: Pure conduction, constant properties, grey-body surface, fixed-T CMB
+# Using grey-body instead of SURFACE_BC=5 for simplicity
+
+-nstepsmacro 20
+-dtmacro 1000000
+-n 100
+-ts_sundials_atol 1.0e-10
+-ts_sundials_rtol 1.0e-10
+-ts_sundials_type bdf
+
+# Mesh (external file, uniform density spherical shell)
+-MESH_SOURCE 1
+-mesh_external_filename output_files/intercomparison/level1/uniform_mesh.dat
+-radius 6.371e6
+-coresize 0.843
+-gravity -9.81
+
+# Constant properties
+-use_const_properties true
+-const_rho 4000.0
+-const_Cp 1000.0
+-const_alpha 1.0e-5
+-const_cond 4.0
+-const_log10visc 2.0
+-const_T_ref 3500.0
+-const_S_ref 3000.0
+
+# Physics: conduction only
+-CONDUCTION 1
+-CONVECTION 0
+-MIXING 0
+-SEPARATION 0
+
+# IC: entropy corresponding to ~3500 K uniform
+-ic_adiabat_entropy 3000.0
+-ic_dsdr -1.0e-6
+
+# BCs: grey-body surface (F = sigma*T^4), core cooling with zero flux
+-SURFACE_BC 1
+-emissivity0 1.0
+-teqm 0.0
+-CORE_BC 2
+-core_bc_value 0.0
+
+# Output
+-outputDirectory output_files/intercomparison/level1/spider_output
+-monitor

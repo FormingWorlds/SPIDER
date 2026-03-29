@@ -671,7 +671,29 @@ PetscErrorCode ParametersSetFromOptions(Parameters P)
         ierr = EOSCompositeSetSubEOS(P->eos, P->eos_phases, P->n_phases);CHKERRQ(ierr);
         ierr = EOSSetUpFromOptions(P->eos, "composite", FC, SC);CHKERRQ(ierr);
       } else SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_SUP,"Only one or two phases are supported");
-    } else SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_SUP,"You must supply the -phase_names option");
+    } else if ( !P->use_const_properties ) {
+      SETERRQ(PETSC_COMM_WORLD,PETSC_ERR_SUP,"You must supply the -phase_names option (unless -use_const_properties is set)");
+    } else {
+      /* Constant-property mode: create a dummy single-phase EOS with a
+         trivial eval that returns constant values.  Marks is_setup=true
+         so that EOSEval() does not crash. */
+      P->n_phases = 1;
+      ierr = EOSCreate(&P->eos_phases[0], SPIDER_EOS_LOOKUP);CHKERRQ(ierr);
+      P->eos = P->eos_phases[0];
+      /* Mark as set up and install dummy eval to prevent segfaults */
+      P->eos->is_setup = PETSC_TRUE;
+      P->eos->eval = NULL; /* will be bypassed in matprop.c */
+      /* Store reference to P in eos impl_data so the dummy eval can
+         access constant values if needed */
+      P->eos->impl_data = (void*)P;
+      /* Set conductivity and viscosity on the EOS object (used by some
+         code paths that read from eos->cond instead of the eval result) */
+      P->eos->cond = P->const_cond;
+      P->eos->log10visc = P->const_log10visc;
+      P->eos->PHASE_BOUNDARY = PETSC_FALSE;
+      ierr = PetscPrintf(PETSC_COMM_WORLD,
+        "Constant-property mode: skipping EOS table loading\n");CHKERRQ(ierr);
+    }
   }
 
   /* Energy terms to include */
