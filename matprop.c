@@ -47,10 +47,14 @@ PetscErrorCode set_phase_fraction_staggered( Ctx *E )
     ierr = DMDAVecGetArray(da_s,S->phi_s,&arr_phi);CHKERRQ(ierr);
 
     for(i=ilo_s; i<ihi_s; ++i){
-        PP = arr_pres[i];
-        SS = arr_S[i];
-        ierr = EOSEval(P->eos, PP, SS, &eos_eval );CHKERRQ(ierr);
-        arr_phi[i] = eos_eval.phase_fraction;
+        if( P->use_const_properties ){
+            arr_phi[i] = 1.0; /* fully liquid in constant-property mode */
+        } else {
+            PP = arr_pres[i];
+            SS = arr_S[i];
+            ierr = EOSEval(P->eos, PP, SS, &eos_eval );CHKERRQ(ierr);
+            arr_phi[i] = eos_eval.phase_fraction;
+        }
     }
 
     ierr = DMDAVecRestoreArrayRead(da_s,M->pressure_s,&arr_pres);CHKERRQ(ierr);
@@ -85,10 +89,18 @@ static PetscErrorCode set_matprop_staggered( Ctx *E )
     ierr = DMDAVecGetArray(da_s,S->temp_s,&arr_temp_s);CHKERRQ(ierr);
 
     for(i=ilo_s; i<ihi_s; ++i){
-        ierr = EOSEval( P->eos, arr_pres_s[i], arr_S_s[i], &eos_eval );CHKERRQ(ierr);
-        arr_rho_s[i] = eos_eval.rho;
-        arr_temp_s[i] = eos_eval.T;
-        arr_cp_s[i] = eos_eval.Cp;
+        if( P->use_const_properties ){
+            arr_rho_s[i] = P->const_rho;
+            arr_cp_s[i] = P->const_Cp;
+            /* T = T_ref * exp((S - S_ref) / Cp) for thermodynamic consistency */
+            arr_temp_s[i] = P->const_T_ref * PetscExpScalar(
+                (arr_S_s[i] - P->const_S_ref) / P->const_Cp );
+        } else {
+            ierr = EOSEval( P->eos, arr_pres_s[i], arr_S_s[i], &eos_eval );CHKERRQ(ierr);
+            arr_rho_s[i] = eos_eval.rho;
+            arr_temp_s[i] = eos_eval.T;
+            arr_cp_s[i] = eos_eval.Cp;
+        }
     }
 
     ierr = DMDAVecRestoreArrayRead(da_s,pres_s,&arr_pres_s);CHKERRQ(ierr);
@@ -142,23 +154,44 @@ PetscErrorCode set_matprop_basic( Ctx *E )
     /* regime: not convecting (0), inviscid (1), viscous (2) */
     ierr = DMDAVecGetArray(    da_b,S->regime,&arr_regime); CHKERRQ(ierr);
 
-    /* loop over all basic nodes */ 
+    /* loop over all basic nodes */
     for(i=ilo_b; i<ihi_b; ++i){
-      ierr = EOSEval( P->eos, arr_pres[i], arr_S_b[i], &eos_eval );CHKERRQ(ierr);
-      arr_phi[i] = eos_eval.phase_fraction;
-      arr_rho[i] = eos_eval.rho;
-      arr_dTdxis[i] = arr_dPdr_b[i] * eos_eval.dTdPs / arr_dxidr_b[i];
-      arr_cp[i] = eos_eval.Cp;
-      arr_temp[i] = eos_eval.T;
-      arr_alpha[i] = eos_eval.alpha;
-      arr_cond[i] = eos_eval.cond;
-      arr_visc[i] = eos_eval.log10visc;
+      if( P->use_const_properties ){
+        /* Constant material properties: bypass EOS tables */
+        arr_phi[i] = 1.0; /* fully liquid */
+        arr_rho[i] = P->const_rho;
+        arr_cp[i] = P->const_Cp;
+        arr_alpha[i] = P->const_alpha;
+        arr_cond[i] = P->const_cond;
+        arr_visc[i] = PetscPowScalar( 10.0, P->const_log10visc );
+        /* T from entropy: T = T_ref * exp((S - S_ref) / Cp) */
+        arr_temp[i] = P->const_T_ref * PetscExpScalar(
+            (arr_S_b[i] - P->const_S_ref) / P->const_Cp );
+        /* dTdPs = alpha * T / (rho * Cp) */
+        eos_eval.dTdPs = P->const_alpha * arr_temp[i] / (P->const_rho * P->const_Cp);
+        arr_dTdxis[i] = arr_dPdr_b[i] * eos_eval.dTdPs / arr_dxidr_b[i];
+        /* Fill eos_eval for GetEddyDiffusivity */
+        eos_eval.rho = arr_rho[i];
+        eos_eval.T = arr_temp[i];
+        eos_eval.Cp = arr_cp[i];
+        eos_eval.alpha = arr_alpha[i];
+        eos_eval.log10visc = P->const_log10visc;
+      } else {
+        ierr = EOSEval( P->eos, arr_pres[i], arr_S_b[i], &eos_eval );CHKERRQ(ierr);
+        arr_phi[i] = eos_eval.phase_fraction;
+        arr_rho[i] = eos_eval.rho;
+        arr_dTdxis[i] = arr_dPdr_b[i] * eos_eval.dTdPs / arr_dxidr_b[i];
+        arr_cp[i] = eos_eval.Cp;
+        arr_temp[i] = eos_eval.T;
+        arr_alpha[i] = eos_eval.alpha;
+        arr_cond[i] = eos_eval.cond;
+        arr_visc[i] = eos_eval.log10visc;
 
-      /* apply viscosity cutoff */
-      ierr = apply_log10visc_cutoff( P, &arr_visc[i] );
-      arr_visc[i] = PetscPowScalar( 10.0, arr_visc[i] );
+        /* apply viscosity cutoff */
+        ierr = apply_log10visc_cutoff( P, &arr_visc[i] );
+        arr_visc[i] = PetscPowScalar( 10.0, arr_visc[i] );
+      }
 
-      /* below are computed in GetEddyDiffusivity, but not yet stored to the arrays */
       /* kinematic viscosity */
       arr_nu[i] = arr_visc[i] / arr_rho[i];
       /* gravity * super-adiabatic temperature gradient */

@@ -243,6 +243,20 @@ typedef struct {
     EOS      eos_phases[SPIDER_MAX_PHASES];
     PetscInt n_phases;
 
+    /* Constant material properties mode (bypasses EOS tables for Levels 1-4
+       of the standalone intercomparison).  When use_const_properties is true,
+       EOSEval is skipped and these values are used instead.  Temperature is
+       derived from entropy: T = const_T_ref * exp((S - const_S_ref) / const_Cp)
+       for thermodynamic consistency. */
+    PetscBool   use_const_properties;
+    PetscScalar const_rho;        /* density [kg/m^3] */
+    PetscScalar const_Cp;         /* heat capacity [J/kg/K] */
+    PetscScalar const_alpha;      /* thermal expansivity [1/K] */
+    PetscScalar const_cond;       /* thermal conductivity [W/m/K] */
+    PetscScalar const_log10visc;  /* log10(viscosity [Pa s]) */
+    PetscScalar const_T_ref;      /* reference temperature [K] */
+    PetscScalar const_S_ref;      /* reference entropy [J/kg/K] */
+
 } data_Parameters;
 typedef data_Parameters* Parameters;
 

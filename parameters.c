@@ -531,6 +531,43 @@ PetscErrorCode ParametersSetFromOptions(Parameters P)
   }
   /* otherwise, we just scale the calculated eddy diffusivity by the user-specified constant */
 
+  /* Constant material properties mode.
+     When -use_const_properties is set, EOSEval is bypassed in matprop.c and
+     constant values are used for rho, Cp, alpha, cond, visc.  Temperature is
+     derived from entropy: T = T_ref * exp((S - S_ref) / Cp). */
+  P->use_const_properties = PETSC_FALSE;
+  ierr = PetscOptionsGetBool(NULL,NULL,"-use_const_properties",&P->use_const_properties,NULL);CHKERRQ(ierr);
+  P->const_rho = 4000.0;
+  ierr = PetscOptionsGetScalar(NULL,NULL,"-const_rho",&P->const_rho,NULL);CHKERRQ(ierr);
+  P->const_Cp = 1000.0;
+  ierr = PetscOptionsGetScalar(NULL,NULL,"-const_Cp",&P->const_Cp,NULL);CHKERRQ(ierr);
+  P->const_alpha = 1.0e-5;
+  ierr = PetscOptionsGetScalar(NULL,NULL,"-const_alpha",&P->const_alpha,NULL);CHKERRQ(ierr);
+  P->const_cond = 4.0;
+  ierr = PetscOptionsGetScalar(NULL,NULL,"-const_cond",&P->const_cond,NULL);CHKERRQ(ierr);
+  P->const_log10visc = 2.0; /* log10(100 Pa s) */
+  ierr = PetscOptionsGetScalar(NULL,NULL,"-const_log10visc",&P->const_log10visc,NULL);CHKERRQ(ierr);
+  P->const_T_ref = 3500.0;
+  ierr = PetscOptionsGetScalar(NULL,NULL,"-const_T_ref",&P->const_T_ref,NULL);CHKERRQ(ierr);
+  P->const_S_ref = 3000.0;
+  ierr = PetscOptionsGetScalar(NULL,NULL,"-const_S_ref",&P->const_S_ref,NULL);CHKERRQ(ierr);
+
+  if( P->use_const_properties ){
+    ierr = PetscPrintf(PETSC_COMM_WORLD,
+      "Using CONSTANT material properties: rho=%.1f, Cp=%.1f, alpha=%.2e, "
+      "cond=%.1f, log10visc=%.1f, T_ref=%.1f, S_ref=%.1f\n",
+      P->const_rho, P->const_Cp, P->const_alpha,
+      P->const_cond, P->const_log10visc, P->const_T_ref, P->const_S_ref);CHKERRQ(ierr);
+    /* Scale to non-dimensional units */
+    P->const_rho /= SC->DENSITY;
+    P->const_Cp /= (SC->ENTROPY);
+    P->const_alpha /= (1.0 / SC->TEMP);
+    P->const_cond /= SC->COND;
+    P->const_log10visc -= SC->LOG10VISC;
+    P->const_T_ref /= SC->TEMP;
+    P->const_S_ref /= SC->ENTROPY;
+  }
+
   /* viscous lid added by Rob Spaargaren */
   P->VISCOUS_LID = 0;
   ierr = PetscOptionsGetInt(NULL,NULL,"-VISCOUS_LID",&P->VISCOUS_LID,NULL);CHKERRQ(ierr);
