@@ -92,12 +92,8 @@ PetscErrorCode TSCustomMonitor(TS ts, PetscInt step, PetscReal time, Vec sol, vo
       long long int time_years_actual;
       PetscInt      i;
 
-      /* Use the desired macro-step time for the filename, not the actual
-         BDF time. When tsurf_poststep_change terminates the integration
-         early, the actual time can be much smaller than dtmacro, causing
-         llround() to produce 0 and overwrite the initial JSON file.
-         The desired time always advances by dtmacro per macro step. */
-      time_years_actual = llround( (P->t0 + ((step - P->stepmacro) * P->dtmacro)) * SC->TIMEYRS );
+      /* current age in integer number of years */
+      time_years_actual = llround( time * SC->TIMEYRS );
 
       ierr = PetscSNPrintf(filename,PETSC_MAX_PATH_LEN,"%s/%lld.json",P->outputDirectory,time_years_actual);CHKERRQ(ierr);
 
@@ -113,8 +109,6 @@ PetscErrorCode TSCustomMonitor(TS ts, PetscInt step, PetscReal time, Vec sol, vo
       cJSON_AddItemToObject(json,"dtmacro_years",cJSON_CreateNumber(P->dtmacro*SC->TIMEYRS));
       cJSON_AddItemToObject(json,"time",cJSON_CreateNumber(time));
       cJSON_AddItemToObject(json,"time_years",cJSON_CreateNumber(time*SC->TIMEYRS));
-      cJSON_AddItemToObject(json,"time_years_desired",cJSON_CreateNumber(
-          (P->t0 + ((step - P->stepmacro) * P->dtmacro)) * SC->TIMEYRS));
       // add other stuff we might like in the header
 
       /* Add solution to file */
