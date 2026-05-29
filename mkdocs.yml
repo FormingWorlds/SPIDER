@@ -58,9 +58,8 @@ nav:
       - 🔗 Zalmoxis: https://proteus-framework.org/Zalmoxis/
       - 🔗 Aragog: https://proteus-framework.org/aragog/
       - 🔗 Atmodeller: https://atmodeller.readthedocs.io/en/latest/
-      - 🔗 FastChem: https://newstrangeworlds.github.io/FastChem/
-      - 🔗 PLATON: https://platon.readthedocs.io/en/latest/
-      - 🔗 SOCRATES: https://github.com/FormingWorlds/SOCRATES/
+      - 🔗 FastChem: https://github.com/FormingWorlds/FastChem/
+      - 🔗 SOCRATES: https://proteus-framework.org/SOCRATES/
 
 theme:
   name: material
