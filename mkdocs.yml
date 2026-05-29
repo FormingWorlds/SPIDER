@@ -99,6 +99,7 @@ theme:
         name: Switch to light mode
 
 extra_css:
+  - stylesheets/proteus_theme.css
   - stylesheets/extra.css
   - stylesheets/footnotes.css
  
