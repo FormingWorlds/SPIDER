@@ -21,6 +21,7 @@ nav:
       - First run: Tutorials/first_run.md
 
   - Explanations:
+      - Testing suite: Explanations/testing.md
       - Model overview:
         - Thermodynamics: Explanations/basic_thermodynamics.md
         - Mass conservation and energy transport: Explanations/transport.md

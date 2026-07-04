@@ -15,29 +15,22 @@ on:
       - '.github/workflows/publish-test-badges.yml'
   workflow_dispatch:
 
+# Least privilege by default: every job runs read-only unless it raises its
+# own grant. Only the publish job, which writes the badges branch, asks for
+# contents: write, so a pull-request run never holds write access to the repo.
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
   group: badges-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
-  refresh-badges:
+  regenerate:
     name: Regenerate tests-total.json
     runs-on: ubuntu-latest
 
     steps:
-      - name: Guard against publishing from a non-main ref
-        # A manual dispatch can be launched from any branch. Publishing another
-        # ref's test count to the public badge would be misleading, so refuse
-        # it loudly. Pull-request runs skip this guard: they only regenerate
-        # and validate the badge, they never publish.
-        if: github.event_name == 'workflow_dispatch' && github.ref != 'refs/heads/main'
-        run: |
-          echo "Badges may only be published from main; this run is on ${{ github.ref }}." >&2
-          exit 1
-
       - name: Checkout repository
         uses: actions/checkout@v6
 
@@ -59,33 +52,15 @@ jobs:
         # after it reaches main.
         run: python tools/generate_test_badges.py --out badge_payload/
 
-      - name: Publish badges to the badges branch
-        # The main ruleset requires a reviewed pull request for every change,
-        # so the badge JSON cannot be committed back onto main from CI.
-        # It is published instead to a dedicated badges branch that lives
-        # outside that ruleset; shields.io reads the JSON from that branch's
-        # raw URL. The branch carries only the badge file plus a README;
-        # consumers that need the source tree use main. The commit is marked
-        # [skip ci], and the branch never triggers CI (the test workflow runs
-        # on main and on pull requests only), so a refresh never starts a run.
-        # Pull-request runs stop at the regenerate step above and never reach
-        # this publish step.
-        if: github.event_name != 'pull_request'
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Validate the badge JSON
+        # Fail the check on a malformed file or a non-positive count so a
+        # generator regression never reaches main behind a green check. These
+        # are the exact bytes that get published: the publish job pushes this
+        # artifact as-is, and the same-run artifact download is integrity
+        # checked, so there is nothing left to re-validate on that side.
         run: |
           set -euo pipefail
-
-          payload="${GITHUB_WORKSPACE}/badge_payload"
-          remote="https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
-          branch="badges"
-
-          # Refuse to publish a partial or malformed set: a generator
-          # regression that drops the file or emits invalid JSON would
-          # otherwise leave a badge silently stale or broken behind a green
-          # check. Validate the file and its shields schema before touching
-          # the remote.
-          python3 - "${payload}" <<'PY'
+          python3 - badge_payload <<'PY'
           import json
           import sys
           from pathlib import Path
@@ -97,10 +72,68 @@ jobs:
               if not path.is_file():
                   sys.exit(f'Missing badge file: {path}')
               data = json.loads(path.read_text())
-              if data.get('schemaVersion') != 1 or not str(data.get('message', '')).strip():
+              message = str(data.get('message', '')).strip()
+              # A well-formed miscount is the failure the count badge is most
+              # exposed to, so require a positive integer, not merely a
+              # non-empty string.
+              if data.get('schemaVersion') != 1 or not message.isdigit() or int(message) < 1:
                   sys.exit(f'Malformed badge file: {path}')
           print(f'Validated {len(expected)} badge file(s).')
           PY
+
+      - name: Upload badge payload
+        # Hand the validated file to the publish job unchanged, so the bytes
+        # that reach the badges branch are exactly the ones checked here.
+        uses: actions/upload-artifact@v4
+        with:
+          name: badge-payload
+          path: badge_payload/tests-total.json
+          retention-days: 1
+          if-no-files-found: error
+
+  publish:
+    name: Publish to the badges branch
+    needs: regenerate
+    # Pull-request runs stop after regenerate: they validate the badge but
+    # never publish, so the write grant below is never exercised on a PR.
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Guard against publishing from a non-main ref
+        # A manual dispatch can be launched from any branch. Publishing another
+        # ref's test count to the public badge would be misleading, so refuse
+        # it loudly before anything is written.
+        if: github.event_name == 'workflow_dispatch' && github.ref != 'refs/heads/main'
+        run: |
+          echo "Badges may only be published from main; this run is on ${{ github.ref }}." >&2
+          exit 1
+
+      - name: Download badge payload
+        uses: actions/download-artifact@v4
+        with:
+          name: badge-payload
+          path: badge_payload
+
+      - name: Publish badges to the badges branch
+        # The main ruleset requires a reviewed pull request for every change,
+        # so the badge JSON cannot be committed back onto main from CI.
+        # It is published instead to a dedicated badges branch that lives
+        # outside that ruleset; shields.io reads the JSON from that branch's
+        # raw URL. The branch carries only the badge file plus a README;
+        # consumers that need the source tree use main. The commit is marked
+        # [skip ci], and the branch never triggers CI (the test workflow runs
+        # on main and on pull requests only), so a refresh never starts a run.
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+
+          payload="${GITHUB_WORKSPACE}/badge_payload"
+          remote="https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          branch="badges"
 
           # Each fallible step returns explicitly: the function is invoked
           # from a conditional, which disables set -e inside it, so a failure

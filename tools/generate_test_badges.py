@@ -63,8 +63,14 @@ def _ensure_sciath_importable() -> None:
         import sciath  # noqa: F401
 
         return
-    except ImportError:
-        pass
+    except ModuleNotFoundError as exc:
+        # Fall back to the vendored clone only when the top-level ``sciath``
+        # package itself is absent, which is the CI case (SciATH is cloned into
+        # tests/sciath but not installed). Any other missing import, such as a
+        # dependency missing from inside a broken SciATH install, is a genuine
+        # fault and re-raises rather than being hidden behind the fallback.
+        if exc.name != "sciath":
+            raise
 
     vendored = _REPO_ROOT / "tests" / "sciath"
     if vendored.is_dir():
