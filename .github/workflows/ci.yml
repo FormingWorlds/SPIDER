@@ -62,3 +62,28 @@ jobs:
           mkdir -p test_dir && cd test_dir
           python -m sciath -d -w pth.conf
           python -m sciath -f -w pth.conf ../tests/tests.yml
+      - name: Surface failure diagnostics
+        if: failure()
+        run: |
+          mkdir -p test_dir
+          echo "=== SciATH report ==="
+          cat test_dir/sciath_test_report.txt 2>/dev/null || echo "(no report produced)"
+          echo "=== SciATH stdout/stderr ==="
+          find test_dir -type f \( -name '*.stdout' -o -name '*.stderr' \) -print -exec cat {} + 2>/dev/null || true
+          echo "=== toolchain provenance ==="
+          {
+            echo "# uname"; uname -a
+            echo "# gcc"; gcc --version 2>/dev/null | head -1
+            echo "# spider ldd"; ldd ./spider 2>/dev/null || true
+            echo "# petsc mpichversion"; ./petsc/*/bin/mpichversion 2>/dev/null | head -5 || true
+          } | tee test_dir/provenance.txt
+          cp -r logs test_dir/build_logs 2>/dev/null || true
+          find petsc -maxdepth 4 -name configure.log -exec cp {} test_dir/petsc-configure.log \; 2>/dev/null || true
+      - name: Archive test results
+        uses: actions/upload-artifact@v6
+        if: always()
+        with:
+          name: spider-sciath-test-dir-${{ github.job }}
+          path: test_dir
+          overwrite: true
+          retention-days: 90
