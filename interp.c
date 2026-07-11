@@ -276,8 +276,9 @@ PetscErrorCode SetInterp1dValue( const Interp1d interp, PetscScalar x, PetscScal
       // loop to find minimum index
       /* trivial algorithm to find minimum index when x data
          is not evenly spaced */
+      /* the bound keeps ind+1 in range when x equals the last node */
       ind = 0;
-      while( (x-xa[ind])>=0) {
+      while( ind<NX-1 && (x-xa[ind])>=0) {
         ind += 1;
       }
       /* loop exits when sign changes, meaning that previous index
@@ -364,6 +365,10 @@ PetscErrorCode SetInterp2dValue( Interp2d interp, PetscScalar x, PetscScalar y, 
     }
     else{
       indx = PetscFloorReal( (x-xmin)/dx );  // minimum index
+      /* keep indx+1 in range when x equals the last node */
+      if( indx > NX-2 ){
+        indx = NX-2;
+      }
     }
 
     // x weights
@@ -398,8 +403,9 @@ PetscErrorCode SetInterp2dValue( Interp2d interp, PetscScalar x, PetscScalar y, 
       // loop to find minimum index
       /* trivial algorithm to find minimum index when y data
          is not evenly spaced */
+      /* the bound keeps indy+1 in range when y equals the last node */
       indy = 0;
-      while( (y-ya[indy])>=0) {
+      while( indy<NY-1 && (y-ya[indy])>=0) {
         indy += 1;
       }
       /* loop exits when sign changes, meaning that previous index
@@ -424,7 +430,11 @@ PetscErrorCode SetInterp2dValue( Interp2d interp, PetscScalar x, PetscScalar y, 
     *val += z2 * w1 * w4;
     *val += z3 * w2 * w3;
     *val += z4 * w1 * w3;
-    *val /= dx; // dx
+    /* normalise by the local segment widths: the index shortcut above
+       assumes even x spacing, but the shipped tables are only evenly
+       spaced to a few parts per million, so the local width keeps the
+       weighting exact for the bracketing nodes */
+    *val /= xa[indx+1]-xa[indx]; // dx
     *val /= ya[indy+1]-ya[indy]; // dy
 
     PetscFunctionReturn(0);

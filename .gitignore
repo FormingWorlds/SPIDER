@@ -55,3 +55,8 @@ petsc*/
 site/
 # personal Claude session state (repo root only; .github/.claude/ stays tracked)
 /.claude/
+
+# C test executables (built by make tests_c; sources stay tracked)
+tests/c/test_*
+!tests/c/*.c
+!tests/c/*.h

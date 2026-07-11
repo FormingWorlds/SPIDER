@@ -65,6 +65,9 @@ CFLAGS+=${C_DEPFLAGS}
 # Provide the current directory so that absolute paths to data files can be constructed.
 CFLAGS+=-DSPIDER_ROOT_DIR=${SPIDER_ROOT_DIR}
 
+# Repo-root headers, needed when compiling the C test executables under tests/c/
+CFLAGS+=-I${SPIDER_ROOT_DIR}
+
 ### Compiling/Linking  #########################################################
 
 # Objects (PETSc rules provides recipe)
@@ -79,13 +82,32 @@ ${EXNAME} : ${SRC_O}
 # The pytest suite drives the spider binary and the C test executables.
 # Tier system and writing guidance: docs/How-to/build_tests.md.
 
+# C test executables: thin evaluators linked against the SPIDER objects.
+# The pytest wrappers under tests/ own all assertions.
+TEST_C_SRC = \
+        tests/c/test_interp.c \
+        tests/c/test_eos.c \
+        tests/c/test_eos_composite.c \
+
+TEST_C_EXE = ${TEST_C_SRC:%.c=%}
+TEST_C_O = ${TEST_C_SRC:%.c=%.o}
+TEST_C_D = ${TEST_C_SRC:%.c=%.d}
+
+# All SPIDER objects except the entry point (each test provides its own main)
+SRC_O_NOMAIN = $(filter-out main.o,${SRC_O})
+
+tests_c : ${TEST_C_EXE}
+
+${TEST_C_EXE} : % : %.o ${SRC_O_NOMAIN}
+	-${CLINKER} -o $@ $^ ${PETSC_TS_LIB}
+
 test :
 	python3 -m pytest -m "(unit or smoke) and not skip"
 
 test_all :
 	python3 -m pytest -m "not skip"
 
-.PHONY: test test_all
+.PHONY: tests_c test test_all
 
 ### Dependencies ###############################################################
 SRC_D = ${SRC_C:%.c=%.d}
@@ -98,7 +120,7 @@ $(SRC_D) : ;
 
 ### Helper Targets #############################################################
 clean ::
-	rm -f ${EXNAME} ${SRC_O} ${SRC_D}
+	rm -f ${EXNAME} ${SRC_O} ${SRC_D} ${TEST_C_EXE} ${TEST_C_O} ${TEST_C_D}
 
 .PHONY: clean
 

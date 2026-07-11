@@ -145,11 +145,18 @@ def c_test():
                 f'{exe.name} exited with code {proc.returncode}:\n{proc.stderr[-2000:]}'
             )
         # The executable prints one JSON object; tolerate PETSc chatter
-        # around it by slicing from the first '{' to the last '}'.
+        # around it by slicing from the first '{' to the last '}' and
+        # dropping interleaved warning lines (e.g. the EOS-table clamp
+        # warnings, which print during evaluation).
         text = proc.stdout
         start, end = text.find('{'), text.rfind('}')
         if start < 0 or end < 0:
             raise RuntimeError(f'{exe.name} produced no JSON on stdout:\n{text[-2000:]}')
-        return json.loads(text[start : end + 1])
+        payload = '\n'.join(
+            line
+            for line in text[start : end + 1].splitlines()
+            if not line.startswith('WARNING')
+        )
+        return json.loads(payload)
 
     return _run
