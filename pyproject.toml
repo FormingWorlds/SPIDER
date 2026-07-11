@@ -22,11 +22,15 @@ markers = [
 # (capped at the 90.0 ecosystem ceiling) and are never manually
 # decreased. The fast gate covers the unit + smoke tiers on every PR;
 # the full gate covers all tiers in the nightly workflow.
+# Initial floors sit a few points below the locally measured values
+# (79.6 fast, 81.2 full with llvm instrumentation) to absorb the
+# difference between compiler instrumentation variants; the ratchet
+# raises them from CI-measured coverage.
 [tool.spider.coverage_fast]
-fail_under = 0.0
+fail_under = 75.0
 
 [tool.spider.coverage_full]
-fail_under = 0.0
+fail_under = 77.0
 
 [tool.ruff]
 line-length = 96

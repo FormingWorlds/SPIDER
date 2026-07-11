@@ -1,0 +1,56 @@
+name: Nightly
+
+on:
+  schedule:
+    - cron: '0 3 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  full-suite:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    env:
+      PETSC_DIR: ${{ github.workspace }}/petsc
+      PETSC_ARCH: arch-test
+    steps:
+    - uses: actions/checkout@v6
+    - name: PETSc cache
+      id: petsc-cache
+      uses: actions/cache@v5
+      with:
+        path: petsc
+        key: ${{ runner.os }}-petsc-cache
+    - name: Build PETSc
+      if: steps.petsc-cache.outputs.cache-hit != 'true'
+      run: |
+          git clone https://gitlab.com/petsc/petsc.git
+          cd petsc
+          git checkout 63b725033a15f75ded7183cf5f88ec748e60783b
+          ./configure --with-fc=0 --with-cxx=0 --with-cc=gcc --download-sundials2 --download-mpich --download-f2cblaslapack PETSC_ARCH=arch-test
+          make all
+    - name: Install Python requirements
+      run: pip install -r py/requirements.txt pytest pytest-timeout gcovr
+    - name: Build with coverage instrumentation
+      run: |
+          make -j CFLAGS_EXTRA="--coverage"
+          make -j tests_c CFLAGS_EXTRA="--coverage"
+    - name: Run the full suite
+      run: python -m pytest -m "not skip" --durations=25
+    - name: Enforce the full coverage gate
+      run: |
+          FULL=$(python -c "import tomllib, pathlib; print(tomllib.loads(pathlib.Path('pyproject.toml').read_text())['tool']['spider']['coverage_full']['fail_under'])")
+          gcovr --gcov-ignore-parse-errors suspicious_hits.warn_once_per_file \
+                --exclude cJSON.c --exclude 'tests/' --exclude 'dev/' \
+                --txt --xml coverage.xml --json-summary coverage-full.json \
+                --fail-under-line "$FULL"
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v6
+      if: always()
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        files: coverage.xml
+        flags: nightly
+        fail_ci_if_error: false
