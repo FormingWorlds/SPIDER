@@ -1,17 +1,24 @@
 #!/usr/bin/env bash
 # Marker-validation gate for the SPIDER test suite.
 #
-# Walks every *.py file under tests/, finds every `def test_*` definition,
-# and verifies that the function (or its enclosing class, or the
-# module-level pytestmark) carries exactly one of:
+# Two checks:
 #
-#     @pytest.mark.unit
-#     @pytest.mark.smoke
-#     @pytest.mark.integration
-#     @pytest.mark.slow
-#     @pytest.mark.skip
+# 1. Marker discipline: walks every *.py file under tests/, finds every
+#    `def test_*` definition, and verifies that the function (or its
+#    enclosing class, or the module-level pytestmark) carries exactly
+#    one of:
 #
-# Any unmarked test is printed as <file>:<line> and the script exits 1.
+#        @pytest.mark.unit
+#        @pytest.mark.smoke
+#        @pytest.mark.integration
+#        @pytest.mark.slow
+#        @pytest.mark.skip
+#
+# 2. Source mirror: every physics C source has a companion test file
+#    tests/test_<stem>.py (utility sources are exempt; the source lists
+#    mirror tools/check_test_quality.py and must be kept in sync).
+#
+# Any violation is printed as <file>:<line> and the script exits 1.
 # Run from repository root:
 #
 #     bash tools/validate_test_structure.sh
@@ -122,11 +129,24 @@ for path in sorted(ROOT.rglob('*.py')):
                 '(need one of unit / smoke / integration / slow / skip)'
             )
 
+# Source-mirror check: physics C sources need a companion test file.
+# Keep this list in sync with PHYSICS_SOURCES in tools/check_test_quality.py.
+PHYSICS_SOURCES = {
+    'atmosphere.c', 'bc.c', 'energy.c', 'eos.c', 'eos_adamswilliamson.c',
+    'eos_composite.c', 'eos_lookup.c', 'ic.c', 'interp.c', 'matprop.c',
+    'mesh.c', 'reaction.c', 'rheologicalfront.c', 'rhs.c', 'twophase.c',
+}
+for source in sorted(PHYSICS_SOURCES):
+    stem = source.rsplit('.', 1)[0]
+    companion = ROOT / f'test_{stem}.py'
+    if not companion.exists():
+        failures.append(f'{source}: missing companion test file tests/test_{stem}.py')
+
 if failures:
-    print(f'Marker validation FAILED on {len(failures)} of {total} tests.')
+    print(f'Structure validation FAILED with {len(failures)} finding(s) over {total} tests.')
     for f in failures:
         print(f'  {f}')
     sys.exit(1)
 
-print(f'Marker validation OK: {total} tests, all carry a marker.')
+print(f'Structure validation OK: {total} tests, all marked; all physics sources mirrored.')
 PY

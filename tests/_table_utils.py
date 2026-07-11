@@ -62,3 +62,25 @@ def bilinear(xa: np.ndarray, ya: np.ndarray, za: np.ndarray, x: float, y: float)
         + za[i, j + 1] * (1 - tx) * ty
         + za[i + 1, j + 1] * tx * ty
     )
+
+
+def read_1d_table(path: Path) -> tuple[np.ndarray, np.ndarray]:
+    """Read a SPIDER 1-D lookup table (e.g. a phase boundary).
+
+    Parameters
+    ----------
+    path : Path
+        Table file (e.g. ``lookup_data/1TPa-dK09-elec-free/liquidus_A11_H13.dat``).
+
+    Returns
+    -------
+    xa : numpy.ndarray, shape (NX,)
+        x nodes (pressure) in SI units.
+    ya : numpy.ndarray, shape (NX,)
+        Table values (entropy) in SI units.
+    """
+    lines = Path(path).read_text().splitlines()
+    head, nx = (int(v) for v in lines[0].lstrip('#').split())
+    sx, sy = (float(v) for v in lines[head - 1].lstrip('#').split())
+    rows = np.array([[float(v) for v in line.split()] for line in lines[head : head + nx]])
+    return rows[:, 0] * sx, rows[:, 1] * sy
