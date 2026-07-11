@@ -14,8 +14,10 @@ The model assumes:
 File format matches SPIDER expectations (SI units, surface to CMB ordering,
 negative gravity).
 """
+from __future__ import annotations
 
 import argparse
+
 import numpy as np
 
 

@@ -1,25 +1,19 @@
 # Testing SPIDER
 
-This guide explains how to validate your SPIDER installation using the test suite.
+This guide explains how to validate your SPIDER installation using the test suite. For guidance on writing new tests, see [Building tests](build_tests.md).
 
 !!! info "Prerequisites"
     - SPIDER is compiled and the `spider` executable exists in the project root.
     - PETSc is installed.
     - Python 3.12 is available (preferably in a Conda environment).
 
-## 1. Install SciATH
+## 1. Install the Python test dependencies
 
-Get SciATH (Scientific Application Test Harness), which is a Python module:
-
-```bash
-cd /somewhere/to/install
-git clone https://github.com/sciath/sciath -b dev
-```
-
-Add the module to your Python path:
+The test suite uses pytest:
 
 ```bash
-export PYTHONPATH=$PYTHONPATH:/path/to/sciath
+pip install -r py/requirements.txt
+pip install pytest pytest-timeout
 ```
 
 ## 2. Set `PETSC_DIR` and `PETSC_ARCH`
@@ -31,90 +25,92 @@ export PETSC_DIR=/somewhere/to/install/petsc
 export PETSC_ARCH=arch-xxx-yyy
 ```
 
-!!! info "What to set for `PETSC_DIR` and `PETSC_ARCH?`"   
+!!! info "What to set for `PETSC_DIR` and `PETSC_ARCH?`"
     The SPIDER installer automatically reports the `PETSC_ARCH` and `PETSC_DIR` that PETSc was built against. To see what you need to set for these variables, run the installer again:
     ```bash
     ./tools/get_spider.sh
     ```
 
-## 3. Test
-
-From the SPIDER root directory, test SPIDER's basic functionality:
+## 3. Build the binary and the C test executables
 
 ```bash
-make test
+make -j
+make -j tests_c
 ```
 
-This command:
+The C test executables under `tests/c/` back the unit tier; tests that need them are skipped with an explanatory message when they have not been built.
 
-1. Creates a `test_dir/` output directory.
-2. Runs the test harness on the suite defined in `tests/tests.yml`.
-3. Reports the location of the test output and a test report by SciATH.
+## 4. Test
 
-All test outputs are collected in `test_dir/`. After tests complete, you can find:
+From the SPIDER root directory, run the fast tiers:
 
-```
-test_dir/
-  - pth.conf                         # Configuration file for test harness
-  - blackbody50_output/              # Output from standard test
-  - external_mesh_roundtrip_output/  # External mesh validation
-  - non_aw_mesh_output/              # Non-AW mesh validation
-  - plot_test_output/                # Plotting test output
-  - sciath_test_report.txt           # SciATH test report
+```bash
+make test               # equivalent to: pytest -m "(unit or smoke) and not skip"
 ```
 
-## What the test suite validates
+or the complete suite including the long-running tiers:
 
-The test suite (defined in `tests/tests.yml`) runs several checks:
+```bash
+make test_all           # equivalent to: pytest -m "not skip"
+```
+
+Run output goes to pytest-managed temporary directories; nothing is written into the repository tree.
+
+## Test tiers
+
+The suite is organised in four tiers, selected with pytest markers:
+
+| Tier | What it runs | Wall time | Command |
+|------|--------------|-----------|---------|
+| `unit` | C test executables and Python-side checks | seconds | `pytest -m unit` |
+| `smoke` | Short real `spider` runs with physics checks on the JSON output | tens of seconds | `pytest -m smoke` |
+| `integration` | Full regression cases against frozen expected output | minutes | `pytest -m integration` |
+| `slow` | Long validation runs and cross-implementation checks | up to hours | `pytest -m slow` |
+
+Pull-request CI runs the `unit` and `smoke` tiers; the nightly workflow runs `integration` and `slow`.
+
+## What the regression tests validate
 
 | Test | Purpose |
 |------|---------|
-| `blackbody50` | Core interior dynamics on a Earth-like blackbody planet. Final state is compared against known outputs. Check `tests/opts/blackbody50.opt` for exact configuration.|
-| `plot_test` | Validates the Python plotting script (`py/plot_spider_lite.py`) runs without error. |
-| `external_mesh_roundtrip` | Verifies SPIDER accepts external mesh files and produces correct results. |
-| `non_aw_mesh` | Confirms SPIDER works with non-Adams-Williamson density profiles. |
+| `test_regression.py::test_blackbody50_final_state_matches_frozen_reference` | Core interior dynamics on an Earth-like blackbody planet. The final state is compared against `tests/expected_output/expected_blackbody50.txt`. Check `tests/opts/blackbody50.opts` for the exact configuration. |
+| `test_regression.py::test_external_mesh_run_reproduces_native_aw_reference` | Verifies SPIDER accepts external mesh files and reproduces the native-mesh results. |
+| `test_regression.py::test_restart_from_snapshot_continues_the_run` | Verifies the restart pathway reads back SPIDER's own output and continues the run. |
+| `test_plot_spider_lite.py` | Validates the Python plotting script (`py/plot_spider_lite.py`) end-to-end. |
 
-For setup details and file format requirements, see [External Mesh Input](external_mesh_input.md).
-
-Each test runs one or more commands and compares output against expected values with specified tolerances.
+For external mesh setup details and file format requirements, see [External Mesh Input](external_mesh_input.md).
 
 ## Common test issues
 
-### SciATH not found
+### spider binary not found
 
-```
-Error: sciath module not found
-```
-
-**Solution:**  
-Ensure SciATH is cloned and added to `PYTHONPATH`:
+Tests that need the binary are skipped with the message `spider binary not found`. Build it first (`make -j`), or point the suite at an existing binary:
 
 ```bash
-export PYTHONPATH=$PYTHONPATH:/path/to/sciath
-make test
+export SPIDER_EXEC=/path/to/spider
 ```
 
 ### Tolerance mismatches
 
-If a test fails with a tolerance error (e.g., relative tolerance exceeded), it usually indicates:
+If a regression test fails with a tolerance error, it usually indicates:
 
 - A code change that alters output slightly (check your recent commits).
-- Different compiler flags or PETSc version (some tests have tight tolerances). Note that by default, PETSc version 3.19.0 is installed, and newer versions might lead to tolerance errors. 
+- Different compiler flags or PETSc version (some tests have tight tolerances). Note that by default, PETSc version 3.19.0 is installed, and newer versions might lead to tolerance errors.
 - Differences in floating-point rounding between systems.
 
-Most tests have `rtol: 1e-5` (relative tolerance) and `atol: 1e-5` (absolute tolerance). See `tests/tests.yml` for specific thresholds.
+The native-mesh regression uses `rtol = atol = 1e-5`; the external-mesh pathway uses `2e-3` because its midpoint-rule shell masses differ from the analytical integrals at finite resolution.
 
 ### Plot test fails
 
-The `plot_test` checks that the Python plotting script runs without error. If it fails, plot the test output manually and see what is going wrong:
+The plotting tests check that `py/plot_spider_lite.py` runs end-to-end. If they fail, plot a run manually and see what is going wrong:
 
 ```bash
-python py/plot_spider_lite.py -d test_dir/blackbody50_output/sandbox/output
+python py/plot_spider_lite.py -d /path/to/run/output
 ```
 
-This generates a file called `interior.pdf` into a `plots/` directory. 
+This generates a file called `interior.pdf` into a `plots/` directory.
 
-If need, install missing dependencies:
+If needed, install missing dependencies:
 
 ```bash
 pip install -r py/requirements.txt
@@ -122,13 +118,12 @@ pip install -r py/requirements.txt
 
 ## Comparing against expected output
 
-After a test run completes, you can manually compare your output against known good results. A quick way to check everything worked well, is by comparing plots. If you have VS Code's `code` installed:
+Frozen references live in `tests/expected_output/`. A quick way to check a run by eye is to compare plots:
 
 ```bash
-code test_dir/plot_test_output/sandbox/plots/interior.pdf
+python py/plot_spider_lite.py -d /path/to/run/output
+code plots/interior.pdf
 code tests/expected_output/blackbody50-interior.png
 ```
 
-or open the files manually.
-
-Expected files are in `tests/expected_output/`. Small differences due to compiler or system differences are usually acceptable if they are within the specified tolerances.
+Small differences due to compiler or system differences are usually acceptable if they are within the specified tolerances. The frozen references are the regression contract: regenerate them only as part of a pull request that explains the underlying physics or solver change.

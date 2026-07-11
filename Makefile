@@ -76,26 +76,16 @@ ${EXNAME} : ${SRC_O}
 	#${RM} $^
 
 ### Tests ######################################################################
-SPIDER_TEST_DIR=${SPIDER_ROOT_DIR}/test_dir
-SPIDER_TEST_SCRIPT=PYTHONPATH=${PYTHONPATH}:${SPIDER_ROOT_DIR}/tests/sciath python -m sciath ${SPIDER_ROOT_DIR}/tests/tests.yml
-SPIDER_TEST_CONF=${SPIDER_TEST_DIR}/pth.conf
+# The pytest suite drives the spider binary and the C test executables.
+# Tier system and writing guidance: docs/How-to/build_tests.md.
 
-check_sciath:
-	PYTHONPATH=${PYTHONPATH}:${PWD}/tests/sciath ./tests/check_sciath.sh
+test :
+	python3 -m pytest -m "(unit or smoke) and not skip"
 
-test_create_output_dir :
-	mkdir -p ${SPIDER_TEST_DIR}
+test_all :
+	python3 -m pytest -m "not skip"
 
-test : test_create_output_dir check_sciath
-	cd ${SPIDER_TEST_DIR} && ${SPIDER_TEST_SCRIPT} -w ${SPIDER_TEST_CONF} && cd -
-	@printf "Test output lives in ${SPIDER_TEST_DIR}\n"
-	@printf "If on a batch system, wait until jobs complete and then\n"
-	@printf "  make test_check\n"
-
-test_check : test_create_output_dir check_sciath
-	cd ${SPIDER_TEST_DIR} && ${SPIDER_TEST_SCRIPT} -w ${SPIDER_TEST_CONF} -v && cd -
-
-.PHONY: test test_create_output_dir
+.PHONY: test test_all
 
 ### Dependencies ###############################################################
 SRC_D = ${SRC_C:%.c=%.d}

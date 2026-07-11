@@ -10,11 +10,13 @@ Creates plots demonstrating:
 
 Output: tests/output/plots/
 """
+from __future__ import annotations
 
 import json
 from pathlib import Path
 
 import matplotlib
+
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
@@ -117,8 +119,8 @@ def plot_round_trip(f1_dir, f2_dir):
                 ax.plot(r, rel_diff, "k-", linewidth=0.8)
                 ax.axhline(0, color="gray", linestyle=":", alpha=0.5)
                 ax.set_xlabel("Radius [km]")
-                ax.set_ylabel(f"Relative diff")
-                ax.set_title(f"(F2-F1)/F1")
+                ax.set_ylabel("Relative diff")
+                ax.set_title("(F2-F1)/F1")
                 max_rel = np.max(np.abs(rel_diff))
                 ax.text(0.05, 0.95, f"max |rel diff| = {max_rel:.2e}",
                         transform=ax.transAxes, fontsize=9, va="top",

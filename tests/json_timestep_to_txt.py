@@ -1,10 +1,13 @@
 #! /usr/bin/env python
 # load output JSON dump a txt file of a given timestep, for testing comparison purposes
 
-from __future__ import print_function # maybe this will work with Python 2
-import os
-import sys
+from __future__ import (
+    annotations,
+    print_function,  # maybe this will work with Python 2
+)
+
 import json
+import sys
 
 # Interpret the first argument as a JSON file to look for
 if len(sys.argv) < 2 :
@@ -22,7 +25,7 @@ with open(filename) as json_data:
         for e in subdomain_data_array:
             # only compare values that exist
             # for example, if atmosphere and reactions are turned off then
-            # some values are not available to compare 
+            # some values are not available to compare
             val_l = e['values']
             if len(val_l) == 0:
                 continue
