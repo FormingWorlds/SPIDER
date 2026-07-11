@@ -56,3 +56,5 @@ petsc*/
 
 # site 
 site/
+# personal Claude session state (repo root only; .github/.claude/ stays tracked)
+/.claude/
