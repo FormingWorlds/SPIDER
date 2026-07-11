@@ -32,7 +32,7 @@ Bower, D.J., Hakim, K., Sossi, P.A., and Sanan, P. (2022), Retention of water in
 
 ## 2. Quick Installation
 
-Here we provide a short installation guide to get you up and running with SPIDER.  First, we install PETSc which provides the solver library and then we install SPIDER.  Finally, we can (optionally) install a [test harness](https://github.com/sciath/sciath).
+Here we provide a short installation guide to get you up and running with SPIDER.  First, we install PETSc which provides the solver library and then we install SPIDER.  Finally, we can (optionally) install the Python test dependencies and run the test suite.
 
 1. Test you have a valid C compiler installed by running the following command in a terminal window (install a C compiler if this command fails):
 
@@ -81,32 +81,23 @@ Here we provide a short installation guide to get you up and running with SPIDER
     make -j
     ```
 
-    SPIDER is now installed and you can in principle skip to *Running a Model* below.  However, you are advised to install the test harness as follows:
+    SPIDER is now installed and you can in principle skip to *Running a Model* below.  However, you are advised to run the test suite as follows:
 
-9. [Optional] Get SciATH (Scientific Application Test Harness), which is a Python module:
-
-    ```
-    cd /somewhere/to/install
-    git clone https://github.com/sciath/sciath -b dev
-    ```
-
-10. [Requires SciATH] Add the resulting module to your Python path (for example):
+9. [Optional] Install the Python test dependencies:
 
     ```
-    export PYTHONPATH=$PYTHONPATH:$PWD/sciath
+    pip install -r py/requirements.txt
+    pip install pytest pytest-timeout
     ```
 
-11. [Requires SciATH] Now return to the root SPIDER directory and test basic functionality:
+10. [Optional] Build the C test executables and run the fast test tiers from the root SPIDER directory:
 
     ```
+    make -j tests_c
     make test
     ```
 
-12. [Requires SciATH] You can also run all available tests by navigating to the `tests/` directory and running:
-
-    ```
-    python -m sciath tests.yml
-    ```
+    `make test_all` additionally runs the full regression cases. See the [testing guide](https://proteus-framework.org/SPIDER/How-to/test.html) for the tier system and troubleshooting.
 
 You should now be ready to use the code.  Proceed to *Running a Model* to learn how to run a basic model and use SPIDER options files.
 
