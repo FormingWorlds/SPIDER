@@ -29,7 +29,7 @@ jobs:
       uses: actions/cache@v5
       with:
         path: petsc
-        key: ${{ runner.os }}-petsc-cache
+        key: ${{ runner.os }}-petsc-63b72503
     - name: Build PETSc
       if: steps.petsc-cache.outputs.cache-hit != 'true'
       run: |
@@ -56,7 +56,7 @@ jobs:
       uses: actions/cache@v5
       with:
         path: petsc
-        key: ${{ runner.os }}-petsc-cache
+        key: ${{ runner.os }}-petsc-63b72503
         fail-on-cache-miss: true
     - name: Install Python requirements
       run: pip install -r py/requirements.txt pytest pytest-timeout ruff gcovr
@@ -70,6 +70,8 @@ jobs:
       run: bash tools/validate_test_structure.sh
     - name: Run test-quality lint
       run: python tools/check_test_quality.py --check
+    - name: Check the runtime-options reference is current
+      run: python tools/generate_options_reference.py --check
     - name: Check the coverage gates against the base branch
       if: github.event_name == 'pull_request'
       run: |
@@ -123,6 +125,14 @@ jobs:
           PY
       env:
         BASE_REF: ${{ github.base_ref }}
+    - name: Check the built binaries exist
+      # Missing binaries turn binary-driven tests into skips; make that a
+      # hard failure instead of a green job.
+      run: |
+          test -x ./spider
+          for exe in tests/c/test_interp tests/c/test_eos tests/c/test_eos_composite; do
+            test -x "$exe"
+          done
     - name: Run unit and smoke tests
       run: python -m pytest -m "(unit or smoke) and not skip and not slow and not integration"
     - name: Enforce the fast coverage gate
@@ -140,5 +150,9 @@ jobs:
         run: pip install -r py/requirements.txt pytest pytest-timeout
       - name: Run installer
         run: ./tools/get_spider.sh
+      - name: Check the installer produced a runnable binary
+        # The smoke tier skips tests when the binary is absent, so assert
+        # its presence first; otherwise this job could pass on all-skip.
+        run: test -x ./spider
       - name: Run the smoke tier against the installed build
         run: python -m pytest -m "smoke and not skip" -q

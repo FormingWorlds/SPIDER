@@ -42,7 +42,7 @@ Sister modules in the ecosystem: ARAGOG (interior, T-P formalism; the cross-chec
 
 1. A C compiler (gcc or clang) and GNU make.
 2. PETSc with SUNDIALS2 (`--download-sundials2`). Two supported paths:
-   - Prebuilt archive: `./tools/get_petsc.sh` (downloads PETSc 3.19.0 from OSF; sets `arch-linux-c-opt` / `arch-darwin-c-opt`).
+   - Installer: `./tools/get_petsc.sh` (downloads the PETSc 3.19.0 source archive from OSF and builds it; sets `arch-linux-c-opt` / `arch-darwin-c-opt`).
    - From source: clone `https://gitlab.com/petsc/petsc.git`, configure with `--with-fc=0 --with-cxx=0 --download-sundials2 --download-mpich --download-f2cblaslapack`.
 3. Python 3.12+ with `pip install -r py/requirements.txt` plus `pytest pytest-timeout` for the test suite.
 
@@ -82,10 +82,10 @@ pytest -m "(unit or smoke) and not skip"
 gcovr --txt --exclude cJSON.c
 ```
 
-**Coverage thresholds** (in `pyproject.toml`; auto-ratcheting, never manually decreased, capped at 90 by `tools/update_coverage_threshold.py`):
+**Coverage thresholds** (in `pyproject.toml`; raised manually with `tools/update_coverage_threshold.py`, which caps them at 90; the CI guard rejects any decrease):
 
-- Fast gate (`[tool.spider.coverage_fast]`, unit + smoke, every PR): ratcheting toward **90%** (the PROTEUS-ecosystem ceiling).
-- Full gate (`[tool.spider.coverage_full]`, unit + smoke + integration + slow, nightly): ratcheting toward **90%**.
+- Fast gate (`[tool.spider.coverage_fast]`, unit + smoke, every PR): moves only upward toward **90%** (the PROTEUS-ecosystem ceiling).
+- Full gate (`[tool.spider.coverage_full]`, unit + smoke + integration + slow, nightly): moves only upward toward **90%**.
 
 **Validate test structure**:
 
@@ -119,7 +119,7 @@ pre-commit install -f
 
 **CI runs on PRs** (`.github/workflows/ci.yml`):
 
-1. **Build**: prebuilt PETSc (OSF archive, cached), `make` with `--coverage`, `make tests_c`.
+1. **Build**: PETSc from source at the pinned commit (cached across runs), then `make` and `make tests_c` with `--coverage`.
 2. **Unit + smoke tests**: `pytest -m "(unit or smoke) and not skip and not slow and not integration"`.
 3. **Fast coverage gate**: gcovr line coverage checked against `[tool.spider.coverage_fast].fail_under`.
 4. **Test structure**: `bash tools/validate_test_structure.sh`.
@@ -128,11 +128,11 @@ pre-commit install -f
 7. **Lint**: `ruff check tests/ tools/ py/` and `ruff format --check tests/ tools/ py/`.
 8. **Installer smoke**: `./tools/get_spider.sh` end-to-end.
 
-**All must pass** before merge. Coverage thresholds auto-ratchet upward (never decrease).
+**All must pass** before merge. Coverage thresholds move only upward (never decrease).
 
 **Nightly CI** (`.github/workflows/nightly.yml`):
 
-- PETSc built from source at the pinned GitLab commit (the thorough configuration).
+- The same cached PETSc build as the PR workflow.
 - Full suite: `pytest -m "not skip"` on a `--coverage` build.
 - gcovr line coverage checked against `[tool.spider.coverage_full].fail_under` and uploaded to Codecov.
 
@@ -142,7 +142,7 @@ pre-commit install -f
 
 - Repo root - C sources (flat layout, 27 files). Physics sources vs utility sources:
   - Physics: `atmosphere.c`, `bc.c`, `energy.c`, `eos.c`, `eos_adamswilliamson.c`, `eos_composite.c`, `eos_lookup.c`, `ic.c`, `interp.c`, `matprop.c`, `mesh.c`, `reaction.c`, `rheologicalfront.c`, `rhs.c`, `twophase.c`.
-  - Utility: `cJSON.c` (vendored), `constants.c`, `ctx.c`, `dimensionalisablefield.c`, `eos_output.c`, `main.c`, `monitor.c`, `parameters.c`, `poststep.c`, `rollback.c`, `util.c`.
+  - Utility: `cJSON.c` (vendored), `constants.c`, `ctx.c`, `dimensionalisablefield.c`, `eos_output.c`, `main.c`, `monitor.c`, `other.c` (uncompiled prototypes), `parameters.c`, `poststep.c`, `rollback.c`, `util.c`. The linter classifies fail-closed: a repo-root C source not on its utility denylist is physics-required.
 - `tests/` - pytest suite. Each physics source has a 1:1 test file at `tests/test_<file>.py`. Cross-cutting tests (`tests/test_regression.py`, `tests/test_aragog_crosscheck.py`) are the exception.
   - `tests/c/` - C test executables (thin evaluators; assertions live in the pytest wrappers).
   - `tests/opts/` - options files for test runs.
@@ -292,10 +292,10 @@ SPIDER measures C line coverage with gcov/gcovr (`--coverage` builds; `cJSON.c` 
 
 | Gate | Tests included | Target | Enforced |
 |---|---|---|---|
-| Fast gate (`tool.spider.coverage_fast.fail_under`) | unit + smoke | Ratcheting toward **90%** | Every PR |
-| Full gate (`tool.spider.coverage_full.fail_under`) | unit + smoke + integration + slow | Ratcheting toward **90%** | Nightly |
+| Fast gate (`tool.spider.coverage_fast.fail_under`) | unit + smoke | Moves only upward toward **90%** | Every PR |
+| Full gate (`tool.spider.coverage_full.fail_under`) | unit + smoke + integration + slow | Moves only upward toward **90%** | Nightly |
 
-Both gates ratchet toward 90, capped at 90 (`tools/update_coverage_threshold.py` enforces `ECOSYSTEM_CEILING = 90.0`); neither may be manually decreased. The CI guard in `ci.yml` rejects any PR that lowers either `fail_under` below `min(base_ref, 90.0)`.
+Both gates are raised manually with `tools/update_coverage_threshold.py`, which caps them at 90 (`ECOSYSTEM_CEILING = 90.0`); neither may be decreased. The CI guard in `ci.yml` rejects any PR that lowers either `fail_under` below `min(base_ref, 90.0)`.
 
 ## Safety & Determinism
 

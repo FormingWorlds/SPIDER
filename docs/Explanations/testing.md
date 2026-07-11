@@ -11,7 +11,7 @@ For how to run the suite locally, see [Testing SPIDER](../How-to/test.md); for h
 
 ## Continuous integration
 
-The `CI` workflow runs on every pull request: it builds SPIDER and the C test executables with coverage instrumentation against a cached PETSc, runs the unit and smoke tiers under a hard ten-minute cap, lints the Python files, validates the test structure and the test-quality baseline, and enforces the fast line-coverage gate. The `Nightly` workflow runs the complete suite including the frozen-reference regressions every night, enforces the full coverage gate, and uploads the coverage report to Codecov. Coverage thresholds only move upward, capped at the PROTEUS-ecosystem ceiling of 90 percent.
+The `CI` workflow runs on every pull request: it builds SPIDER and the C test executables with coverage instrumentation against a cached PETSc, runs the unit and smoke tiers under a hard ten-minute cap, lints the Python files, validates the test structure and the test-quality baseline, and enforces the fast line-coverage gate. The `Nightly` workflow runs the complete suite including the frozen-reference regressions every night, enforces the full coverage gate, and uploads the coverage report to Codecov. Coverage thresholds move only upward (raised manually as measured coverage grows, with CI rejecting any decrease), capped at the PROTEUS-ecosystem ceiling of 90 percent.
 
 ## Badge system
 

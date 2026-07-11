@@ -10,6 +10,7 @@
 #include <petsc.h>
 
 #include "constants.h"
+#include "util.h"
 
 /* Fill the scaling constants from the -entropy0 / -radius0 / -time0 /
    -pressure0 / -volatile0 options, mirroring ScalingConstantsSet and
@@ -18,16 +19,18 @@
 static PETSC_UNUSED PetscErrorCode SpiderTestScalingConstantsSetFromOptions(ScalingConstants SC)
 {
   PetscErrorCode ierr;
-  PetscScalar    ENTROPY0 = 1.0E3, RADIUS0 = 1.0E6, TIME0 = 3.154E7;
-  PetscScalar    PRESSURE0 = 1.0E7, VOLATILE0 = 1.0E-10;
+  PetscScalar    ENTROPY0, RADIUS0, TIME0, PRESSURE0, VOLATILE0;
   PetscScalar    SQRTST;
 
   PetscFunctionBeginUser;
-  ierr = PetscOptionsGetScalar(NULL, NULL, "-entropy0", &ENTROPY0, NULL);CHKERRQ(ierr);
-  ierr = PetscOptionsGetScalar(NULL, NULL, "-radius0", &RADIUS0, NULL);CHKERRQ(ierr);
-  ierr = PetscOptionsGetScalar(NULL, NULL, "-time0", &TIME0, NULL);CHKERRQ(ierr);
-  ierr = PetscOptionsGetScalar(NULL, NULL, "-pressure0", &PRESSURE0, NULL);CHKERRQ(ierr);
-  ierr = PetscOptionsGetScalar(NULL, NULL, "-volatile0", &VOLATILE0, NULL);CHKERRQ(ierr);
+  /* PetscOptionsGetPositiveScalar matches the production reads in
+     parameters.c, so a nonpositive scaling errors here exactly as it
+     would in the binary. */
+  ierr = PetscOptionsGetPositiveScalar("-entropy0", &ENTROPY0, 1.0E3, NULL);CHKERRQ(ierr);
+  ierr = PetscOptionsGetPositiveScalar("-radius0", &RADIUS0, 1.0E6, NULL);CHKERRQ(ierr);
+  ierr = PetscOptionsGetPositiveScalar("-time0", &TIME0, 3.154E7, NULL);CHKERRQ(ierr);
+  ierr = PetscOptionsGetPositiveScalar("-pressure0", &PRESSURE0, 1.0E7, NULL);CHKERRQ(ierr);
+  ierr = PetscOptionsGetPositiveScalar("-volatile0", &VOLATILE0, 1.0E-10, NULL);CHKERRQ(ierr);
 
   SC->ENTROPY   = ENTROPY0;
   SC->RADIUS    = RADIUS0;

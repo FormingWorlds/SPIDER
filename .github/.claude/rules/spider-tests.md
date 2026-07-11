@@ -274,10 +274,10 @@ C line coverage is measured with gcov/gcovr on `--coverage` builds; `cJSON.c` is
 
 | Gate | Tests | Target | When |
 |---|---|---|---|
-| Fast gate (`tool.spider.coverage_fast`) | unit + smoke | ratcheting toward **90%** | Every PR |
-| Full gate (`tool.spider.coverage_full`) | unit + smoke + integration + slow | ratcheting toward **90%** | Nightly |
+| Fast gate (`tool.spider.coverage_fast`) | unit + smoke | moves only upward toward **90%** | Every PR |
+| Full gate (`tool.spider.coverage_full`) | unit + smoke + integration + slow | moves only upward toward **90%** | Nightly |
 
-The ratchet is one-way (`tools/update_coverage_threshold.py`), capped at 90%. Never manually decrease a threshold. The CI guard rejects any PR that lowers either `fail_under` below `min(base_ref, 90.0)`.
+The ratchet is one-way and run manually (`tools/update_coverage_threshold.py`), capped at 90%. Never decrease a threshold. The CI guard rejects any PR that lowers either `fail_under` below `min(base_ref, 90.0)`.
 
 What this means for adding code:
 

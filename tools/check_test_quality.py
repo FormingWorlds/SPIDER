@@ -72,32 +72,10 @@ OPTIONAL_DEPS = {
     'bibtexparser',
 }
 
-# Physics source files (C, repo root). Each one must have a 1:1 test file
-# at ``tests/test_<source stem>.py`` (the rule in spider-tests.md section 12).
-# Each source must have at least one @pytest.mark.physics_invariant test
-# and at least one @pytest.mark.reference_pinned test in its companion
-# test file.
-PHYSICS_SOURCES = {
-    'atmosphere.c',
-    'bc.c',
-    'energy.c',
-    'eos.c',
-    'eos_adamswilliamson.c',
-    'eos_composite.c',
-    'eos_lookup.c',
-    'ic.c',
-    'interp.c',
-    'matprop.c',
-    'mesh.c',
-    'reaction.c',
-    'rheologicalfront.c',
-    'rhs.c',
-    'twophase.c',
-}
-
 # Utility sources are exempt from the physics-invariant / reference-pinned
 # requirement but still subject to the anti-happy-path rules. cJSON is
-# vendored third-party code.
+# vendored third-party code. This denylist is the single classification
+# point: every other C source at the repo root is physics-required.
 UTILITY_SOURCES = {
     'cJSON.c',
     'constants.c',
@@ -106,11 +84,21 @@ UTILITY_SOURCES = {
     'eos_output.c',
     'main.c',
     'monitor.c',
+    'other.c',  # uncompiled prototype code, not in the Makefile source list
     'parameters.c',
     'poststep.c',
     'rollback.c',
     'util.c',
 }
+
+# Physics source files (C, repo root), derived from the tree so that a
+# newly added source is physics-required by default (fail-closed) until
+# it is explicitly classified as utility above. Each physics source must
+# have a 1:1 test file at ``tests/test_<source stem>.py`` (the rule in
+# spider-tests.md section 12) with at least one
+# @pytest.mark.physics_invariant test and at least one
+# @pytest.mark.reference_pinned test.
+PHYSICS_SOURCES = {p.name for p in REPO_ROOT.glob('*.c')} - UTILITY_SOURCES
 
 
 def _is_weak_assert(node: ast.Assert) -> str | None:

@@ -130,12 +130,11 @@ for path in sorted(ROOT.rglob('*.py')):
             )
 
 # Source-mirror check: physics C sources need a companion test file.
-# Keep this list in sync with PHYSICS_SOURCES in tools/check_test_quality.py.
-PHYSICS_SOURCES = {
-    'atmosphere.c', 'bc.c', 'energy.c', 'eos.c', 'eos_adamswilliamson.c',
-    'eos_composite.c', 'eos_lookup.c', 'ic.c', 'interp.c', 'matprop.c',
-    'mesh.c', 'reaction.c', 'rheologicalfront.c', 'rhs.c', 'twophase.c',
-}
+# The classification lives in tools/check_test_quality.py (fail-closed:
+# every repo-root C source not on its utility denylist is physics).
+sys.path.insert(0, 'tools')
+from check_test_quality import PHYSICS_SOURCES  # noqa: E402
+
 for source in sorted(PHYSICS_SOURCES):
     stem = source.rsplit('.', 1)[0]
     companion = ROOT / f'test_{stem}.py'

@@ -99,7 +99,7 @@ SRC_O_NOMAIN = $(filter-out main.o,${SRC_O})
 tests_c : ${TEST_C_EXE}
 
 ${TEST_C_EXE} : % : %.o ${SRC_O_NOMAIN}
-	-${CLINKER} -o $@ $^ ${PETSC_TS_LIB}
+	${CLINKER} -o $@ $^ ${PETSC_TS_LIB}
 
 test :
 	python3 -m pytest -m "(unit or smoke) and not skip"

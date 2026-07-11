@@ -22,7 +22,7 @@ jobs:
       uses: actions/cache@v5
       with:
         path: petsc
-        key: ${{ runner.os }}-petsc-cache
+        key: ${{ runner.os }}-petsc-63b72503
     - name: Build PETSc
       if: steps.petsc-cache.outputs.cache-hit != 'true'
       run: |
@@ -37,6 +37,12 @@ jobs:
       run: |
           make -j CFLAGS_EXTRA="--coverage"
           make -j tests_c CFLAGS_EXTRA="--coverage"
+    - name: Check the built binaries exist
+      run: |
+          test -x ./spider
+          for exe in tests/c/test_interp tests/c/test_eos tests/c/test_eos_composite; do
+            test -x "$exe"
+          done
     - name: Run the full suite
       run: python -m pytest -m "not skip" --durations=25
     - name: Enforce the full coverage gate
