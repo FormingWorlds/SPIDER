@@ -147,17 +147,19 @@ def _element_moles(masses_kg, element):
 
 @pytest.fixture(scope='module')
 def abundance_ic_run(cached_spider_run):
-    """One-step reaction run with the abundance-based atmosphere IC.
+    """Zero-step reaction run with the abundance-based atmosphere IC.
 
     IC_ATMOSPHERE 1 solves the initial partial pressures and reaction
     masses from the per-volatile total abundances, subject to the
-    water and carbon dioxide equilibrium constraints.
+    water and carbon dioxide equilibrium constraints. Zero macro steps:
+    the tests read only the initial condition, so the run skips time
+    integration entirely.
     """
     return cached_spider_run(
         opts_file='reaction.opts',
         overrides=(
             '-IC_ATMOSPHERE', '1',
-            '-nstepsmacro', '1',
+            '-nstepsmacro', '0',
             '-n', '50',
             '-H2O_initial_total_abundance', '800.0',
             '-H2_initial_total_abundance', '0.6',
@@ -223,17 +225,18 @@ def test_abundance_ic_realises_the_requested_inventory(abundance_ic_run):
 
 @pytest.fixture(scope='module')
 def ocean_moles_ic_run(cached_spider_run):
-    """One-step reaction run with the ocean-moles atmosphere IC.
+    """Zero-step reaction run with the ocean-moles atmosphere IC.
 
     The mole counts are chosen so the implied abundances match the
     abundance-IC configuration, keeping the equilibrium solve within
-    its convergence basin.
+    its convergence basin. Zero macro steps: the tests read only the
+    initial condition.
     """
     return cached_spider_run(
         opts_file='reaction.opts',
         overrides=(
             '-IC_ATMOSPHERE', '4',
-            '-nstepsmacro', '1',
+            '-nstepsmacro', '0',
             '-n', '50',
             '-H2O_initial_ocean_moles', '2.43',
             '-H2_initial_ocean_moles', '0.0163',

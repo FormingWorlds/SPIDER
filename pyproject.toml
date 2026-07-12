@@ -27,7 +27,7 @@ markers = [
 # difference between compiler instrumentation variants; the ratchet
 # raises them from CI-measured coverage.
 [tool.spider.coverage_fast]
-fail_under = 88.0
+fail_under = 90.0
 
 [tool.spider.coverage_full]
 fail_under = 90.0
