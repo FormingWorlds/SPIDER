@@ -1,6 +1,6 @@
 # Coupling to PROTEUS
 
-SPIDER is the entropy-formalism interior module of the [PROTEUS](https://proteus-framework.org/PROTEUS) framework. PROTEUS does not link SPIDER as a library: it runs the compiled `spider` binary as a subprocess once per interior sub-step and exchanges data through the command-line options it passes in and the JSON files SPIDER writes out. The whole contract is therefore the runtime options (documented on the [options reference](../Reference/options.md)) and the JSON output layout described below. Keeping that contract stable is what lets PROTEUS pin a specific SPIDER commit and evolve the two codes independently.
+SPIDER is the C, PETSc-based interior module of the [PROTEUS](https://proteus-framework.org/PROTEUS) framework. PROTEUS does not link SPIDER as a library: it runs the compiled `spider` binary as a subprocess once per interior sub-step and exchanges data through the command-line options it passes in and the JSON files SPIDER writes out. The whole contract is therefore the runtime options (documented on the [options reference](../Reference/options.md)) and the JSON output layout described below. Keeping that contract stable is what lets PROTEUS pin a specific SPIDER commit and evolve the two codes independently.
 
 The PROTEUS side lives in `src/proteus/interior_energetics/spider.py`.
 

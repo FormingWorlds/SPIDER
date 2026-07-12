@@ -24,7 +24,7 @@
 
 SPIDER solves the interior thermal evolution of rocky planets in the entropy formulation (Bower et al. 2018). It is one of the interior modules of the PROTEUS ecosystem, called by the main [PROTEUS](https://github.com/FormingWorlds/PROTEUS) coupled atmosphere-interior framework as a subprocess. SPIDER is also usable standalone for magma-ocean evolution studies.
 
-Sister modules in the ecosystem: ARAGOG (interior, T-P formalism; the cross-check sibling), AGNI (atmospheric radiative transfer), SOCRATES (spectral radiative transfer), CALLIOPE (outgassing), JANUS (1D convective atmosphere), MORS (stellar evolution), VULCAN (atmospheric chemistry), ZEPHYRUS / BOREAS (atmospheric escape), Zalmoxis (interior structure; supplies external meshes to SPIDER), Obliqua (tidal evolution).
+Sister modules in the ecosystem: ARAGOG (interior thermal evolution, entropy formulation reimplemented in Python and JAX; the cross-check sibling), AGNI (atmospheric radiative transfer), SOCRATES (spectral radiative transfer), CALLIOPE (outgassing), JANUS (1D convective atmosphere), MORS (stellar evolution), VULCAN (atmospheric chemistry), ZEPHYRUS / BOREAS (atmospheric escape), Zalmoxis (interior structure; supplies external meshes to SPIDER), Obliqua (tidal evolution).
 
 **Project Type**: Scientific simulation code (C, PETSc-based) with a Python test harness.
 
