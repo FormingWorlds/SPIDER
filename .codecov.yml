@@ -1,3 +1,11 @@
+parsers:
+  cobertura:
+    # gcovr emits branch data in the Cobertura report, so Codecov would
+    # otherwise count every partially-branched line as a miss and report
+    # roughly half the line coverage the nightly gate measures. Treat
+    # partials as hits so the badge tracks the same line coverage.
+    partials_as_hits: true
+
 coverage:
   # C line coverage measured by gcovr in the nightly workflow.
   range: "70...90"
