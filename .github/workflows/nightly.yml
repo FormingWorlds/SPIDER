@@ -58,5 +58,11 @@ jobs:
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         files: coverage.xml
+        # Upload only the gcovr-filtered report. Without these, the uploader
+        # searches the coverage build tree and runs gcov on every instrumented
+        # object (including the vendored cJSON.c and the tests/c executables
+        # that the coverage gate excludes), which halves the reported number.
+        disable_search: true
+        plugins: noop
         flags: nightly
         fail_ci_if_error: false
