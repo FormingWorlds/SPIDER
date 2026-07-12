@@ -78,7 +78,8 @@ def count_tests(marker_expression: str) -> int:
     # pytest exits 5 when a filter selects nothing; that still parses below.
     if proc.returncode not in (0, 5):
         raise RuntimeError(
-            f'pytest collection failed for -m "{marker_expression}":\n{proc.stdout[-2000:]}'
+            f'pytest collection failed for -m "{marker_expression}":\n'
+            f'{proc.stdout[-2000:]}\n{proc.stderr[-2000:]}'
         )
     for line in reversed(proc.stdout.splitlines()):
         if 'no tests collected' in line:
@@ -88,7 +89,7 @@ def count_tests(marker_expression: str) -> int:
             return int(match.group(1))
     raise RuntimeError(
         f'could not parse the collection count for -m "{marker_expression}":\n'
-        f'{proc.stdout[-2000:]}'
+        f'{proc.stdout[-2000:]}\n{proc.stderr[-2000:]}'
     )
 
 

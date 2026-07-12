@@ -44,7 +44,13 @@ except ModuleNotFoundError:  # pragma: no cover - fallback for older interpreter
             'Install with: pip install tomli'
         ) from e
 
-import tomlkit
+try:
+    import tomlkit
+except ModuleNotFoundError as e:  # pragma: no cover - environment guard
+    raise ImportError(
+        'tomlkit is required to update pyproject.toml. '
+        'Install with: pip install tomlkit'
+    ) from e
 
 # PROTEUS-ecosystem coverage ceiling. The ratchet may raise either gate
 # toward this value but never above it; above 90% the gate tracks pragma
@@ -122,7 +128,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         '--coverage-file',
         default='coverage.json',
-        help="Path to coverage JSON (from 'coverage json'). Default: coverage.json",
+        help="Path to a gcovr JSON summary (from 'gcovr --json-summary'). Default: coverage.json",
     )
     parser.add_argument(
         '--target',

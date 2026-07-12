@@ -113,10 +113,11 @@ test_all :
 SRC_D = ${SRC_C:%.c=%.d}
 
 # Indicate that SRC_D is up to date. Prevents the include from having quadratic complexity.
-$(SRC_D) : ;
+$(SRC_D) $(TEST_C_D) : ;
 
 # Include dependency files
 -include $(SRC_D)
+-include $(TEST_C_D)
 
 ### Helper Targets #############################################################
 clean ::
