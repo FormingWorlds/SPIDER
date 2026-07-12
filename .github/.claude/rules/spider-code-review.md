@@ -62,7 +62,7 @@ Review rules:
 
 ## Test marker discipline
 
-Every test file must begin with a module-level `pytestmark = [pytest.mark.<tier>, pytest.mark.timeout(<budget>)]` (unit/30 s, smoke/60 s, integration/300 s, slow/3600 s). Per-function markers are additive but do not replace the module-level marker; PR CI runs `pytest -m "(unit or smoke) and not skip and not slow and not integration"` and any file missing the tier marker ships untested.
+Every test file must begin with a module-level `pytestmark = [pytest.mark.<tier>, pytest.mark.timeout(<budget>)]` (unit/30 s, smoke/120 s, integration/300 s, slow/3600 s). Per-function markers are additive but do not replace the module-level marker; PR CI runs `pytest -m "(unit or smoke) and not skip and not slow and not integration"` and any file missing the tier marker ships untested.
 
 ## Test quality (cross-reference)
 

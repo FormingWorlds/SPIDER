@@ -16,7 +16,7 @@ import pytest
 
 from tests._json_utils import atmosphere_si, read_output
 
-pytestmark = [pytest.mark.smoke, pytest.mark.timeout(60)]
+pytestmark = [pytest.mark.smoke, pytest.mark.timeout(120)]
 
 # Stefan-Boltzmann constant as hard-coded in constants.c; the CODATA
 # update differs only in the seventh digit, far inside the pin

@@ -15,7 +15,7 @@ import pytest
 
 from tests._json_utils import atmosphere_si, data_si, field_si, read_output
 
-pytestmark = [pytest.mark.smoke, pytest.mark.timeout(60)]
+pytestmark = [pytest.mark.smoke, pytest.mark.timeout(120)]
 
 # All output times of the 12-step blackbody50 run.
 FULL_TIMES = tuple(range(0, 1300, 100))

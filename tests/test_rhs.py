@@ -15,7 +15,7 @@ import pytest
 
 from tests._json_utils import data_si, read_output
 
-pytestmark = [pytest.mark.smoke, pytest.mark.timeout(60)]
+pytestmark = [pytest.mark.smoke, pytest.mark.timeout(120)]
 
 SECONDS_PER_YEAR = 365.25 * 24.0 * 3600.0
 

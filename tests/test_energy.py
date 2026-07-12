@@ -16,7 +16,7 @@ import pytest
 
 from tests._json_utils import atmosphere_si, data_si, read_output
 
-pytestmark = [pytest.mark.smoke, pytest.mark.timeout(60)]
+pytestmark = [pytest.mark.smoke, pytest.mark.timeout(120)]
 
 FLUX_COMPONENTS = ('Jconv_b', 'Jcond_b', 'Jmix_b', 'Jgrav_b')
 

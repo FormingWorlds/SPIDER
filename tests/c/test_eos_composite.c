@@ -50,7 +50,8 @@ int main(int argc, char **argv)
 
   ierr = EOSCreate(&composite, SPIDER_EOS_COMPOSITE);CHKERRQ(ierr);
   ierr = EOSCompositeSetSubEOS(composite, sub_eos, 2);CHKERRQ(ierr);
-  ierr = EOSSetUpFromOptions(composite, "", FC, SC);CHKERRQ(ierr);
+  /* the prefix matches the production setup in parameters.c */
+  ierr = EOSSetUpFromOptions(composite, "composite", FC, SC);CHKERRQ(ierr);
 
   for (i = 0; i < nP; ++i) {
     EOSEvalData eval;

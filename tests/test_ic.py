@@ -17,7 +17,7 @@ import pytest
 
 from tests._json_utils import data_si, read_output, solution_entries
 
-pytestmark = [pytest.mark.smoke, pytest.mark.timeout(60)]
+pytestmark = [pytest.mark.smoke, pytest.mark.timeout(120)]
 
 # blackbody50 geometry: radius 6371000 m, coresize 0.55, so the mantle
 # shell spans 6371000 * 0.45 m from surface to core-mantle boundary.

@@ -16,7 +16,7 @@ import pytest
 
 from tests._json_utils import data_si, read_output
 
-pytestmark = [pytest.mark.smoke, pytest.mark.timeout(60)]
+pytestmark = [pytest.mark.smoke, pytest.mark.timeout(120)]
 
 # Viscosity end members configured in tests/opts/blackbody50.opts.
 MELT_LOG10_VISC = 2.0  # log10(Pa s)

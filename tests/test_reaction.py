@@ -15,7 +15,7 @@ import pytest
 
 from tests._json_utils import field_si, read_output
 
-pytestmark = [pytest.mark.smoke, pytest.mark.timeout(60)]
+pytestmark = [pytest.mark.smoke, pytest.mark.timeout(120)]
 
 VOLATILES = ('H2O', 'H2', 'CO2', 'CO')
 

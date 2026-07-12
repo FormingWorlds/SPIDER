@@ -199,7 +199,7 @@ Tier markers, with their CI surface and per-test wall-time budgets:
 pytestmark = [pytest.mark.<tier>, pytest.mark.timeout(<budget>)]
 ```
 
-with timeouts: 30 s for unit, 60 s for smoke, 300 s for integration, 3600 s for slow. Per-function markers are additive but do not replace the module-level marker. CI runs `pytest -m "(unit or smoke) and not skip and not slow and not integration"`; tests without a tier marker are invisible to CI. The `pytest-timeout` ceiling is a defensive net against future regressions that introduce a hang.
+with timeouts: 30 s for unit, 120 s for smoke, 300 s for integration, 3600 s for slow. Per-function markers are additive but do not replace the module-level marker. CI runs `pytest -m "(unit or smoke) and not skip and not slow and not integration"`; tests without a tier marker are invisible to CI. The `pytest-timeout` ceiling is a defensive net against future regressions that introduce a hang.
 
 The `unit` budget is < 1 s rather than the ecosystem's usual < 100 ms because a C test executable pays `PetscInitialize` startup on every invocation; the cost is fixed overhead, not physics.
 

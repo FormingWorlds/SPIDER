@@ -18,7 +18,7 @@ import pytest
 
 from tests._json_utils import data_si, field_si, read_output
 
-pytestmark = [pytest.mark.smoke, pytest.mark.timeout(60)]
+pytestmark = [pytest.mark.smoke, pytest.mark.timeout(120)]
 
 PHI_CRITICAL = 0.4  # blackbody50 -phi_critical
 # blackbody50 geometry: radius 6371000 m, coresize 0.55.

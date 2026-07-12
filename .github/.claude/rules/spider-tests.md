@@ -194,7 +194,7 @@ pytestmark = [pytest.mark.<tier>, pytest.mark.timeout(<budget>)]
 with budgets:
 
 - `unit` -> `timeout(30)` (target wall-time per test < 1 s; PetscInitialize startup dominates).
-- `smoke` -> `timeout(60)` (target < 30 s; short real runs).
+- `smoke` -> `timeout(120)` (target < 30 s on a development machine; the ceiling absorbs the slower CI runners, which also pay the session-cached run on its first consumer).
 - `integration` -> `timeout(300)`.
 - `slow` -> `timeout(3600)`.
 

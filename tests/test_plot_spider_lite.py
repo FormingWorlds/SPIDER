@@ -17,7 +17,7 @@ import pytest
 
 pytest.importorskip('matplotlib')
 
-pytestmark = [pytest.mark.smoke, pytest.mark.timeout(60)]
+pytestmark = [pytest.mark.smoke, pytest.mark.timeout(120)]
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 PLOT_SCRIPT = REPO_ROOT / 'py' / 'plot_spider_lite.py'

@@ -9,13 +9,13 @@ SPIDER is scientific simulation code, so its tests are held to physics-grade sta
 Every test file declares its tier and a defensive timeout at module level, directly after the imports:
 
 ```python
-pytestmark = [pytest.mark.smoke, pytest.mark.timeout(60)]
+pytestmark = [pytest.mark.smoke, pytest.mark.timeout(120)]
 ```
 
 | Tier | What belongs here | Timeout | Where it runs |
 |------|-------------------|---------|---------------|
 | `unit` | C test executables and Python-side checks; no full `spider` runs | 30 s | Every pull request |
-| `smoke` | Short real runs (a few macro steps, 50 nodes) with physics checks on the JSON output | 60 s | Every pull request |
+| `smoke` | Short real runs (a few macro steps, 50 nodes) with physics checks on the JSON output | 120 s | Every pull request |
 | `integration` | Full regression cases against the frozen references in `tests/expected_output/` | 300 s | Nightly |
 | `slow` | Long validation runs, cross-implementation comparisons | 3600 s | Nightly |
 
