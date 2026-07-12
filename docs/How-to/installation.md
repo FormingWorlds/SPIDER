@@ -75,7 +75,7 @@ To ensure you have everything installed, run:
 !!! warning "Python version"
     PETSc requires Python <= 3.12. If you do not make use of Conda, make sure your active environment uses a compatible version.
 
-If you use Conda, it is recommended to build and run SPIDER inside a dedicated environment. This keeps the Python dependencies for SPIDER and optional tools such as SciATH separate from your base environment.
+If you use Conda, it is recommended to build and run SPIDER inside a dedicated environment. This keeps the Python dependencies for SPIDER and its pytest-based test suite separate from your base environment.
 
 Create and activate a Python 3.12 environment:
 

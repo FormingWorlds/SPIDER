@@ -24,11 +24,14 @@ SPIDER uses calendar versioning: releases are named `YY.MM.DD` (no leading `v`),
     gh release create 26.03.02 --generate-notes --title "26.03.02"
     ```
 
+    !!! warning "Tag format"
+        Tags are bare CalVer dates with no leading `v` (`26.03.02`, not `v26.03.02`), so the tag matches the `version.h` triple that the release guard checks and that is stamped into every JSON output file.
+
     Edit the generated notes where the automatic summary needs context; call out any change to the JSON output fields or their units explicitly, because the PROTEUS coupling reads them.
 
 4. **Release guard.** A workflow checks on every published release that the tag name matches the `version.h` triple and fails the release job on a mismatch; fix `version.h` (or retag) and re-run it if it fires.
 
-5. **Update the PROTEUS pin.** Coupled deployments pin SPIDER by commit in PROTEUS's `pyproject.toml` (`[tool.proteus.modules.spider]`); after a release that PROTEUS should adopt, open a PROTEUS pull request bumping the pin and run the PROTEUS interior smoke tests against it.
+5. **Update the PROTEUS pin.** Coupled deployments pin SPIDER by commit in PROTEUS's `pyproject.toml` (`[tool.proteus.modules.spider]`); after a release that PROTEUS should adopt, open a PROTEUS pull request bumping the pin and run the PROTEUS interior smoke tests against it. See [Coupling to PROTEUS](proteus_coupling.md) for the exchange contract that makes a pin bump safe.
 
 There is no package registry step: SPIDER ships as source plus the GitHub release.
 

@@ -17,6 +17,7 @@ nav:
       - Testing: How-to/test.md
       - Building tests: How-to/build_tests.md
       - External mesh input: How-to/external_mesh_input.md
+      - Coupling to PROTEUS: How-to/proteus_coupling.md
       - Releasing: How-to/releasing.md
 
   - Tutorials:
