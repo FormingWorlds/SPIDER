@@ -15,7 +15,7 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from tests._json_utils import data_si, read_output, solution_entries
+from tests._json_utils import data_si, field_si, read_output, solution_entries
 
 pytestmark = [pytest.mark.smoke, pytest.mark.timeout(120)]
 
@@ -98,3 +98,214 @@ def test_initial_adiabat_is_nearly_flat_until_cooling_imprints_structure(blackbo
     s_200 = data_si(read_output(blackbody_short, 200), 'S_s')
     assert s_200[0] < s_0[0]
     assert s_0[0] - s_200[0] > 10.0  # J/kg/K
+
+
+# Molar masses (kg/mol) of the reaction.opts volatiles, matching the
+# per-volatile molar_mass options in the configuration.
+MOLAR_MASS = {
+    'H2O': 0.01801528,
+    'H2': 0.00201588,
+    'CO2': 0.04401,
+    'CO': 0.02801,
+}
+# Elemental composition (atoms per molecule) for the mole bookkeeping.
+STOICHIOMETRY = {
+    'H2O': {'H': 2, 'O': 1},
+    'H2': {'H': 2},
+    'CO2': {'C': 1, 'O': 2},
+    'CO': {'C': 1, 'O': 1},
+}
+# Requested inventories (ppm by mass of the mantle) for the abundance IC.
+# The values sit 20 to 40 percent off the three-ocean equilibrium implied
+# by the configured guess pressures (984, 0.45, 5.0, 22.6 ppm), so the
+# Newton solve stays within its convergence basin on every platform while
+# the reactions still have to redistribute a resolvable amount of mass.
+ABUNDANCE_PPM = {'H2O': 800.0, 'H2': 0.6, 'CO2': 7.0, 'CO': 18.0}
+# Requested inventories (Earth oceans) for the ocean-moles IC, matched to
+# the abundance targets above; the mole count of one ocean is the
+# OCEAN_MOLES constant in constants.c.
+OCEAN_MOLES = 7.68894973907177e22  # mol per Earth ocean of H2O (or H2)
+MOLES_OCEANS = {'H2O': 2.43, 'H2': 0.0163, 'CO2': 0.0087, 'CO': 0.0352}
+
+
+def _volatile_reservoirs_kg(doc, volatile):
+    """SI masses of the liquid, solid, and atmosphere reservoirs."""
+    block = doc['atmosphere'][volatile]
+    return {
+        key: float(field_si(block[key])[0])
+        for key in ('initial_kg', 'liquid_kg', 'solid_kg', 'atmosphere_kg', 'physical_kg')
+    }
+
+
+def _element_moles(masses_kg, element):
+    """Total moles of one element across the four volatile inventories."""
+    return sum(
+        masses_kg[v] / MOLAR_MASS[v] * STOICHIOMETRY[v].get(element, 0)
+        for v in MOLAR_MASS
+    )
+
+
+@pytest.fixture(scope='module')
+def abundance_ic_run(cached_spider_run):
+    """Zero-step reaction run with the abundance-based atmosphere IC.
+
+    IC_ATMOSPHERE 1 solves the initial partial pressures and reaction
+    masses from the per-volatile total abundances, subject to the
+    water and carbon dioxide equilibrium constraints. Zero macro steps:
+    the tests read only the initial condition, so the run skips time
+    integration entirely.
+    """
+    return cached_spider_run(
+        opts_file='reaction.opts',
+        overrides=(
+            '-IC_ATMOSPHERE', '1',
+            '-nstepsmacro', '0',
+            '-n', '50',
+            '-H2O_initial_total_abundance', '800.0',
+            '-H2_initial_total_abundance', '0.6',
+            '-CO2_initial_total_abundance', '7.0',
+            '-CO_initial_total_abundance', '18.0',
+        ),
+        name='ic_abundance',
+    )
+
+
+@pytest.mark.physics_invariant
+@pytest.mark.reference_pinned
+def test_abundance_ic_realises_the_requested_inventory(abundance_ic_run):
+    """The abundance IC conserves the requested elemental inventories.
+
+    Anchor: mass-balance identity through the initial-pressure solve.
+    Each volatile's initial_kg must equal the requested ppm of the
+    mantle mass exactly, and because the water and carbon dioxide
+    reactions conserve hydrogen and carbon, the realised reservoirs
+    carry the same H and C mole totals as the request. Oxygen is NOT
+    conserved among the volatiles: the reactions exchange it with the
+    melt's oxygen-fugacity buffer (observed 2e-3 relative for these
+    targets), which discriminates an inert fO2 pathway.
+    """
+    doc = read_output(abundance_ic_run, 0)
+    mantle_kg = float(field_si(doc['atmosphere']['mass_mantle'])[0])
+
+    requested = {}
+    realised = {}
+    for volatile, ppm in ABUNDANCE_PPM.items():
+        res = _volatile_reservoirs_kg(doc, volatile)
+        requested[volatile] = ppm * 1e-6 * mantle_kg
+        realised[volatile] = res['liquid_kg'] + res['solid_kg'] + res['atmosphere_kg']
+        # rel=1e-9: initial_kg is the requested abundance times the
+        # mantle mass, stored rather than solved.
+        assert res['initial_kg'] == pytest.approx(requested[volatile], rel=1e-9)
+        # physical_kg is defined as the reservoir sum.
+        assert res['physical_kg'] == pytest.approx(realised[volatile], rel=1e-10)
+
+    # Elemental conservation through the equilibrium solve: H and C
+    # totals match the request (observed to 3e-15 relative; rel=1e-9
+    # leaves platform headroom). This is the discriminating check that
+    # the solve redistributed mass without creating or destroying it.
+    for element in ('H', 'C'):
+        assert _element_moles(realised, element) == pytest.approx(
+            _element_moles(requested, element), rel=1e-9
+        )
+
+    # Oxygen exchange: the realised volatile O inventory departs from
+    # the requested one (observed 2.2e-3 relative; the threshold sits
+    # twentyfold below) because the fO2 buffer participates in both
+    # reactions. An inert fO2 pathway would conserve O to the same
+    # 1e-9 the H and C totals meet.
+    o_req = _element_moles(requested, 'O')
+    o_real = _element_moles(realised, 'O')
+    assert abs(o_real - o_req) > 1e-4 * o_req
+
+    # Edge case: the reactions moved water mass at the IC (observed
+    # 3.6e-3 relative), so the realised H2O reservoirs sit resolvably
+    # off the bare request.
+    assert abs(realised['H2O'] - requested['H2O']) > 1e-4 * requested['H2O']
+
+
+@pytest.fixture(scope='module')
+def ocean_moles_ic_run(cached_spider_run):
+    """Zero-step reaction run with the ocean-moles atmosphere IC.
+
+    The mole counts are chosen so the implied abundances match the
+    abundance-IC configuration, keeping the equilibrium solve within
+    its convergence basin. Zero macro steps: the tests read only the
+    initial condition.
+    """
+    return cached_spider_run(
+        opts_file='reaction.opts',
+        overrides=(
+            '-IC_ATMOSPHERE', '4',
+            '-nstepsmacro', '0',
+            '-n', '50',
+            '-H2O_initial_ocean_moles', '2.43',
+            '-H2_initial_ocean_moles', '0.0163',
+            '-CO2_initial_ocean_moles', '0.0087',
+            '-CO_initial_ocean_moles', '0.0352',
+        ),
+        name='ic_ocean_moles',
+    )
+
+
+@pytest.mark.physics_invariant
+@pytest.mark.reference_pinned
+def test_ocean_moles_ic_converts_moles_to_mass(ocean_moles_ic_run):
+    """IC_ATMOSPHERE 4 converts Earth-ocean mole counts to inventory mass.
+
+    Anchor: the OCEAN_MOLES constant in constants.c (7.68894974e22 mol
+    per Earth ocean). Each volatile's initial_kg must equal
+    moles * OCEAN_MOLES * molar_mass, so the pin verifies both the
+    constant and the per-volatile molar mass wiring.
+    """
+    doc = read_output(ocean_moles_ic_run, 0)
+
+    for volatile, oceans in MOLES_OCEANS.items():
+        res = _volatile_reservoirs_kg(doc, volatile)
+        expected = oceans * OCEAN_MOLES * MOLAR_MASS[volatile]  # kg
+        # rel=1e-9: a closed-form product of three stored constants.
+        assert res['initial_kg'] == pytest.approx(expected, rel=1e-9)
+
+    # Molar-mass discrimination: reading the CO2 inventory with the CO
+    # molar mass shifts the expected mass by the mass ratio (36%), far
+    # beyond the pin tolerance.
+    co2 = _volatile_reservoirs_kg(doc, 'CO2')
+    wrong = MOLES_OCEANS['CO2'] * OCEAN_MOLES * MOLAR_MASS['CO']
+    assert abs(co2['initial_kg'] - wrong) > 0.3 * co2['initial_kg']
+
+    # Edge case: the smallest inventory (CO2, 0.0087 oceans) still
+    # produces a positive, finite mass at the expected scale.
+    assert 0 < co2['initial_kg'] < 1e21  # kg
+    assert np.isfinite(co2['initial_kg'])
+
+
+@pytest.mark.physics_invariant
+def test_abundance_and_ocean_mole_solves_agree(abundance_ic_run, ocean_moles_ic_run):
+    """The two atmosphere-IC routes converge to the same equilibrium.
+
+    The ocean-mole counts are chosen to imply the abundance targets to
+    about 0.1 percent, so both configurations pose the same equilibrium
+    problem through different entry points and their SOLVED partial
+    pressures must agree. This validates the converged state itself:
+    a solve that stopped early, hit a floor, or landed on a different
+    root would separate the two routes far beyond the input rounding.
+    """
+    doc_a = read_output(abundance_ic_run, 0)
+    doc_m = read_output(ocean_moles_ic_run, 0)
+
+    for volatile in MOLAR_MASS:
+        p_a = float(field_si(doc_a['atmosphere'][volatile]['atmosphere_bar'])[0])
+        p_m = float(field_si(doc_m['atmosphere'][volatile]['atmosphere_bar'])[0])
+        # Positivity of the solved state itself (the in-code guard
+        # rejects negative solutions; this pins it from the outside).
+        assert p_a > 0 and p_m > 0, volatile
+        # rel=5e-3: the mole counts imply the abundances to about 7e-4
+        # (observed agreement 3.5e-4 to 6.7e-4); the margin is sevenfold
+        # while a wrong-branch or non-converged solve differs at the
+        # tens-of-percent level.
+        assert p_m == pytest.approx(p_a, rel=5e-3), volatile
+
+    # Scale guard: the equilibrium sits at bar-scale pressures for this
+    # inventory (observed 1.7 to 14 bar); a nondimensional leak or a
+    # Pa/bar slip would leave this bracket by orders of magnitude.
+    p_h2o = float(field_si(doc_a['atmosphere']['H2O']['atmosphere_bar'])[0])
+    assert 0.1 < p_h2o < 100.0  # bar

@@ -6,11 +6,18 @@ writes one shields.io endpoint-badge JSON file per public badge:
 
     {"schemaVersion": 1, "label": "<label>", "message": "<count>", "color": "blue"}
 
-Three badges are published:
+Six badges are published:
 
-* ``tests-total.json``   - every collected test (all tiers).
-* ``tests-fast.json``    - the unit + smoke tiers that run on every pull request.
-* ``tests-nightly.json`` - the integration + slow tiers that run nightly.
+* ``tests-total.json``       - every collected test (all tiers).
+* ``tests-unit.json``        - the unit tier (C test executables and Python logic).
+* ``tests-smoke.json``       - the smoke tier (short real binary runs).
+* ``tests-integration.json`` - the integration tier.
+* ``tests-fast.json``        - the unit + smoke tiers that run on every pull request.
+* ``tests-nightly.json``     - the integration + slow tiers that run nightly.
+
+The per-tier files (unit, smoke, integration) match the badge scheme of
+the other ecosystem modules; the fast and nightly files describe the CI
+split that consumes the tiers.
 
 Usage
 -----
@@ -39,6 +46,9 @@ _REPO_ROOT = Path(__file__).resolve().parent.parent
 # marker filters of the CI workflows.
 _BADGES = {
     'total': ('tests', 'not skip'),
+    'unit': ('unit tests', 'unit and not skip'),
+    'smoke': ('smoke tests', 'smoke and not skip'),
+    'integration': ('integration tests', 'integration and not skip'),
     'fast': ('fast tests', '(unit or smoke) and not skip and not slow and not integration'),
     'nightly': ('nightly tests', '(integration or slow) and not skip'),
 }

@@ -73,8 +73,17 @@ def run_spider(spider_exec, tmp_path_factory):
         (outdir / 'spider_stdout.log').write_text(proc.stdout)
         (outdir / 'spider_stderr.log').write_text(proc.stderr)
         if proc.returncode != 0:
-            tail = (proc.stderr or proc.stdout)[-2000:]
-            raise RuntimeError(f'spider exited with code {proc.returncode} for {cmd}:\n{tail}')
+            # The PETSc error block sits near the top of a long stderr
+            # stream while the tail is MPI abort boilerplate; keep both
+            # so tests can assert on the actual error message.
+            stream = proc.stderr or proc.stdout
+            petsc = '\n'.join(
+                line for line in stream.splitlines() if 'PETSC ERROR' in line
+            )[:2000]
+            tail = stream[-2000:]
+            raise RuntimeError(
+                f'spider exited with code {proc.returncode} for {cmd}:\n{petsc}\n{tail}'
+            )
         return outdir
 
     return _run

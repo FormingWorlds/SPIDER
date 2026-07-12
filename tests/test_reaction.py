@@ -147,3 +147,131 @@ def test_elements_conserved_across_each_reaction_pair(reaction_run):
     # inventory; both bounds discriminate unit slips.
     assert 1e16 < abs(h2o['reaction_kg']) < 1e20
     assert abs(h2o['reaction_kg']) < 0.01 * h2o['initial_kg']
+
+
+# The full named-reaction library configuration: seven volatiles and
+# the IVTANTHERMO water, IVTANTHERMO carbon dioxide, IVTANTHERMO
+# methane, and ammonia reactions (tests/opts/reaction_library.opts).
+LIBRARY_VOLATILES = ('H2O', 'H2', 'CO2', 'CO', 'CH4', 'NH3', 'N2')
+LIBRARY_MOLAR_MASS = {
+    'H2O': 0.01801528,
+    'H2': 0.00201588,
+    'CO2': 0.04401,
+    'CO': 0.02801,
+    'CH4': 0.01604,
+    'NH3': 0.017031,
+    'N2': 0.028014,
+}
+LIBRARY_STOICHIOMETRY = {
+    'H2O': {'H': 2, 'O': 1},
+    'H2': {'H': 2},
+    'CO2': {'C': 1, 'O': 2},
+    'CO': {'C': 1, 'O': 1},
+    'CH4': {'C': 1, 'H': 4},
+    'NH3': {'N': 1, 'H': 3},
+    'N2': {'N': 2},
+}
+
+
+@pytest.fixture(scope='module')
+def library_run(cached_spider_run):
+    """One macro step of the full named-reaction library configuration."""
+    return cached_spider_run(
+        opts_file='reaction_library.opts',
+        overrides=('-nstepsmacro', '1', '-n', '50'),
+        name='reaction_library',
+    )
+
+
+def _library_element_moles(doc, element):
+    """Moles of one element summed over all seven volatile inventories."""
+    total = 0.0
+    for volatile in LIBRARY_VOLATILES:
+        block = doc['atmosphere'][volatile]
+        kg = sum(
+            float(field_si(block[key])[0])
+            for key in ('liquid_kg', 'solid_kg', 'atmosphere_kg')
+        )
+        moles = kg / LIBRARY_MOLAR_MASS[volatile]
+        total += moles * LIBRARY_STOICHIOMETRY[volatile].get(element, 0)
+    return total
+
+
+@pytest.mark.physics_invariant
+def test_reaction_library_conserves_h_c_n(library_run):
+    """The four-reaction network conserves hydrogen, carbon, and nitrogen.
+
+    The methane reaction exchanges C and H, the ammonia reaction N and
+    H, and the water and carbon dioxide reactions H and C, but none of
+    them creates or destroys those elements, so the molar totals over
+    all seven volatiles are the same before and after the macro step.
+    """
+    doc_0 = read_output(library_run, 0)
+    doc_1 = read_output(library_run, 1000)
+
+    # rel=1e-5: the coupled volatile solve conserves the totals to its
+    # own tolerance (observed drifts at or below 1.5e-6).
+    for element in ('H', 'C', 'N'):
+        total_0 = _library_element_moles(doc_0, element)
+        total_1 = _library_element_moles(doc_1, element)
+        assert total_1 == pytest.approx(total_0, rel=1e-5), element
+        assert total_0 > 0
+
+    # Equilibrium partitioning discrimination: at these conditions the
+    # ammonia reaction pushes nearly all nitrogen into N2, so the
+    # realised NH3 share of the N inventory is tiny even though 0.5 ppm
+    # of NH3 was requested. An inert ammonia reaction would leave the
+    # requested 20 percent molar share in place.
+    n2_block = doc_0['atmosphere']['N2']
+    n2_kg = sum(
+        float(field_si(n2_block[key])[0])
+        for key in ('liquid_kg', 'solid_kg', 'atmosphere_kg')
+    )
+    n_total = _library_element_moles(doc_0, 'N')
+    assert 2.0 * n2_kg / LIBRARY_MOLAR_MASS['N2'] > 0.99 * n_total
+
+    # Edge case: the trace species (NH3) still carries a positive,
+    # finite inventory through the equilibrium.
+    nh3_kg = sum(
+        float(field_si(doc_0['atmosphere']['NH3'][key])[0])
+        for key in ('liquid_kg', 'solid_kg', 'atmosphere_kg')
+    )
+    assert 0 < nh3_kg < 1e21  # kg
+
+
+@pytest.mark.physics_invariant
+def test_oxygen_flows_through_the_melt_buffer(library_run):
+    """Oxygen is exchanged with the melt fO2 buffer, not conserved.
+
+    The water, carbon dioxide, and methane reactions carry an
+    oxygen-fugacity stoichiometry (the ammonia reaction does not), so
+    the volatile O inventory drifts over a step (observed 5e-3
+    relative in 1000 years) while H stays conserved in the same
+    window. A conserved O total would mean the fO2 coupling is inert,
+    which this test is designed to expose.
+    """
+    doc_0 = read_output(library_run, 0)
+    doc_1 = read_output(library_run, 1000)
+
+    o_0 = _library_element_moles(doc_0, 'O')
+    o_1 = _library_element_moles(doc_1, 'O')
+    assert o_0 > 0
+    # The fO2 exchange must move a resolvable amount of oxygen.
+    assert abs(o_1 - o_0) / o_0 > 1e-4
+
+    # Contrast: hydrogen is conserved in the very same step, so the
+    # oxygen drift is the fO2 pathway and not a global mass leak.
+    h_0 = _library_element_moles(doc_0, 'H')
+    h_1 = _library_element_moles(doc_1, 'H')
+    assert h_1 == pytest.approx(h_0, rel=1e-5)
+
+    # Positivity to solver tolerance: the coupled volatile solve has no
+    # hard positivity clamp, so a trace reservoir can undershoot zero
+    # by roundoff (observed -7e9 kg of CH4 against its 4.2e18 kg
+    # inventory, i.e. -2e-9 relative). Bound the undershoot at 1e-6 of
+    # the species inventory instead of asserting a hard zero.
+    for volatile in LIBRARY_VOLATILES:
+        block = doc_1['atmosphere'][volatile]
+        floor = -1e-6 * float(field_si(block['initial_kg'])[0])
+        for key in ('liquid_kg', 'solid_kg', 'atmosphere_kg'):
+            assert float(field_si(block[key])[0]) >= floor, (volatile, key)

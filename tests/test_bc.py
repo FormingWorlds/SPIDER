@@ -99,3 +99,94 @@ def test_mantle_cools_from_the_top_between_surface_and_cmb(blackbody_short):
     # Scale guard on the deep end: blackbody50 reaches ~1.38e11 Pa at
     # the CMB; a nondimensional leak would sit near unity.
     assert 1e10 < pressure_b[-1] < 1e12
+
+
+@pytest.fixture(scope='module')
+def core_flux_run(cached_spider_run):
+    """Two-macro-step blackbody50 run with a prescribed core heat flux."""
+    return cached_spider_run(
+        overrides=('-nstepsmacro', '2', '-CORE_BC', '2', '-core_bc_value', '1.0e5'),
+        name='core_flux',
+    )
+
+
+@pytest.mark.physics_invariant
+def test_prescribed_core_flux_slows_cmb_cooling(core_flux_run, blackbody_short):
+    """CORE_BC 2 injects heat at the CMB and slows the deep cooling.
+
+    Against the default core-cooling run at identical initial
+    conditions and output times, a prescribed 1e5 W/m^2 inflow keeps
+    the deepest staggered node hotter after 200 years (observed 2515
+    vs 2511 J/kg/K) and roughly doubles the total heat flux carried at
+    the core-mantle boundary node.
+    """
+    flux_0 = data_si(read_output(core_flux_run, 0), 'S_s')  # J/kg/K
+    cool_0 = data_si(read_output(blackbody_short, 0), 'S_s')  # J/kg/K
+    # Edge case, identical IC: the boundary condition acts only during
+    # integration, so t = 0 must agree between the two runs exactly.
+    np.testing.assert_allclose(flux_0, cool_0, rtol=1e-12)
+
+    flux_200 = data_si(read_output(core_flux_run, 200), 'S_s')
+    cool_200 = data_si(read_output(blackbody_short, 200), 'S_s')
+    # Direction discrimination: heating from below leaves the CMB node
+    # hotter than core cooling does; the observed gap (3.9 J/kg/K) is
+    # far above the CVODE tolerance floor.
+    assert flux_200[-1] > cool_200[-1]
+    assert flux_200[-1] - cool_200[-1] > 1.0  # J/kg/K
+
+    # The prescribed inflow roughly doubles the CMB heat flux relative
+    # to core cooling (observed 1.9e5 vs 9.2e4 W/m^2).
+    jtot_flux = data_si(read_output(core_flux_run, 200), 'Jtot_b')  # W/m^2
+    jtot_cool = data_si(read_output(blackbody_short, 200), 'Jtot_b')  # W/m^2
+    assert jtot_flux[-1] > 1.5 * jtot_cool[-1]
+    # Positivity: entropy stays physical under the modified BC.
+    assert np.all(flux_200 > 0)
+
+
+@pytest.fixture(scope='module')
+def entropy_bc_run(cached_spider_run):
+    """One-step run with constant-entropy boundaries and a steady IC.
+
+    The prescribed boundary entropies (2550 and 2650 J/kg/K) bracket
+    the 2600 J/kg/K adiabat; the steady-state energy solve keeps the
+    perturbed initial condition integrable within one macro step.
+    """
+    return cached_spider_run(
+        overrides=(
+            '-nstepsmacro', '1',
+            '-dtmacro', '10',
+            '-ic_surface_entropy', '2550',
+            '-ic_core_entropy', '2650',
+            '-ic_steady_state_energy',
+        ),
+        name='entropy_bc_steady',
+    )
+
+
+@pytest.mark.physics_invariant
+@pytest.mark.reference_pinned
+def test_constant_entropy_bc_pins_the_initial_surface(entropy_bc_run, blackbody_short):
+    """ic_surface_entropy fixes the surface basic node exactly.
+
+    Anchor: analytical identity. The constant-entropy boundary writes
+    the option value (2550 J/kg/K) onto the surface basic node, and the
+    subsequent steady-state solve preserves it, so the initial output
+    carries the prescribed value exactly. The default run's surface
+    (2599.7 J/kg/K, from the 2600 adiabat and the ic_dsdr gradient)
+    discriminates the option not being applied.
+    """
+    s_b = data_si(read_output(entropy_bc_run, 0), 'S_b')  # J/kg/K
+
+    # rel=1e-10: the value is assigned, not solved for.
+    assert s_b[0] == pytest.approx(2550.0, rel=1e-10)
+
+    # Discrimination guard: the default IC surface value differs by
+    # ~50 J/kg/K, five orders above the pin tolerance.
+    s_b_default = data_si(read_output(blackbody_short, 0), 'S_b')
+    assert abs(s_b_default[0] - 2550.0) > 40.0  # J/kg/K
+
+    # The core-side prescription seeds the deep profile before the
+    # steady-state solve rebalances it; the result must stay physical
+    # and within the entropy range of the loaded tables.
+    assert np.all(s_b > 0)
+    assert 2400.0 < s_b[-1] < 2700.0  # J/kg/K

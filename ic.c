@@ -932,9 +932,12 @@ static PetscErrorCode solve_for_initial_partial_pressure( Ctx *E )
        is way off.  The newtontr seems to help, and particularly increasing the size
        of delta0 to 10.0.  But I'm sure further optimisations are possible */
     ierr = PetscOptionsSetValue(NULL,"-atmosic_snes_type","newtontr");CHKERRQ(ierr);
-    /* Inform the nonlinear solver to generate a finite-difference approximation
-       to the Jacobian */
-    ierr = PetscOptionsSetValue(NULL,"-atmosic_snes_mf",NULL);CHKERRQ(ierr);
+    /* Build an explicit finite-difference Jacobian. The system is tiny
+       (one dof per volatile plus one per reaction), so the dense FD
+       Jacobian is cheap, and the trust-region solver needs a matrix
+       that supports transpose products, which the matrix-free
+       approximation does not provide. */
+    ierr = PetscOptionsSetValue(NULL,"-atmosic_snes_fd",NULL);CHKERRQ(ierr);
     /* Turn off convergence based on step size */
     ierr = PetscOptionsSetValue(NULL,"-atmosic_snes_stol","0");CHKERRQ(ierr);
     /* Turn off convergenced based on trust region tolerance */
@@ -973,10 +976,12 @@ static PetscErrorCode solve_for_initial_partial_pressure( Ctx *E )
 
     ierr = VecGetArray(x,&xx);CHKERRQ(ierr);
     for (i=0; i<Ap->n_volatiles; ++i) {
-        if( A->volatiles[i].p < 0.0 ){
-            /* Sanity check on solution (since it's non-unique) */
+        /* Sanity check on the solved value (the solution is non-unique):
+           test the converged unknown itself, not the stale entry left in
+           the atmosphere struct by the last residual evaluation. */
+        if( xx[i] < 0.0 ){
             SETERRQ2(PetscObjectComm((PetscObject)snes),PETSC_ERR_CONV_FAILED,
-                "Unphysical initial volatile partial pressure: volatile %d, x: %g",i,A->volatiles[i].p);
+                "Unphysical initial volatile partial pressure: volatile %d, x: %g",i,xx[i]);
         }
         else{
             A->volatiles[i].p = xx[i];
