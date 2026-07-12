@@ -166,7 +166,6 @@
 -volatile_names H2O,H2,CO2,CO,CH4,NH3,N2
 
 -CO2_SOLUBILITY 3
--CO2_initial_atmos_pressure 1.8412864823803783E5
 -CO2_kdist 0.0
 -CO2_kabs 1E-4
 -CO2_henry 0.0
@@ -174,7 +173,6 @@
 -CO2_molar_mass 0.04401 # kg/mol
 
 -H2O_SOLUBILITY 1
--H2O_initial_atmos_pressure 3.3703436080366105E5
 -H2O_kdist 0.0
 -H2O_kabs 0.01
 -H2O_henry 1.6886562705299146
@@ -182,7 +180,6 @@
 -H2O_molar_mass 0.01801528 # kg/mol
 
 -CO_SOLUBILITY 1
--CO_initial_atmos_pressure 15.555831058257253E5
 -CO_kdist 0.0
 -CO_kabs 1.0E-5
 -CO_henry 0.0
@@ -190,7 +187,6 @@
 -CO_molar_mass 0.02801 # kg/mol
 
 -H2_SOLUBILITY 1
--H2_initial_atmos_pressure 4.27087847230405E5
 -H2_kdist 0.0
 -H2_kabs 5.0E-5 # absorption (m^2/kg)
 -H2_henry 0.0

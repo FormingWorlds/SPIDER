@@ -116,8 +116,14 @@ def test_compositional_viscosity_matches_spaargaren(c_test):
         c_test, ('-melt_visc_comp', '1.2', '-melt_visc_ref_comp', '0.9'), *probe
     )
 
-    shift_high = _spaargaren_prefactor(1.4) - _spaargaren_prefactor(1.6)  # +0.2074
-    shift_low = _spaargaren_prefactor(1.2) - _spaargaren_prefactor(0.9)  # -1.3580
+    shift_high = _spaargaren_prefactor(1.4) - _spaargaren_prefactor(1.6)
+    shift_low = _spaargaren_prefactor(1.2) - _spaargaren_prefactor(0.9)
+    # Transcription pins: the helper re-encodes the published piecewise
+    # coefficients independently of eos.c; these literals (hand-derived
+    # from Spaargaren et al. 2020) guard the helper itself, so a shared
+    # transcription error cannot silently cancel.
+    assert shift_high == pytest.approx(0.2074, abs=1e-4)
+    assert shift_low == pytest.approx(-1.35803, abs=1e-4)
     # abs=1e-9: the prefactor is a closed-form expression of the two
     # option values, so only roundoff enters.
     assert high['log10visc'][0] == pytest.approx(2.0 + shift_high, abs=1e-9)

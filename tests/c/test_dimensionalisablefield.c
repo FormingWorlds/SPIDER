@@ -20,7 +20,7 @@ int main(int argc, char **argv)
   PetscScalar            scalings[1] = {TEST_SCALING};
   PetscScalar            dupScaling[1];
   const PetscScalar      *arr;
-  PetscScalar            original0, scaled0, roundtrip0;
+  PetscScalar            original0, scaled0, rescaled0, roundtrip0;
   PetscInt               i, numDomains, nlocal;
 
   ierr = PetscInitialize(&argc, &argv, NULL, help);
@@ -51,6 +51,13 @@ int main(int argc, char **argv)
   scaled0 = arr[0];
   ierr = VecRestoreArrayRead(v, &arr);CHKERRQ(ierr);
 
+  /* scaling an already-scaled field is the documented no-op guard:
+     it warns and must leave the values untouched */
+  ierr = DimensionalisableFieldScale(f);CHKERRQ(ierr);
+  ierr = VecGetArrayRead(v, &arr);CHKERRQ(ierr);
+  rescaled0 = arr[0];
+  ierr = VecRestoreArrayRead(v, &arr);CHKERRQ(ierr);
+
   ierr = DimensionalisableFieldUnscale(f);CHKERRQ(ierr);
   ierr = VecGetArrayRead(v, &arr);CHKERRQ(ierr);
   roundtrip0 = arr[0];
@@ -68,6 +75,7 @@ int main(int argc, char **argv)
   ierr = PetscPrintf(PETSC_COMM_WORLD, "{\n");CHKERRQ(ierr);
   ierr = PetscPrintf(PETSC_COMM_WORLD, "\"original0\": %.17g,\n", (double)original0);CHKERRQ(ierr);
   ierr = PetscPrintf(PETSC_COMM_WORLD, "\"scaled0\": %.17g,\n", (double)scaled0);CHKERRQ(ierr);
+  ierr = PetscPrintf(PETSC_COMM_WORLD, "\"rescaled0\": %.17g,\n", (double)rescaled0);CHKERRQ(ierr);
   ierr = PetscPrintf(PETSC_COMM_WORLD, "\"roundtrip0\": %.17g,\n", (double)roundtrip0);CHKERRQ(ierr);
   ierr = PetscPrintf(PETSC_COMM_WORLD, "\"scaling\": %.17g,\n", (double)TEST_SCALING);CHKERRQ(ierr);
   ierr = PetscPrintf(PETSC_COMM_WORLD, "\"dup_scaling0\": %.17g,\n", (double)dupScaling[0]);CHKERRQ(ierr);

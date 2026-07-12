@@ -276,3 +276,36 @@ def test_ocean_moles_ic_converts_moles_to_mass(ocean_moles_ic_run):
     # produces a positive, finite mass at the expected scale.
     assert 0 < co2['initial_kg'] < 1e21  # kg
     assert np.isfinite(co2['initial_kg'])
+
+
+@pytest.mark.physics_invariant
+def test_abundance_and_ocean_mole_solves_agree(abundance_ic_run, ocean_moles_ic_run):
+    """The two atmosphere-IC routes converge to the same equilibrium.
+
+    The ocean-mole counts are chosen to imply the abundance targets to
+    about 0.1 percent, so both configurations pose the same equilibrium
+    problem through different entry points and their SOLVED partial
+    pressures must agree. This validates the converged state itself:
+    a solve that stopped early, hit a floor, or landed on a different
+    root would separate the two routes far beyond the input rounding.
+    """
+    doc_a = read_output(abundance_ic_run, 0)
+    doc_m = read_output(ocean_moles_ic_run, 0)
+
+    for volatile in MOLAR_MASS:
+        p_a = float(field_si(doc_a['atmosphere'][volatile]['atmosphere_bar'])[0])
+        p_m = float(field_si(doc_m['atmosphere'][volatile]['atmosphere_bar'])[0])
+        # Positivity of the solved state itself (the in-code guard
+        # rejects negative solutions; this pins it from the outside).
+        assert p_a > 0 and p_m > 0, volatile
+        # rel=5e-3: the mole counts imply the abundances to about 7e-4
+        # (observed agreement 3.5e-4 to 6.7e-4); the margin is sevenfold
+        # while a wrong-branch or non-converged solve differs at the
+        # tens-of-percent level.
+        assert p_m == pytest.approx(p_a, rel=5e-3), volatile
+
+    # Scale guard: the equilibrium sits at bar-scale pressures for this
+    # inventory (observed 1.7 to 14 bar); a nondimensional leak or a
+    # Pa/bar slip would leave this bracket by orders of magnitude.
+    p_h2o = float(field_si(doc_a['atmosphere']['H2O']['atmosphere_bar'])[0])
+    assert 0.1 < p_h2o < 100.0  # bar

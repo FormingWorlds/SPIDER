@@ -35,8 +35,13 @@ def test_scale_unscale_round_trip_is_exact(c_test):
 
     # rel=1e-15: one multiplication, roundoff only.
     assert out['scaled0'] == pytest.approx(SCALING * FIRST_VALUE, rel=1e-15)
-    # No-op guard: scaling must actually change the stored values.
+    # State-change guard: scaling must actually change the stored values.
     assert abs(out['scaled0'] - out['original0']) > 1.0
+    # Error contract: scaling an already-scaled field is the documented
+    # no-op guard; it warns and leaves every value untouched, so a
+    # second Scale call must not multiply again (which would give 6.25).
+    assert out['rescaled0'] == pytest.approx(out['scaled0'], rel=1e-15)
+    assert abs(out['rescaled0'] - SCALING**2 * FIRST_VALUE) > 1.0
     # Round trip: unscale exactly inverts scale.
     assert out['roundtrip0'] == pytest.approx(out['original0'], rel=1e-15)
     assert out['original0'] == pytest.approx(FIRST_VALUE, rel=1e-15)

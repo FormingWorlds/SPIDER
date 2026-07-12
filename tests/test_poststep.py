@@ -91,9 +91,8 @@ def test_poststep_without_rollback_is_refused(run_spider):
             name='poststep_no_rollback',
         )
     message = str(excinfo.value)
-    # A nonzero exit reached the harness (the exact code differs by
-    # platform: the unsupported-configuration error surfaces directly
-    # on macOS and through the time-stepper wrapper on Linux).
+    # The documented refusal fired, not an arbitrary crash: the PETSc
+    # error text names the missing option. (The exit code itself
+    # differs by platform, so the message is the stable contract.)
+    assert 'You must run with -activate_rollback' in message
     assert 'spider exited with code' in message
-    assert 'code 0' not in message
-    assert '-activate_poststep' in message  # the offending option, echoed in the command

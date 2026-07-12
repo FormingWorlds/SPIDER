@@ -976,10 +976,12 @@ static PetscErrorCode solve_for_initial_partial_pressure( Ctx *E )
 
     ierr = VecGetArray(x,&xx);CHKERRQ(ierr);
     for (i=0; i<Ap->n_volatiles; ++i) {
-        if( A->volatiles[i].p < 0.0 ){
-            /* Sanity check on solution (since it's non-unique) */
+        /* Sanity check on the solved value (the solution is non-unique):
+           test the converged unknown itself, not the stale entry left in
+           the atmosphere struct by the last residual evaluation. */
+        if( xx[i] < 0.0 ){
             SETERRQ2(PetscObjectComm((PetscObject)snes),PETSC_ERR_CONV_FAILED,
-                "Unphysical initial volatile partial pressure: volatile %d, x: %g",i,A->volatiles[i].p);
+                "Unphysical initial volatile partial pressure: volatile %d, x: %g",i,xx[i]);
         }
         else{
             A->volatiles[i].p = xx[i];

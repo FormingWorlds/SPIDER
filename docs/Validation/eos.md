@@ -11,3 +11,11 @@
 **Discrimination guards**: The solidus value at 10 GPa (about 1524 J/kg/K) sits far from the pinned liquidus value (about 2128 J/kg/K), so a swapped-boundary regression fails; sign and scale guards bound the entropies; a companion test pins the per-phase viscosity and conductivity dispatch with a 19-decade melt/solid contrast.
 
 eos.c owns the option parsing shared by all EOS implementations and loads the phase boundaries. The boundary interpolation is compared against numpy.interp on the same file, and the per-phase transport constants configured in the options file are recovered exactly from the evaluation.
+
+**Reference-pinned test**: `tests/test_eos.py::test_compositional_viscosity_matches_spaargaren`
+
+**Anchor**: The piecewise Mg/Si log10 viscosity prefactor of Spaargaren et al. (2020). The test re-encodes the published coefficients independently of eos.c and additionally pins the two branch-pair shifts as hand-derived literals (0.2074 and -1.35803), so a transcription error in either copy of the formula surfaces.
+
+**Tolerance**: abs 1e-9 on the evaluated shifts (closed-form option arithmetic); abs 1e-4 on the literal transcription pins.
+
+**Discrimination guards**: The two configurations shift in opposite directions across more than 1.5 decades, covering all four piecewise branches; a collapsed piecewise or a disabled compositional term fails, and the bare-constant edge case pins the term switched off. The activation-term test (same file) pins the zero-pressure limit exactly and the pressure-scale damping direction.

@@ -26,4 +26,4 @@ The flux assembly is validated through its superposition structure: each transpo
 
 **Tolerance**: Relative energy-flow spread below 1e-8 (observed 2e-11); grey-body pin at rel 1e-5.
 
-**Discrimination guards**: A T^3 exponent slip misses the flux by a factor of about 300; sign and scale bounds on the flux.
+**Discrimination guards**: A T^3 exponent slip misses the flux by roughly a factor of the surface temperature (about 2000 here); sign and scale bounds on the flux.

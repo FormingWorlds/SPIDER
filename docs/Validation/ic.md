@@ -18,7 +18,7 @@ The initial condition writes the prescribed adiabat onto the mesh. The top-node 
 
 **Tolerance**: rel 1e-9 on the stored inventories and the H and C totals (observed agreement 3e-15).
 
-**Discrimination guards**: The volatile oxygen total moves by a factor of about two against the request because the reactions exchange O with the melt's fO2 buffer; the realised H2O reservoirs differ from the bare request by more than half, so an inert reaction network fails both checks.
+**Discrimination guards**: The volatile oxygen total drifts by about 2e-3 relative against the request because the reactions exchange O with the melt's fO2 buffer, and the realised H2O reservoirs sit about 4e-3 relative off the bare request; the test thresholds sit at 1e-4, twenty-fold below the observed signals, while an inert reaction network would match the request to the 1e-9 the H and C totals meet.
 
 **Reference-pinned test**: `tests/test_ic.py::test_ocean_moles_ic_converts_moles_to_mass`
 

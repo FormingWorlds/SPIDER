@@ -243,11 +243,12 @@ def test_reaction_library_conserves_h_c_n(library_run):
 def test_oxygen_flows_through_the_melt_buffer(library_run):
     """Oxygen is exchanged with the melt fO2 buffer, not conserved.
 
-    Every reaction in the library carries an oxygen-fugacity
-    stoichiometry, so the volatile O inventory drifts over a step
-    (observed 5e-3 relative in 1000 years) while H stays conserved in
-    the same window. A conserved O total would mean the fO2 coupling
-    is inert, which this test is designed to expose.
+    The water, carbon dioxide, and methane reactions carry an
+    oxygen-fugacity stoichiometry (the ammonia reaction does not), so
+    the volatile O inventory drifts over a step (observed 5e-3
+    relative in 1000 years) while H stays conserved in the same
+    window. A conserved O total would mean the fO2 coupling is inert,
+    which this test is designed to expose.
     """
     doc_0 = read_output(library_run, 0)
     doc_1 = read_output(library_run, 1000)

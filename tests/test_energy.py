@@ -162,6 +162,11 @@ def test_surface_node_flux_is_the_grey_body_atmospheric_flux(blackbody_short):
 # order of al26 and k40 in early solar system material.
 HEATING_OVERRIDES = (
     '-nstepsmacro', '2',
+    # dtmacro is pinned here because the decay pin below requires the
+    # second output at exactly t = 200 years (two al26 half-lives, one
+    # k40 half-life); the test must not inherit it silently from the
+    # shared options file.
+    '-dtmacro', '100',
     '-radionuclide_names', 'al26,k40',
     '-al26_t0', '0.0',
     '-al26_abundance', '1.0',
@@ -350,7 +355,8 @@ def test_steady_state_ic_balances_interior_and_surface(steady_state_run):
     # rel=1e-5: the radiation balance is solved to snes_rtol 1e-9; the
     # margin absorbs output rounding of T_surf.
     assert fatm == pytest.approx(expected, rel=1e-5)
-    # Exponent guard: a T^3 slip at ~1960 K misses by a factor of ~300.
+    # Exponent guard: a T^3 slip misses by roughly a factor of T_surf
+    # (~2000 at the ~1960 K of this state), far beyond any tolerance.
     assert abs(fatm - sigma * (t_surf**3 - 273.0**3)) > 0.5 * fatm
     # Sign and scale guards.
     assert fatm > 0
