@@ -238,3 +238,14 @@
 -N2_henry 0.0
 -N2_henry_pow 1.0
 -N2_molar_mass 0.028014 # kg/mol
+
+# Initial guesses for the partial-pressure solve (Pa), near the
+# equilibrium of the abundances above so the Newton iteration converges
+# from the same starting point on every platform.
+-H2O_initial_atmos_pressure 2.78e4
+-H2_initial_atmos_pressure 2.61e4
+-CO2_initial_atmos_pressure 3.27e5
+-CO_initial_atmos_pressure 3.33e6
+-CH4_initial_atmos_pressure 5.1e-4
+-NH3_initial_atmos_pressure 1.2
+-N2_initial_atmos_pressure 2.07e5
