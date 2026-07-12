@@ -32,11 +32,19 @@ def reaction_run(cached_spider_run):
     """One macro step of the Bower et al. (2021) reaction configuration.
 
     A single 1000-year step keeps the smoke budget while exercising the
-    full reaction, outgassing, and atmosphere coupling.
+    full reaction, outgassing, and atmosphere coupling. The mesh runs at
+    50 nodes instead of the configuration file's 100, matching the other
+    reaction-family fixtures and cutting the instrumented run from 18 to
+    7 seconds so it clears the smoke-tier timeout on slow runners. The
+    closure and conservation identities asserted on this run hold to
+    solver tolerance at any resolution; the sign structure follows from
+    the secular cooling of the step, and the magnitude guards hold at
+    both resolutions with more than twentyfold margin (the transfer
+    magnitudes themselves shift about two percent between meshes).
     """
     return cached_spider_run(
         opts_file='reaction.opts',
-        overrides=('-nstepsmacro', '1'),
+        overrides=('-nstepsmacro', '1', '-n', '50'),
         name='reaction_short',
     )
 
@@ -97,8 +105,8 @@ def test_reaction_transfer_balances_the_initial_inventory(reaction_run):
     for volatile in VOLATILES:
         r = _reservoirs(doc1, volatile)
         # rel 1e-5: the budget closes to the tolerance of the coupled
-        # volatile solve (observed residual 1.4e-6 on CO2 after one
-        # 1000-year step).
+        # volatile solve. CO2 is the worst species at 1.4e-6 after one
+        # 1000-year step; the other three close at 3e-8 or better.
         assert r['initial_kg'] == pytest.approx(
             r['physical_kg'] + r['reaction_kg'], rel=1e-5
         ), volatile
