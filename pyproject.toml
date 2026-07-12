@@ -1,0 +1,50 @@
+# SPIDER is a C code; this file does NOT define a Python package. It
+# configures the Python test harness (pytest), the C coverage gates read
+# by CI and tools/update_coverage_threshold.py, and ruff for the Python
+# files under tests/, tools/, and py/.
+
+[tool.pytest.ini_options]
+minversion = "7.0"
+testpaths = ["tests"]
+pythonpath = ["."]
+addopts = "-ra --strict-markers --strict-config"
+markers = [
+    "unit: C test executables and Python-side checks, no full spider runs (< 1 s each)",
+    "smoke: short real spider runs on minimal configurations (< 30 s each)",
+    "integration: full regression cases against frozen expected output (nightly)",
+    "slow: long validation runs and cross-implementation checks (nightly)",
+    "physics_invariant: marks tests that assert a physical invariant (conservation, positivity, boundedness, monotonicity, symmetry). See .github/.claude/rules/spider-tests.md section 3.",
+    "reference_pinned: marks tests that pin behavior against a published benchmark, analytical limit, or cross-implementation cross-check. Cite the source in the test docstring. Each physics source must contain at least one. See .github/.claude/rules/spider-tests.md section 3.",
+]
+
+# C line coverage gates, measured with gcovr on a --coverage build.
+# Both gates ratchet upward via tools/update_coverage_threshold.py
+# (capped at the 90.0 ecosystem ceiling) and are never manually
+# decreased. The fast gate covers the unit + smoke tiers on every PR;
+# the full gate covers all tiers in the nightly workflow.
+# Initial floors sit a few points below the locally measured values
+# (79.6 fast, 81.2 full with llvm instrumentation) to absorb the
+# difference between compiler instrumentation variants; the ratchet
+# raises them from CI-measured coverage.
+[tool.spider.coverage_fast]
+fail_under = 75.0
+
+[tool.spider.coverage_full]
+fail_under = 77.0
+
+[tool.ruff]
+line-length = 96
+target-version = "py312"
+include = ["tests/**/*.py", "tools/**/*.py", "py/**/*.py"]
+
+[tool.ruff.lint]
+select = ["F", "E", "W", "I"]
+ignore = ["E501"]
+
+[tool.ruff.lint.isort]
+known-first-party = []
+required-imports = ["from __future__ import annotations"]
+
+[tool.ruff.format]
+quote-style = "single"
+indent-style = "space"

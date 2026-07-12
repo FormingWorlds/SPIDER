@@ -20,8 +20,10 @@ File format (SI units):
     r_s[0] P_s[0] rho_s[0] g_s[0]    (staggered nodes, surface to CMB)
     ...
 """
+from __future__ import annotations
 
 import argparse
+
 import numpy as np
 
 

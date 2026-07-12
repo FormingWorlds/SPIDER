@@ -1,0 +1,200 @@
+#!/usr/bin/env python3
+"""Automatically ratchet the C line-coverage thresholds for the test suites.
+
+This script implements a coverage ratcheting mechanism: the required coverage
+threshold for a given suite can only increase or stay the same, never
+decrease. Coverage is measured by gcovr on a --coverage build. Two modes:
+
+* full  - updates `[tool.spider.coverage_full].fail_under` (all tiers, nightly)
+* fast  - updates `[tool.spider.coverage_fast].fail_under` (unit/smoke gate)
+
+Usage examples::
+
+    # Ratchet the fast (unit/smoke) threshold from a gcovr JSON summary
+    gcovr --exclude cJSON.c --exclude tests/ --json-summary coverage-fast.json
+    python tools/update_coverage_threshold.py --coverage-file coverage-fast.json --target fast
+
+    # Ratchet the full-suite threshold
+    python tools/update_coverage_threshold.py --coverage-file coverage-full.json --target full
+
+Exit codes:
+    0 -> threshold updated (increased)
+    1 -> no update needed
+    2 -> validation failure (e.g., missing keys)
+
+This script is intended to run in CI after coverage is computed for the
+corresponding suite; it can also be used locally.
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import sys
+from pathlib import Path
+
+try:  # Python 3.11+
+    import tomllib
+except ModuleNotFoundError:  # pragma: no cover - fallback for older interpreters
+    try:
+        import tomli as tomllib  # type: ignore
+    except ModuleNotFoundError as e:
+        raise ImportError(
+            'tomllib (Python 3.11+) or tomli package is required. '
+            'Install with: pip install tomli'
+        ) from e
+
+try:
+    import tomlkit
+except ModuleNotFoundError as e:  # pragma: no cover - environment guard
+    raise ImportError(
+        'tomlkit is required to update pyproject.toml. '
+        'Install with: pip install tomlkit'
+    ) from e
+
+# PROTEUS-ecosystem coverage ceiling. The ratchet may raise either gate
+# toward this value but never above it; above 90% the gate tracks pragma
+# usage and style rather than bug-finding signal.
+ECOSYSTEM_CEILING = 90.0
+
+
+def read_current_coverage(coverage_file: Path) -> float:
+    """Read the line-coverage percentage from a gcovr JSON summary file."""
+    if not coverage_file.exists():
+        raise FileNotFoundError(
+            f"{coverage_file} not found. Run 'gcovr --json-summary {coverage_file}' first."
+        )
+
+    with coverage_file.open() as f:
+        data = json.load(f)
+
+    if 'line_percent' in data:
+        return float(data['line_percent'])
+    # Older gcovr releases nest the totals differently.
+    return float(data['totals']['percent_covered'])
+
+
+def read_threshold_from_pyproject(target: str) -> float:
+    """Read the current coverage threshold from pyproject.toml for a target."""
+    pyproject_file = Path('pyproject.toml')
+    if not pyproject_file.exists():
+        raise FileNotFoundError('pyproject.toml not found')
+
+    data = tomllib.loads(pyproject_file.read_text())
+    try:
+        if target == 'full':
+            return float(data['tool']['spider']['coverage_full']['fail_under'])
+        if target == 'fast':
+            return float(data['tool']['spider']['coverage_fast']['fail_under'])
+    except KeyError as exc:
+        raise ValueError(
+            f"fail_under setting not found in pyproject.toml for target '{target}'"
+        ) from exc
+
+    raise ValueError(f"Unknown target '{target}'")
+
+
+def update_threshold_in_pyproject(target: str, new_threshold: float) -> bool:
+    """Update the fail_under threshold in pyproject.toml for a target."""
+    pyproject_file = Path('pyproject.toml')
+    if not pyproject_file.exists():
+        raise FileNotFoundError('pyproject.toml not found')
+
+    document = tomlkit.parse(pyproject_file.read_text())
+
+    spider_section = document.get('tool', {}).get('spider')
+    if spider_section is None:
+        raise ValueError('[tool.spider] section not found in pyproject.toml')
+    key = f'coverage_{target}'
+    section = spider_section.get(key)
+    if section is None:
+        raise ValueError(f'[tool.spider.{key}] section not found in pyproject.toml')
+
+    current_value = float(section.get('fail_under', 0))
+    new_value = float(f'{new_threshold:.2f}')
+
+    # Ratchet: only update if strictly higher
+    if new_value <= current_value:
+        return False
+
+    section['fail_under'] = new_value
+    pyproject_file.write_text(tomlkit.dumps(document))
+    print(f'[+] Updated pyproject.toml: {target} fail_under = {new_value:.2f}')
+    return True
+
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description='Ratcheted coverage thresholds')
+    parser.add_argument(
+        '--coverage-file',
+        default='coverage.json',
+        help="Path to a gcovr JSON summary (from 'gcovr --json-summary'). Default: coverage.json",
+    )
+    parser.add_argument(
+        '--target',
+        choices=['full', 'fast'],
+        default='full',
+        help="Which threshold to ratchet: 'full' (global) or 'fast' (unit/smoke)",
+    )
+    return parser.parse_args()
+
+
+def main() -> int:
+    """Main entrypoint for threshold ratcheting."""
+    args = parse_args()
+
+    try:
+        coverage_path = Path(args.coverage_file)
+        target = args.target
+
+        current_coverage = read_current_coverage(coverage_path)
+        current_threshold = read_threshold_from_pyproject(target)
+
+        print(f'Target: {target}')
+        print(f'Current coverage: {current_coverage:.2f}%')
+        print(f'Current threshold: {current_threshold:.2f}%')
+
+        new_threshold = min(round(current_coverage, 2), ECOSYSTEM_CEILING)
+
+        if current_threshold >= ECOSYSTEM_CEILING:
+            print(
+                f'[=] Threshold {current_threshold:.2f}% already at or above '
+                f'the {ECOSYSTEM_CEILING:.2f}% ecosystem ceiling (no update needed)'
+            )
+            return 1
+
+        if new_threshold > current_threshold:
+            print(
+                f'[+] Coverage increased. Updating threshold: '
+                f'{current_threshold:.2f}% -> {new_threshold:.2f}%'
+            )
+            update_threshold_in_pyproject(target, new_threshold)
+            return 0
+
+        if new_threshold == current_threshold:
+            print(f'[=] Threshold already at {current_threshold:.2f}% (no update needed)')
+            return 1
+
+        print(f'[!] Coverage decreased: {new_threshold:.2f}% < {current_threshold:.2f}%')
+        print('    Threshold not updated.')
+        return 2
+
+    except FileNotFoundError as e:
+        print(f'[x] Error: Required file not found: {e}', file=sys.stderr)
+        return 2
+    except (ValueError, KeyError) as e:
+        print(
+            f'[x] Error: Invalid coverage data or configuration ({type(e).__name__}): {e}',
+            file=sys.stderr,
+        )
+        return 2
+    except Exception as e:
+        print(
+            f'[x] Error updating coverage threshold ({type(e).__name__}): {e}',
+            file=sys.stderr,
+        )
+        return 2
+
+
+if __name__ == '__main__':
+    sys.exit(main())

@@ -1,0 +1,13 @@
+# energy.c: Energy fluxes
+
+**Source under test**: `energy.c`
+
+**Reference-pinned test**: `tests/test_energy.py::test_disabled_transport_mechanisms_carry_zero_flux`
+
+**Anchor**: Analytical limit: a disabled transport mechanism carries zero flux, and with only conduction enabled the total flux equals the conductive flux identically.
+
+**Tolerance**: Exact (tight allclose) on the zero and identity relations; see the test comments.
+
+**Discrimination guards**: The complementary mechanism stays nonzero when its sibling is disabled (wrong-path guard); the total flux is asserted to be the sum of the four components at every node in the full-physics configuration; scale bounds on the magma-ocean flux magnitudes.
+
+The flux assembly is validated through its superposition structure: each transport term can be switched off through its runtime option, and the total must respond exactly. This pins the dispatch wiring between the options, the individual flux routines, and the total used by the time integration.

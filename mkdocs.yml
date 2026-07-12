@@ -15,7 +15,10 @@ nav:
         - Quick installation: How-to/installation.md
         - Quadruple precision: How-to/quadruple_installation.md
       - Testing: How-to/test.md
+      - Building tests: How-to/build_tests.md
       - External mesh input: How-to/external_mesh_input.md
+      - Coupling to PROTEUS: How-to/proteus_coupling.md
+      - Releasing: How-to/releasing.md
 
   - Tutorials:
       - First run: Tutorials/first_run.md
@@ -36,7 +39,26 @@ nav:
         - Toy model and numerical schemes: Explanations/toy_model.md
 
   - Reference:
+      - Runtime options: Reference/options.md
       - Publications: Reference/publications.md
+
+  - Validation:
+      - Overview: Validation/index.md
+      - atmosphere.c: Validation/atmosphere.md
+      - bc.c: Validation/bc.md
+      - energy.c: Validation/energy.md
+      - eos.c: Validation/eos.md
+      - eos_adamswilliamson.c: Validation/eos_adamswilliamson.md
+      - eos_composite.c: Validation/eos_composite.md
+      - eos_lookup.c: Validation/eos_lookup.md
+      - ic.c: Validation/ic.md
+      - interp.c: Validation/interp.md
+      - matprop.c: Validation/matprop.md
+      - mesh.c: Validation/mesh.md
+      - reaction.c: Validation/reaction.md
+      - rheologicalfront.c: Validation/rheologicalfront.md
+      - rhs.c: Validation/rhs.md
+      - twophase.c: Validation/twophase.md
 
   - Community:
       - Code of Conduct: Community/CODE_OF_CONDUCT.md

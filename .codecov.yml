@@ -1,0 +1,16 @@
+coverage:
+  # C line coverage measured by gcovr in the nightly workflow.
+  range: "70...90"
+  status:
+    project:
+      default:
+        target: auto
+        threshold: 1%
+    patch:
+      default:
+        target: auto
+        threshold: 1%
+
+comment:
+  require_changes: true
+  layout: "reach, diff, flags, files"

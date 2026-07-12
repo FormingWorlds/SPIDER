@@ -1,0 +1,37 @@
+name: Release guard
+
+on:
+  push:
+    tags:
+      - '*'
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+
+jobs:
+  version-consistency:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Check that the tag matches version.h
+        run: |
+          set -euo pipefail
+          tag="${GITHUB_REF_NAME}"
+          major=$(sed -n 's/#define SPIDER_MAJOR_VERSION "\(.*\)"/\1/p' version.h)
+          minor=$(sed -n 's/#define SPIDER_MINOR_VERSION "\(.*\)"/\1/p' version.h)
+          patch=$(sed -n 's/#define SPIDER_PATCH_VERSION "\(.*\)"/\1/p' version.h)
+          version="${major}.${minor}.${patch}"
+          # A same-day follow-up release may carry a .N suffix beyond the
+          # version.h triple (e.g. 26.03.02.1); accept the exact triple or
+          # a numeric suffix on top of it. The dots are escaped so they
+          # match literally.
+          escaped=$(printf '%s' "$version" | sed 's/\./\\./g')
+          if [ "$tag" = "$version" ] || [[ "$tag" =~ ^${escaped}\.[0-9]+$ ]]; then
+            echo "Tag $tag matches version.h ($version)."
+          else
+            echo "Tag $tag does not match version.h ($version)." >&2
+            echo "Update version.h (or retag) and re-run this check." >&2
+            exit 1
+          fi

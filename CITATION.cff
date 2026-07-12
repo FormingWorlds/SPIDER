@@ -1,0 +1,94 @@
+cff-version: 1.2.0
+message: >-
+  If you use SPIDER, please cite it via the metadata in this file and
+  the papers listed under references (Bower et al. 2018 for the interior
+  dynamics; Wolf and Bower 2018 for the RTpress melt data; Bower et al.
+  2019 for the volatile and atmosphere coupling; Bower et al. 2022 for
+  the redox reactions).
+title: 'SPIDER: Simulating Planetary Interior Dynamics with Extreme Rheology'
+type: software
+repository-code: 'https://github.com/FormingWorlds/SPIDER'
+url: 'https://proteus-framework.org/SPIDER/'
+license: GPL-3.0
+authors:
+  - family-names: Bower
+    given-names: Dan J.
+  - family-names: Sanan
+    given-names: Patrick
+  - family-names: Wolf
+    given-names: Aaron S.
+  - name: Forming Worlds Lab
+preferred-citation:
+  type: article
+  title: >-
+    Numerical solution of a non-linear conservation law applicable to
+    the interior dynamics of partially molten planets
+  authors:
+    - family-names: Bower
+      given-names: Dan J.
+    - family-names: Sanan
+      given-names: Patrick
+    - family-names: Wolf
+      given-names: Aaron S.
+  journal: Physics of the Earth and Planetary Interiors
+  volume: 274
+  start: 49
+  end: 62
+  year: 2018
+  doi: 10.1016/j.pepi.2017.11.004
+references:
+  - type: article
+    title: >-
+      An equation of state for high pressure-temperature liquids
+      (RTpress) with application to MgSiO3 melt
+    authors:
+      - family-names: Wolf
+        given-names: Aaron S.
+      - family-names: Bower
+        given-names: Dan J.
+    journal: Physics of the Earth and Planetary Interiors
+    volume: 278
+    start: 59
+    end: 74
+    year: 2018
+    doi: 10.1016/j.pepi.2018.02.004
+  - type: article
+    title: >-
+      Linking the evolution of terrestrial interiors and an early
+      outgassed atmosphere to astrophysical observations
+    authors:
+      - family-names: Bower
+        given-names: Dan J.
+      - family-names: Kitzmann
+        given-names: Daniel
+      - family-names: Wolf
+        given-names: Aaron S.
+      - family-names: Sanan
+        given-names: Patrick
+      - family-names: Dorn
+        given-names: Caroline
+      - family-names: Oza
+        given-names: Apurva V.
+    journal: Astronomy and Astrophysics
+    volume: 631
+    start: A103
+    year: 2019
+    doi: 10.1051/0004-6361/201935710
+  - type: article
+    title: >-
+      Retention of water in terrestrial magma oceans and carbon-rich
+      early atmospheres
+    authors:
+      - family-names: Bower
+        given-names: Dan J.
+      - family-names: Hakim
+        given-names: Kaustubh
+      - family-names: Sossi
+        given-names: Paolo A.
+      - family-names: Sanan
+        given-names: Patrick
+    journal: The Planetary Science Journal
+    volume: 3
+    start: 93
+    year: 2022
+    doi: 10.3847/PSJ/ac5fb1

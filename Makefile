@@ -65,6 +65,9 @@ CFLAGS+=${C_DEPFLAGS}
 # Provide the current directory so that absolute paths to data files can be constructed.
 CFLAGS+=-DSPIDER_ROOT_DIR=${SPIDER_ROOT_DIR}
 
+# Repo-root headers, needed when compiling the C test executables under tests/c/
+CFLAGS+=-I${SPIDER_ROOT_DIR}
+
 ### Compiling/Linking  #########################################################
 
 # Objects (PETSc rules provides recipe)
@@ -76,39 +79,49 @@ ${EXNAME} : ${SRC_O}
 	#${RM} $^
 
 ### Tests ######################################################################
-SPIDER_TEST_DIR=${SPIDER_ROOT_DIR}/test_dir
-SPIDER_TEST_SCRIPT=PYTHONPATH=${PYTHONPATH}:${SPIDER_ROOT_DIR}/tests/sciath python -m sciath ${SPIDER_ROOT_DIR}/tests/tests.yml
-SPIDER_TEST_CONF=${SPIDER_TEST_DIR}/pth.conf
+# The pytest suite drives the spider binary and the C test executables.
+# Tier system and writing guidance: docs/How-to/build_tests.md.
 
-check_sciath:
-	PYTHONPATH=${PYTHONPATH}:${PWD}/tests/sciath ./tests/check_sciath.sh
+# C test executables: thin evaluators linked against the SPIDER objects.
+# The pytest wrappers under tests/ own all assertions.
+TEST_C_SRC = \
+        tests/c/test_interp.c \
+        tests/c/test_eos.c \
+        tests/c/test_eos_composite.c \
 
-test_create_output_dir :
-	mkdir -p ${SPIDER_TEST_DIR}
+TEST_C_EXE = ${TEST_C_SRC:%.c=%}
+TEST_C_O = ${TEST_C_SRC:%.c=%.o}
+TEST_C_D = ${TEST_C_SRC:%.c=%.d}
 
-test : test_create_output_dir check_sciath
-	cd ${SPIDER_TEST_DIR} && ${SPIDER_TEST_SCRIPT} -w ${SPIDER_TEST_CONF} && cd -
-	@printf "Test output lives in ${SPIDER_TEST_DIR}\n"
-	@printf "If on a batch system, wait until jobs complete and then\n"
-	@printf "  make test_check\n"
+# All SPIDER objects except the entry point (each test provides its own main)
+SRC_O_NOMAIN = $(filter-out main.o,${SRC_O})
 
-test_check : test_create_output_dir check_sciath
-	cd ${SPIDER_TEST_DIR} && ${SPIDER_TEST_SCRIPT} -w ${SPIDER_TEST_CONF} -v && cd -
+tests_c : ${TEST_C_EXE}
 
-.PHONY: test test_create_output_dir
+${TEST_C_EXE} : % : %.o ${SRC_O_NOMAIN}
+	${CLINKER} -o $@ $^ ${PETSC_TS_LIB}
+
+test :
+	python3 -m pytest -m "(unit or smoke) and not skip"
+
+test_all :
+	python3 -m pytest -m "not skip"
+
+.PHONY: tests_c test test_all
 
 ### Dependencies ###############################################################
 SRC_D = ${SRC_C:%.c=%.d}
 
 # Indicate that SRC_D is up to date. Prevents the include from having quadratic complexity.
-$(SRC_D) : ;
+$(SRC_D) $(TEST_C_D) : ;
 
 # Include dependency files
 -include $(SRC_D)
+-include $(TEST_C_D)
 
 ### Helper Targets #############################################################
 clean ::
-	rm -f ${EXNAME} ${SRC_O} ${SRC_D}
+	rm -f ${EXNAME} ${SRC_O} ${SRC_D} ${TEST_C_EXE} ${TEST_C_O} ${TEST_C_D}
 
 .PHONY: clean
 

@@ -15,9 +15,11 @@ The "atmosphere" section contains "mass_mantle".
 
 Exit code 0 if all within tolerance, 1 otherwise.
 """
+from __future__ import annotations
 
 import json
 import sys
+
 import numpy as np
 
 RTOL = 1e-5

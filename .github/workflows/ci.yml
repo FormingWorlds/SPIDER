@@ -7,22 +7,29 @@ on:
   pull_request:
     branches:
       - main
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref_name }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
 
 jobs:
-  build:
-
+  petsc:
+    # Builds (or restores) the PETSc dependency. Separated from the test
+    # job so the test job can carry a tight wallclock cap while a cold
+    # PETSc build from source stays possible.
     runs-on: ubuntu-latest
-
     steps:
     - uses: actions/checkout@v6
-    - name: Install Python requirements
-      run: pip install -r py/requirements.txt
     - name: PETSc cache
       id: petsc-cache
       uses: actions/cache@v5
       with:
         path: petsc
-        key: ${{ runner.os }}-petsc-cache
+        key: ${{ runner.os }}-petsc-63b72503
     - name: Build PETSc
       if: steps.petsc-cache.outputs.cache-hit != 'true'
       run: |
@@ -31,34 +38,121 @@ jobs:
           git checkout 63b725033a15f75ded7183cf5f88ec748e60783b
           ./configure --with-fc=0 --with-cxx=0 --with-cc=gcc --download-sundials2 --download-mpich --download-f2cblaslapack PETSC_ARCH=arch-test
           make all
-    - name: make
-      run: PETSC_DIR=petsc PETSC_ARCH=arch-test make
-    - name: Test with SciATH
-      run: |
-          cd tests && git clone https://github.com/sciath/sciath --depth=1 && cd -
-          export PYTHONPATH=$PYTHONPATH:$PWD/tests/sciath
-          mkdir -p test_dir && cd test_dir
-          python -m sciath -d -w pth.conf
-          python -m sciath -f -w pth.conf ../tests/tests.yml
-    - name: Archive test results
-      uses: actions/upload-artifact@v6
-      if : always()
+
+  test:
+    needs: petsc
+    runs-on: ubuntu-latest
+    # Hard wallclock cap on the fast tier; slower work belongs in the
+    # nightly workflow.
+    timeout-minutes: 10
+    env:
+      PETSC_DIR: ${{ github.workspace }}/petsc
+      PETSC_ARCH: arch-test
+    steps:
+    - uses: actions/checkout@v6
       with:
-        name: spider-sciath-test-dir
-        path: test_dir
+        fetch-depth: 0
+    - name: PETSc cache
+      uses: actions/cache@v5
+      with:
+        path: petsc
+        key: ${{ runner.os }}-petsc-63b72503
+        fail-on-cache-miss: true
+    - name: Install Python requirements
+      run: pip install -r py/requirements.txt pytest pytest-timeout ruff gcovr
+    - name: Build with coverage instrumentation
+      run: |
+          make -j CFLAGS_EXTRA="--coverage"
+          make -j tests_c CFLAGS_EXTRA="--coverage"
+    - name: Lint Python files
+      run: ruff check tests/ tools/ py/
+    - name: Validate test structure
+      run: bash tools/validate_test_structure.sh
+    - name: Run test-quality lint
+      run: python tools/check_test_quality.py --check
+    - name: Check the runtime-options reference is current
+      run: python tools/generate_options_reference.py --check
+    - name: Check the coverage gates against the base branch
+      if: github.event_name == 'pull_request'
+      run: |
+          git fetch --depth=1 origin "$BASE_REF"
+          python - <<'PY'
+          import os
+          import pathlib
+          import subprocess
+          import sys
+          import tomllib
+
+          CEILING = 90.0
+          base_ref = os.environ['BASE_REF']
+          head = tomllib.loads(pathlib.Path('pyproject.toml').read_text())
+          proc = subprocess.run(
+              ['git', 'show', f'origin/{base_ref}:pyproject.toml'],
+              capture_output=True, text=True,
+          )
+          if proc.returncode != 0:
+              print('base pyproject.toml not found; skipping the comparison')
+              sys.exit(0)
+          base = tomllib.loads(proc.stdout)
+          failed = False
+          for key in ('coverage_fast', 'coverage_full'):
+              try:
+                  base_value = float(base['tool']['spider'][key]['fail_under'])
+              except (KeyError, TypeError):
+                  base_value = 0.0
+              try:
+                  head_value = float(head['tool']['spider'][key]['fail_under'])
+              except (KeyError, TypeError):
+                  print(f'{key}: fail_under missing from pyproject.toml')
+                  failed = True
+                  continue
+              floor = min(base_value, CEILING)
+              if head_value < floor:
+                  print(
+                      f'{key}: fail_under lowered from {base_value} to '
+                      f'{head_value}; the gate only ratchets upward'
+                  )
+                  failed = True
+              elif head_value > CEILING:
+                  print(
+                      f'{key}: fail_under {head_value} exceeds the '
+                      f'{CEILING} ecosystem ceiling'
+                  )
+                  failed = True
+              else:
+                  print(f'{key}: fail_under {head_value} (base {base_value}) OK')
+          sys.exit(1 if failed else 0)
+          PY
+      env:
+        BASE_REF: ${{ github.base_ref }}
+    - name: Check the built binaries exist
+      # Missing binaries turn binary-driven tests into skips; make that a
+      # hard failure instead of a green job.
+      run: |
+          test -x ./spider
+          for exe in tests/c/test_interp tests/c/test_eos tests/c/test_eos_composite; do
+            test -x "$exe"
+          done
+    - name: Run unit and smoke tests
+      run: python -m pytest -m "(unit or smoke) and not skip and not slow and not integration"
+    - name: Enforce the fast coverage gate
+      run: |
+          FAST=$(python -c "import tomllib, pathlib; print(tomllib.loads(pathlib.Path('pyproject.toml').read_text())['tool']['spider']['coverage_fast']['fail_under'])")
+          gcovr --gcov-ignore-parse-errors suspicious_hits.warn_once_per_file \
+                --exclude cJSON.c --exclude 'tests/' --exclude 'dev/' \
+                --txt --fail-under-line "$FAST"
 
   installer-smoke:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
       - name: Install Python requirements
-        run: pip install -r py/requirements.txt
+        run: pip install -r py/requirements.txt pytest pytest-timeout
       - name: Run installer
         run: ./tools/get_spider.sh
-      - name: Test with SciATH
-        run: |
-          cd tests && git clone https://github.com/sciath/sciath --depth=1 && cd -
-          export PYTHONPATH=$PYTHONPATH:$PWD/tests/sciath
-          mkdir -p test_dir && cd test_dir
-          python -m sciath -d -w pth.conf
-          python -m sciath -f -w pth.conf ../tests/tests.yml
+      - name: Check the installer produced a runnable binary
+        # The smoke tier skips tests when the binary is absent, so assert
+        # its presence first; otherwise this job could pass on all-skip.
+        run: test -x ./spider
+      - name: Run the smoke tier against the installed build
+        run: python -m pytest -m "smoke and not skip" -q

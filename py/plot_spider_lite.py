@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+from __future__ import annotations
+
 import argparse
 import json
 import logging
@@ -9,6 +11,7 @@ from bisect import bisect_left
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
+import matplotlib.ticker as ticker
 import numpy as np
 from matplotlib.figure import Figure
 
@@ -121,13 +124,21 @@ class MyJSON(object):
                 if os.path.isfile(os.path.join(self.indir, f))
             ]
         except FileNotFoundError:
-            print("no JSON files found in directory: {}".format(self.indir))
-            sys.exit(0)
+            print(
+                "output directory not found: {}".format(self.indir), file=sys.stderr
+            )
+            sys.exit(1)
         time_l = [fname for fname in file_l]
         time_l = list(filter(lambda a: a.endswith("json"), time_l))
         time_l = [int(time.split(".json")[0]) for time in time_l]
         # ascending order
         time_l = sorted(time_l, key=int)
+        if not time_l:
+            print(
+                "no JSON files found in directory: {}".format(self.indir),
+                file=sys.stderr,
+            )
+            sys.exit(1)
         self.time_l = time_l
 
     def __set_time_list_from_select_times(self):

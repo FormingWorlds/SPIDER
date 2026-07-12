@@ -5,12 +5,11 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/FormingWorlds/SPIDER/actions">
-    <img src="https://github.com/FormingWorlds/SPIDER/actions/workflows/ci.yml/badge.svg" alt="Build">
-  </a>
-  <a href="https://doi.org/10.5281/zenodo.5682523">
-    <img src="https://zenodo.org/badge/DOI/10.5281/zenodo.5682523.svg" alt="DOI">
-  </a>
+  <a href="https://www.gnu.org/licenses/gpl-3.0"><img src="https://img.shields.io/badge/License-GPLv3-blue.svg" alt="License"></a>
+  <a href="https://proteus-framework.org/SPIDER/"><img src="https://img.shields.io/github/actions/workflow/status/FormingWorlds/SPIDER/docs.yaml?branch=main&label=Docs" alt="Docs"></a>
+  <a href="https://app.codecov.io/gh/FormingWorlds/SPIDER"><img src="https://img.shields.io/codecov/c/github/FormingWorlds/SPIDER?label=coverage&logo=codecov" alt="codecov"></a>
+  <a href="https://github.com/FormingWorlds/SPIDER/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/FormingWorlds/SPIDER/ci.yml?branch=main&label=Unit%20Tests" alt="Unit Tests"></a>
+  <a href="https://github.com/FormingWorlds/SPIDER/actions/workflows/nightly.yml"><img src="https://img.shields.io/github/actions/workflow/status/FormingWorlds/SPIDER/nightly.yml?branch=main&label=Integration%20Tests" alt="Integration Tests"></a>
 </p>
 
 **Simulating Planetary Interior Dynamics with Extreme Rheology**

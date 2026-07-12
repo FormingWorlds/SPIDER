@@ -28,9 +28,6 @@ spider
 # output
 output/
 
-# test working directory (should agree with SPIDER_TEST_DIR in Makefile)
-test_dir
-
 # generated test mesh files
 tests/data/*.dat
 
@@ -56,3 +53,10 @@ petsc*/
 
 # site 
 site/
+# personal Claude session state (repo root only; .github/.claude/ stays tracked)
+/.claude/
+
+# C test executables (built by make tests_c; sources stay tracked)
+tests/c/test_*
+!tests/c/*.c
+!tests/c/*.h
