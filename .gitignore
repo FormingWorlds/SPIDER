@@ -16,6 +16,12 @@ spider
 # dependency files
 *.d
 
+# coverage instrumentation and counters (from --coverage builds)
+*.gcno
+*.gcda
+coverage.xml
+coverage-*.json
+
 # Vim swap files
 .*.sw[omp]
 
