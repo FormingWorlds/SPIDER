@@ -88,6 +88,7 @@ TEST_C_SRC = \
         tests/c/test_interp.c \
         tests/c/test_eos.c \
         tests/c/test_eos_composite.c \
+        tests/c/test_dimensionalisablefield.c \
 
 TEST_C_EXE = ${TEST_C_SRC:%.c=%}
 TEST_C_O = ${TEST_C_SRC:%.c=%.o}

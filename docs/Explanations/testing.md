@@ -2,8 +2,9 @@
 
 [![Tests](https://img.shields.io/github/actions/workflow/status/FormingWorlds/SPIDER/ci.yml?branch=main&label=Tests)](https://github.com/FormingWorlds/SPIDER/actions/workflows/ci.yml)
 [![tests](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/FormingWorlds/SPIDER/badges/tests-total.json)](https://proteus-framework.org/testing)
-[![fast tests](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/FormingWorlds/SPIDER/badges/tests-fast.json)](https://github.com/FormingWorlds/SPIDER/actions/workflows/ci.yml)
-[![nightly tests](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/FormingWorlds/SPIDER/badges/tests-nightly.json)](https://github.com/FormingWorlds/SPIDER/actions/workflows/nightly.yml)
+[![unit tests](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/FormingWorlds/SPIDER/badges/tests-unit.json)](https://github.com/FormingWorlds/SPIDER/actions/workflows/ci.yml)
+[![smoke tests](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/FormingWorlds/SPIDER/badges/tests-smoke.json)](https://github.com/FormingWorlds/SPIDER/actions/workflows/ci.yml)
+[![integration tests](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/FormingWorlds/SPIDER/badges/tests-integration.json)](https://github.com/FormingWorlds/SPIDER/actions/workflows/nightly.yml)
 
 SPIDER's tests run under pytest in four tiers. The unit tier drives small C test executables that evaluate pure functions (interpolation, equation-of-state lookups, phase blending) at probe points and checks the results in Python; the smoke tier runs the real `spider` binary for a few macro steps and asserts physical invariants on the JSON output (mass closure, positivity, monotonicity, boundary-condition identities); the integration tier compares full runs against frozen reference output; and the slow tier is reserved for long validation runs. Every physics source file has a companion test file, and each is pinned against a published benchmark, an analytical limit, or an independent cross-check, inventoried under [Validation](../Validation/index.md).
 

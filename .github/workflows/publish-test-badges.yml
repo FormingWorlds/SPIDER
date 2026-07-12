@@ -64,7 +64,14 @@ jobs:
           from pathlib import Path
 
           payload = Path(sys.argv[1])
-          expected = ('tests-total.json', 'tests-fast.json', 'tests-nightly.json')
+          expected = (
+              'tests-total.json',
+              'tests-unit.json',
+              'tests-smoke.json',
+              'tests-integration.json',
+              'tests-fast.json',
+              'tests-nightly.json',
+          )
           for name in expected:
               path = payload / name
               if not path.is_file():
