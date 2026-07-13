@@ -6,18 +6,19 @@ writes one shields.io endpoint-badge JSON file per public badge:
 
     {"schemaVersion": 1, "label": "<label>", "message": "<count>", "color": "blue"}
 
-Six badges are published:
+Three badges are published, two categories that sum to the total:
 
-* ``tests-total.json``       - every collected test (all tiers).
+* ``tests-total.json``       - every collected test (``not skip``).
 * ``tests-unit.json``        - the unit tier (C test executables and Python logic).
-* ``tests-smoke.json``       - the smoke tier (short real binary runs).
-* ``tests-integration.json`` - the integration tier.
-* ``tests-fast.json``        - the unit + smoke tiers that run on every pull request.
-* ``tests-nightly.json``     - the integration + slow tiers that run nightly.
+* ``tests-integration.json`` - the smoke, integration, and slow tiers combined.
 
-The per-tier files (unit, smoke, integration) match the badge scheme of
-the other ecosystem modules; the fast and nightly files describe the CI
-split that consumes the tiers.
+The internal pytest marker scheme has four tiers (``unit``, ``smoke``,
+``integration``, ``slow``); the public badge surface collapses ``smoke +
+integration + slow`` into a single "integration tests" category so the
+count badges match the two-category convention used across the ecosystem
+modules. Internal CI granularity is unaffected: the four markers are
+still registered in ``pyproject.toml`` and drive ``ci.yml`` and
+``nightly.yml`` directly.
 
 Usage
 -----
@@ -25,10 +26,12 @@ Usage
 
 The published copies live on the ``badges`` branch, written there by the
 ``Refresh test count badges`` workflow; nothing is committed into the
-source tree on ``main``. Collection needs the Python test dependencies
-(pytest, pytest-timeout, numpy) but neither PETSc nor a built binary.
-A collection failure or a zero count fails the run loudly instead of
-publishing a wrong number.
+source tree on ``main``. The publish job rebuilds the branch from the
+generated files on every run, so a category that is no longer emitted
+here disappears from the branch on the next refresh. Collection needs
+the Python test dependencies (pytest, pytest-timeout, numpy) but neither
+PETSc nor a built binary. A collection failure or a zero count fails the
+run loudly instead of publishing a wrong number.
 """
 
 from __future__ import annotations
@@ -42,15 +45,13 @@ from pathlib import Path
 
 _REPO_ROOT = Path(__file__).resolve().parent.parent
 
-# name -> (badge label, pytest -m expression); the expressions mirror the
-# marker filters of the CI workflows.
+# name -> (badge label, pytest -m expression). The public surface is the
+# total plus two categories that partition it: the unit tier, and the
+# smoke, integration, and slow tiers combined under "integration tests".
 _BADGES = {
     'total': ('tests', 'not skip'),
     'unit': ('unit tests', 'unit and not skip'),
-    'smoke': ('smoke tests', 'smoke and not skip'),
-    'integration': ('integration tests', 'integration and not skip'),
-    'fast': ('fast tests', '(unit or smoke) and not skip and not slow and not integration'),
-    'nightly': ('nightly tests', '(integration or slow) and not skip'),
+    'integration': ('integration tests', '(smoke or integration or slow) and not skip'),
 }
 
 _COLLECTED_RE = re.compile(r'(\d+)(?:/\d+)? tests? collected')
@@ -154,9 +155,9 @@ def main() -> int:
     counts = {name: count_tests(expr) for name, (_, expr) in _BADGES.items()}
     if counts['total'] == 0:
         raise RuntimeError('collected zero tests in total; refusing to publish.')
-    if counts['fast'] + counts['nightly'] != counts['total']:
+    if counts['unit'] + counts['integration'] != counts['total']:
         raise RuntimeError(
-            f'tier counts do not partition the total ({counts}); '
+            f'category counts do not partition the total ({counts}); '
             'a test is missing a tier marker or carries two.'
         )
     for name, (label, _) in _BADGES.items():
