@@ -67,10 +67,7 @@ jobs:
           expected = (
               'tests-total.json',
               'tests-unit.json',
-              'tests-smoke.json',
               'tests-integration.json',
-              'tests-fast.json',
-              'tests-nightly.json',
           )
           for name in expected:
               path = payload / name
