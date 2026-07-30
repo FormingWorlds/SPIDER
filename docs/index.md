@@ -2,7 +2,7 @@
 
 [![License](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![Docs](https://img.shields.io/github/actions/workflow/status/FormingWorlds/SPIDER/docs.yaml?branch=main&label=Docs)](https://proteus-framework.org/SPIDER/)
-[![codecov](https://img.shields.io/codecov/c/github/FormingWorlds/SPIDER/main?label=coverage&logo=codecov)](https://app.codecov.io/gh/FormingWorlds/SPIDER)
+[![Coverage](https://img.shields.io/codecov/c/github/FormingWorlds/SPIDER?label=coverage&logo=codecov)](https://app.codecov.io/gh/FormingWorlds/SPIDER)
 [![Unit Tests](https://img.shields.io/github/actions/workflow/status/FormingWorlds/SPIDER/ci.yml?branch=main&label=Unit%20Tests)](https://github.com/FormingWorlds/SPIDER/actions/workflows/ci.yml)
 [![Integration Tests](https://img.shields.io/github/actions/workflow/status/FormingWorlds/SPIDER/nightly.yml?branch=main&label=Integration%20Tests)](https://github.com/FormingWorlds/SPIDER/actions/workflows/nightly.yml)
 
