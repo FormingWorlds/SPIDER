@@ -6,7 +6,7 @@
 [![Unit Tests](https://img.shields.io/github/actions/workflow/status/FormingWorlds/SPIDER/ci.yml?branch=main&label=Unit%20Tests)](https://github.com/FormingWorlds/SPIDER/actions/workflows/ci.yml)
 [![Integration Tests](https://img.shields.io/github/actions/workflow/status/FormingWorlds/SPIDER/nightly.yml?branch=main&label=Integration%20Tests)](https://github.com/FormingWorlds/SPIDER/actions/workflows/nightly.yml)
 
-**SPIDER** is the interior dynamics module of the [PROTEUS](https://proteus-framework.org/PROTEUS) coupled atmosphere-interior evolution framework. It is a 1-D parameterised interior dynamics code for rocky planets with molten and/or solid interiors, with support for volatile cycling, redox reactions, and radiative transfer in the atmosphere. Simulating Planetary Interior Dynamics with Extreme Rheology.
+**SPIDER** is the interior dynamics module of the [PROTEUS](https://proteus-framework.org/PROTEUS) coupled atmosphere-interior evolution framework, simulating planetary interior dynamics with extreme rheology. It is a 1-D parameterised interior dynamics code for rocky planets with molten and/or solid interiors, with support for volatile cycling, redox reactions, and radiative transfer in the atmosphere.
 
 <p align="center">
   <img src="assets/spider.png" style="max-width:40%; height:auto;" alt="SPIDER logo">
