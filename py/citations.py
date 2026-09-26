@@ -60,10 +60,11 @@ def main():
 
         used = {}
 
+        # repl runs inside this iteration, so used is the current dictionary
         def repl(match):
             key = match.group(1)
             suffix = match.group(2).strip()
-            used[key] = bib_map.get(key, f'Missing bibliography entry for {key}.')
+            used[key] = bib_map.get(key, f'Missing bibliography entry for {key}.')  # noqa: B023
             if suffix:
                 return f'[^cite-{key}], {suffix}'
             return f'[^cite-{key}]'
