@@ -79,8 +79,15 @@ def count_tests(marker_expression: str) -> int:
     """
     proc = subprocess.run(
         [
-            sys.executable, '-m', 'pytest', '--collect-only', '-q',
-            '-m', marker_expression, '-p', 'no:cacheprovider',
+            sys.executable,
+            '-m',
+            'pytest',
+            '--collect-only',
+            '-q',
+            '-m',
+            marker_expression,
+            '-p',
+            'no:cacheprovider',
         ],
         cwd=_REPO_ROOT,
         capture_output=True,

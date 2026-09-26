@@ -153,10 +153,14 @@ def entropy_bc_run(cached_spider_run):
     """
     return cached_spider_run(
         overrides=(
-            '-nstepsmacro', '1',
-            '-dtmacro', '10',
-            '-ic_surface_entropy', '2550',
-            '-ic_core_entropy', '2650',
+            '-nstepsmacro',
+            '1',
+            '-dtmacro',
+            '10',
+            '-ic_surface_entropy',
+            '2550',
+            '-ic_core_entropy',
+            '2650',
             '-ic_steady_state_energy',
         ),
         name='entropy_bc_steady',

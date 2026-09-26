@@ -161,25 +161,40 @@ def test_surface_node_flux_is_the_grey_body_atmospheric_flux(blackbody_short):
 # 200-year run; the production rates and concentrations are of the
 # order of al26 and k40 in early solar system material.
 HEATING_OVERRIDES = (
-    '-nstepsmacro', '2',
+    '-nstepsmacro',
+    '2',
     # dtmacro is pinned here because the decay pin below requires the
     # second output at exactly t = 200 years (two al26 half-lives, one
     # k40 half-life); the test must not inherit it silently from the
     # shared options file.
-    '-dtmacro', '100',
-    '-radionuclide_names', 'al26,k40',
-    '-al26_t0', '0.0',
-    '-al26_abundance', '1.0',
-    '-al26_concentration', '10.0',
-    '-al26_heat_production', '0.3568',
-    '-al26_half_life', '100.0',
-    '-k40_t0', '0.0',
-    '-k40_abundance', '1.0',
-    '-k40_concentration', '300.0',
-    '-k40_heat_production', '2.92e-5',
-    '-k40_half_life', '200.0',
-    '-HTIDAL', '1',
-    '-htidal_value', '1.0e-7',
+    '-dtmacro',
+    '100',
+    '-radionuclide_names',
+    'al26,k40',
+    '-al26_t0',
+    '0.0',
+    '-al26_abundance',
+    '1.0',
+    '-al26_concentration',
+    '10.0',
+    '-al26_heat_production',
+    '0.3568',
+    '-al26_half_life',
+    '100.0',
+    '-k40_t0',
+    '0.0',
+    '-k40_abundance',
+    '1.0',
+    '-k40_concentration',
+    '300.0',
+    '-k40_heat_production',
+    '2.92e-5',
+    '-k40_half_life',
+    '200.0',
+    '-HTIDAL',
+    '1',
+    '-htidal_value',
+    '1.0e-7',
 )
 # Specific heating of each isotope at t0: concentration (mass fraction)
 # times isotopic abundance times heat production. al26 dominates.
@@ -264,9 +279,7 @@ def test_prescribed_tidal_heating_is_uniform_and_steady(heating_run):
 
 
 @pytest.mark.physics_invariant
-def test_tidal_heating_profile_from_file_is_recovered(
-    blackbody_short, run_spider, tmp_path
-):
+def test_tidal_heating_profile_from_file_is_recovered(blackbody_short, run_spider, tmp_path):
     """HTIDAL 2 reads a per-node heating profile and applies it verbatim.
 
     A linear ramp from 1e-8 to 5e-8 W/kg across the staggered nodes is

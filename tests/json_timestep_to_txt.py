@@ -10,18 +10,18 @@ import json
 import sys
 
 # Interpret the first argument as a JSON file to look for
-if len(sys.argv) < 2 :
+if len(sys.argv) < 2:
     filename = 'output/0.json'
-else :
+else:
     filename = sys.argv[1]
 
 timestep = filename.split('/')[-1].split('.json')[0]
-outfilename = '{}.txt'.format(timestep)
+outfilename = f'{timestep}.txt'
 
 with open(filename) as json_data:
     data_d = json.load(json_data)
     subdomain_data_array = data_d['solution']['subdomain data']
-    with open(outfilename,'w') as outfile :
+    with open(outfilename, 'w') as outfile:
         for e in subdomain_data_array:
             # only compare values that exist
             # for example, if atmosphere and reactions are turned off then
@@ -36,7 +36,7 @@ with open(filename) as json_data:
             outfile.write(e['scaling'])
             outfile.write('\n')
 
-            for nn, ee in enumerate(e['values']) :
+            for nn, ee in enumerate(e['values']):
                 outfile.write('val: ')
                 outfile.write(ee)
                 outfile.write('\n')

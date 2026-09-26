@@ -20,6 +20,7 @@ File format (SI units):
     r_s[0] P_s[0] rho_s[0] g_s[0]    (staggered nodes, surface to CMB)
     ...
 """
+
 from __future__ import annotations
 
 import argparse
@@ -86,8 +87,9 @@ def aw_mass_within_radius(r, R, rhos, beta, g):
 
 def aw_mass_within_shell(r_out, r_in, R, rhos, beta, g):
     """Mass within spherical shell (without 4*pi)."""
-    return (aw_mass_within_radius(r_out, R, rhos, beta, g)
-            - aw_mass_within_radius(r_in, R, rhos, beta, g))
+    return aw_mass_within_radius(r_out, R, rhos, beta, g) - aw_mass_within_radius(
+        r_in, R, rhos, beta, g
+    )
 
 
 def aw_average_density(R, R_core, rhos, beta, g):
@@ -150,22 +152,25 @@ def radius_from_mass_coordinate(xi_targets, R, R_core, rhos, beta, g, rho_avg):
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Generate SPIDER external mesh file from AW parameters"
+        description='Generate SPIDER external mesh file from AW parameters'
     )
-    parser.add_argument("-n", type=int, default=50,
-                        help="Number of basic nodes (default: 50)")
-    parser.add_argument("-radius", type=float, default=6371000.0,
-                        help="Planet radius [m] (default: 6371000)")
-    parser.add_argument("-coresize", type=float, default=0.55,
-                        help="Core size fraction (default: 0.55)")
-    parser.add_argument("-rhos", type=float, default=4078.95095544,
-                        help="Surface density [kg/m^3]")
-    parser.add_argument("-beta", type=float, default=1.1115348931000002e-07,
-                        help="AW beta parameter [1/m]")
-    parser.add_argument("-gravity", type=float, default=-10.0,
-                        help="Surface gravity [m/s^2] (negative)")
-    parser.add_argument("-o", "--output", type=str, required=True,
-                        help="Output mesh file path")
+    parser.add_argument('-n', type=int, default=50, help='Number of basic nodes (default: 50)')
+    parser.add_argument(
+        '-radius', type=float, default=6371000.0, help='Planet radius [m] (default: 6371000)'
+    )
+    parser.add_argument(
+        '-coresize', type=float, default=0.55, help='Core size fraction (default: 0.55)'
+    )
+    parser.add_argument(
+        '-rhos', type=float, default=4078.95095544, help='Surface density [kg/m^3]'
+    )
+    parser.add_argument(
+        '-beta', type=float, default=1.1115348931000002e-07, help='AW beta parameter [1/m]'
+    )
+    parser.add_argument(
+        '-gravity', type=float, default=-10.0, help='Surface gravity [m/s^2] (negative)'
+    )
+    parser.add_argument('-o', '--output', type=str, required=True, help='Output mesh file path')
     args = parser.parse_args()
 
     numpts_b = args.n
@@ -203,19 +208,19 @@ def main():
     g_s = np.full(numpts_s, g)
 
     # Write output file
-    with open(args.output, "w") as f:
-        f.write(f"# {numpts_b} {numpts_s}\n")
+    with open(args.output, 'w') as f:
+        f.write(f'# {numpts_b} {numpts_s}\n')
         for i in range(numpts_b):
-            f.write(f"{r_b[i]:.15e} {P_b[i]:.15e} {rho_b[i]:.15e} {g_b[i]:.15e}\n")
+            f.write(f'{r_b[i]:.15e} {P_b[i]:.15e} {rho_b[i]:.15e} {g_b[i]:.15e}\n')
         for i in range(numpts_s):
-            f.write(f"{r_s[i]:.15e} {P_s[i]:.15e} {rho_s[i]:.15e} {g_s[i]:.15e}\n")
+            f.write(f'{r_s[i]:.15e} {P_s[i]:.15e} {rho_s[i]:.15e} {g_s[i]:.15e}\n')
 
-    print(f"Wrote {args.output}: {numpts_b} basic + {numpts_s} staggered nodes")
-    print(f"  R = {R:.0f} m, R_core = {R_core:.0f} m")
-    print(f"  rho_avg = {rho_avg:.6f} kg/m^3")
-    print(f"  r_b range: [{r_b[-1]:.1f}, {r_b[0]:.1f}] m")
-    print(f"  P_b range: [{P_b[0]:.3e}, {P_b[-1]:.3e}] Pa")
+    print(f'Wrote {args.output}: {numpts_b} basic + {numpts_s} staggered nodes')
+    print(f'  R = {R:.0f} m, R_core = {R_core:.0f} m')
+    print(f'  rho_avg = {rho_avg:.6f} kg/m^3')
+    print(f'  r_b range: [{r_b[-1]:.1f}, {r_b[0]:.1f}] m')
+    print(f'  P_b range: [{P_b[0]:.3e}, {P_b[-1]:.3e}] Pa')
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

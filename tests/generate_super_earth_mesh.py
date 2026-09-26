@@ -14,6 +14,7 @@ The model assumes:
 File format matches SPIDER expectations (SI units, surface to CMB ordering,
 negative gravity).
 """
+
 from __future__ import annotations
 
 import argparse
@@ -97,16 +98,16 @@ def interpolate_to_nodes(r_fine, P_fine, rho_fine, g_fine, r_nodes):
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Generate super-Earth external mesh file for SPIDER"
+        description='Generate super-Earth external mesh file for SPIDER'
     )
-    parser.add_argument("-n", type=int, default=50,
-                        help="Number of basic nodes (default: 50)")
-    parser.add_argument("-radius", type=float, default=8.28e6,
-                        help="Planet radius [m] (default: 1.3 R_Earth)")
-    parser.add_argument("-coresize", type=float, default=0.50,
-                        help="Core size fraction (default: 0.50)")
-    parser.add_argument("-o", "--output", type=str, required=True,
-                        help="Output mesh file path")
+    parser.add_argument('-n', type=int, default=50, help='Number of basic nodes (default: 50)')
+    parser.add_argument(
+        '-radius', type=float, default=8.28e6, help='Planet radius [m] (default: 1.3 R_Earth)'
+    )
+    parser.add_argument(
+        '-coresize', type=float, default=0.50, help='Core size fraction (default: 0.50)'
+    )
+    parser.add_argument('-o', '--output', type=str, required=True, help='Output mesh file path')
     args = parser.parse_args()
 
     numpts_b = args.n
@@ -115,13 +116,11 @@ def main():
     R_core = args.coresize * R
 
     # Super-Earth mantle densities
-    rho_cmb = 5500.0   # kg/m^3, density at CMB
+    rho_cmb = 5500.0  # kg/m^3, density at CMB
     rho_surf = 3500.0  # kg/m^3, density at surface
 
     # Compute fine profile
-    r_fine, P_fine, rho_fine, g_fine = compute_profile(
-        R, R_core, rho_cmb, rho_surf
-    )
+    r_fine, P_fine, rho_fine, g_fine = compute_profile(R, R_core, rho_cmb, rho_surf)
 
     # Create node positions (surface to CMB, uniformly spaced in radius)
     r_b = np.linspace(R, R_core, numpts_b)
@@ -132,12 +131,12 @@ def main():
     P_s, rho_s, g_s = interpolate_to_nodes(r_fine, P_fine, rho_fine, g_fine, r_s)
 
     # Write output file
-    with open(args.output, "w") as f:
-        f.write(f"# {numpts_b} {numpts_s}\n")
+    with open(args.output, 'w') as f:
+        f.write(f'# {numpts_b} {numpts_s}\n')
         for i in range(numpts_b):
-            f.write(f"{r_b[i]:.15e} {P_b[i]:.15e} {rho_b[i]:.15e} {g_b[i]:.15e}\n")
+            f.write(f'{r_b[i]:.15e} {P_b[i]:.15e} {rho_b[i]:.15e} {g_b[i]:.15e}\n')
         for i in range(numpts_s):
-            f.write(f"{r_s[i]:.15e} {P_s[i]:.15e} {rho_s[i]:.15e} {g_s[i]:.15e}\n")
+            f.write(f'{r_s[i]:.15e} {P_s[i]:.15e} {rho_s[i]:.15e} {g_s[i]:.15e}\n')
 
     # Summary
     mantle_mass = 0.0
@@ -146,13 +145,13 @@ def main():
         mantle_mass += rho_s[i] * vol
     mantle_mass *= 4.0 * np.pi
 
-    print(f"Wrote {args.output}: {numpts_b} basic + {numpts_s} staggered nodes")
-    print(f"  R = {R:.0f} m, R_core = {R_core:.0f} m")
-    print(f"  rho range: [{rho_surf:.0f}, {rho_cmb:.0f}] kg/m^3")
-    print(f"  P range: [{P_b[0]:.3e}, {P_b[-1]:.3e}] Pa")
-    print(f"  g range: [{g_b[0]:.3e}, {g_b[-1]:.3e}] m/s^2")
-    print(f"  Mantle mass: {mantle_mass:.3e} kg")
+    print(f'Wrote {args.output}: {numpts_b} basic + {numpts_s} staggered nodes')
+    print(f'  R = {R:.0f} m, R_core = {R_core:.0f} m')
+    print(f'  rho range: [{rho_surf:.0f}, {rho_cmb:.0f}] kg/m^3')
+    print(f'  P range: [{P_b[0]:.3e}, {P_b[-1]:.3e}] Pa')
+    print(f'  g range: [{g_b[0]:.3e}, {g_b[-1]:.3e}] m/s^2')
+    print(f'  Mantle mass: {mantle_mass:.3e} kg')
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

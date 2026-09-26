@@ -31,9 +31,12 @@ def _eval(c_test, prefix, p_list, s_list):
         'test_eos',
         (
             *OPTS,
-            '-eos_prefix', prefix,
-            '-P_si', ','.join(str(p) for p in p_list),
-            '-S_si', ','.join(str(s) for s in s_list),
+            '-eos_prefix',
+            prefix,
+            '-P_si',
+            ','.join(str(p) for p in p_list),
+            '-S_si',
+            ','.join(str(s) for s in s_list),
         ),
     )
 
@@ -109,12 +112,8 @@ def test_compositional_viscosity_matches_spaargaren(c_test):
     shift adds to the configured melt log10visc of 2.0.
     """
     probe = ((1.0e10,), (2600.0,))
-    high = _eval_with(
-        c_test, ('-melt_visc_comp', '1.4', '-melt_visc_ref_comp', '1.6'), *probe
-    )
-    low = _eval_with(
-        c_test, ('-melt_visc_comp', '1.2', '-melt_visc_ref_comp', '0.9'), *probe
-    )
+    high = _eval_with(c_test, ('-melt_visc_comp', '1.4', '-melt_visc_ref_comp', '1.6'), *probe)
+    low = _eval_with(c_test, ('-melt_visc_comp', '1.2', '-melt_visc_ref_comp', '0.9'), *probe)
 
     shift_high = _spaargaren_prefactor(1.4) - _spaargaren_prefactor(1.6)
     shift_low = _spaargaren_prefactor(1.2) - _spaargaren_prefactor(0.9)
@@ -148,9 +147,12 @@ def _eval_with(c_test, extra, p_list, s_list):
         (
             *OPTS,
             *extra,
-            '-eos_prefix', 'melt',
-            '-P_si', ','.join(str(p) for p in p_list),
-            '-S_si', ','.join(str(s) for s in s_list),
+            '-eos_prefix',
+            'melt',
+            '-P_si',
+            ','.join(str(p) for p in p_list),
+            '-S_si',
+            ','.join(str(s) for s in s_list),
         ),
     )
 
@@ -169,9 +171,7 @@ def test_activation_terms_shape_the_viscosity_profile(c_test):
     probes_p = (0.0, 6.55e10)  # Pa; surface limit and deep mantle
     probes_s = (2600.0, 2600.0)  # J/kg/K
 
-    vol = _eval_with(
-        c_test, ('-melt_activation_volume', '1.0e-6'), probes_p, probes_s
-    )
+    vol = _eval_with(c_test, ('-melt_activation_volume', '1.0e-6'), probes_p, probes_s)
     # Edge limit: no pressure, no activation-volume contribution; the
     # bare constant 2.0 returns exactly.
     assert vol['log10visc'][0] == pytest.approx(2.0, abs=1e-10)
@@ -185,8 +185,10 @@ def test_activation_terms_shape_the_viscosity_profile(c_test):
     damped = _eval_with(
         c_test,
         (
-            '-melt_activation_volume', '1.0e-6',
-            '-melt_activation_volume_pressure_scale', '1.0e10',
+            '-melt_activation_volume',
+            '1.0e-6',
+            '-melt_activation_volume_pressure_scale',
+            '1.0e10',
         ),
         probes_p,
         probes_s,

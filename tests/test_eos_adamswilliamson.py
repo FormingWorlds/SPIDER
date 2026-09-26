@@ -33,12 +33,16 @@ def _aw_eval(c_test, p_list, extra=()):
         'test_eos',
         (
             *OPTS,
-            '-eos_type', 'adamswilliamson',
-            '-eos_prefix', 'adams_williamson',
-            '-P_si', ','.join(str(p) for p in p_list),
+            '-eos_type',
+            'adamswilliamson',
+            '-eos_prefix',
+            'adams_williamson',
+            '-P_si',
+            ','.join(str(p) for p in p_list),
             # Entropy is unused by the AW density but the executable
             # requires paired probe points.
-            '-S_si', ','.join('2600.0' for _ in range(n)),
+            '-S_si',
+            ','.join('2600.0' for _ in range(n)),
             *extra,
         ),
     )

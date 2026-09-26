@@ -28,10 +28,12 @@ def rollback_run(cached_spider_run):
     """Six-step run whose first step exceeds the tsurf-change ceiling."""
     return cached_spider_run(
         overrides=(
-            '-nstepsmacro', str(NOMINAL_STEPS),
+            '-nstepsmacro',
+            str(NOMINAL_STEPS),
             '-activate_poststep',
             '-activate_rollback',
-            '-tsurf_poststep_change', str(TSURF_CEILING),
+            '-tsurf_poststep_change',
+            str(TSURF_CEILING),
         ),
         name='rollback_event',
     )
@@ -46,9 +48,7 @@ def test_tsurf_event_rolls_back_and_stops_early(rollback_run):
     macro step, and the surface cooling across that window exceeds the
     1 K ceiling that triggered the event.
     """
-    outputs = sorted(
-        int(p.stem) for p in rollback_run.glob('*.json') if p.stem.isdigit()
-    )
+    outputs = sorted(int(p.stem) for p in rollback_run.glob('*.json') if p.stem.isdigit())
 
     # Early stop: the initial condition plus the rolled-back state.
     assert len(outputs) == 2
@@ -84,9 +84,11 @@ def test_poststep_without_rollback_is_refused(run_spider):
     with pytest.raises(RuntimeError) as excinfo:
         run_spider(
             overrides=(
-                '-nstepsmacro', '2',
+                '-nstepsmacro',
+                '2',
                 '-activate_poststep',
-                '-tsurf_poststep_change', str(TSURF_CEILING),
+                '-tsurf_poststep_change',
+                str(TSURF_CEILING),
             ),
             name='poststep_no_rollback',
         )

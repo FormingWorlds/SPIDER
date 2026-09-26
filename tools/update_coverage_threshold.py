@@ -48,8 +48,7 @@ try:
     import tomlkit
 except ModuleNotFoundError as e:  # pragma: no cover - environment guard
     raise ImportError(
-        'tomlkit is required to update pyproject.toml. '
-        'Install with: pip install tomlkit'
+        'tomlkit is required to update pyproject.toml. Install with: pip install tomlkit'
     ) from e
 
 # PROTEUS-ecosystem coverage ceiling. The ratchet may raise either gate

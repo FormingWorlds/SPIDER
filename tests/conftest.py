@@ -77,9 +77,9 @@ def run_spider(spider_exec, tmp_path_factory):
             # stream while the tail is MPI abort boilerplate; keep both
             # so tests can assert on the actual error message.
             stream = proc.stderr or proc.stdout
-            petsc = '\n'.join(
-                line for line in stream.splitlines() if 'PETSC ERROR' in line
-            )[:2000]
+            petsc = '\n'.join(line for line in stream.splitlines() if 'PETSC ERROR' in line)[
+                :2000
+            ]
             tail = stream[-2000:]
             raise RuntimeError(
                 f'spider exited with code {proc.returncode} for {cmd}:\n{petsc}\n{tail}'

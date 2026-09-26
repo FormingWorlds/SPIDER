@@ -197,8 +197,7 @@ def _library_element_moles(doc, element):
     for volatile in LIBRARY_VOLATILES:
         block = doc['atmosphere'][volatile]
         kg = sum(
-            float(field_si(block[key])[0])
-            for key in ('liquid_kg', 'solid_kg', 'atmosphere_kg')
+            float(field_si(block[key])[0]) for key in ('liquid_kg', 'solid_kg', 'atmosphere_kg')
         )
         moles = kg / LIBRARY_MOLAR_MASS[volatile]
         total += moles * LIBRARY_STOICHIOMETRY[volatile].get(element, 0)
@@ -232,8 +231,7 @@ def test_reaction_library_conserves_h_c_n(library_run):
     # requested 20 percent molar share in place.
     n2_block = doc_0['atmosphere']['N2']
     n2_kg = sum(
-        float(field_si(n2_block[key])[0])
-        for key in ('liquid_kg', 'solid_kg', 'atmosphere_kg')
+        float(field_si(n2_block[key])[0]) for key in ('liquid_kg', 'solid_kg', 'atmosphere_kg')
     )
     n_total = _library_element_moles(doc_0, 'N')
     assert 2.0 * n2_kg / LIBRARY_MOLAR_MASS['N2'] > 0.99 * n_total
