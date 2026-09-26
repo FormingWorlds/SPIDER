@@ -36,7 +36,7 @@ target-version = "py312"
 include = ["tests/**/*.py", "tools/**/*.py", "py/**/*.py"]
 
 [tool.ruff.lint]
-select = ["F", "E", "W", "I"]
+select = ["F", "E", "W", "I", "B", "UP", "C4", "PIE", "NPY"]
 ignore = ["E501"]
 
 [tool.ruff.lint.isort]
