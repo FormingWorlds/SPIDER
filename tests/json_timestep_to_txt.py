@@ -1,10 +1,7 @@
 #! /usr/bin/env python
 # load output JSON dump a txt file of a given timestep, for testing comparison purposes
 
-from __future__ import (
-    annotations,
-    print_function,  # maybe this will work with Python 2
-)
+from __future__ import annotations
 
 import json
 import sys
@@ -36,7 +33,7 @@ with open(filename) as json_data:
             outfile.write(e['scaling'])
             outfile.write('\n')
 
-            for nn, ee in enumerate(e['values']):
+            for ee in e['values']:
                 outfile.write('val: ')
                 outfile.write(ee)
                 outfile.write('\n')

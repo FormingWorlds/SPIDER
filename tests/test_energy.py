@@ -299,7 +299,7 @@ def test_tidal_heating_profile_from_file_is_recovered(blackbody_short, run_spide
         '# scaling factors (constant) for each column given on line below',
         '# 1.0 1.0',
     ]
-    lines += [f'{p:.18e} {h:.18e}' for p, h in zip(pressure_s, ramp)]
+    lines += [f'{p:.18e} {h:.18e}' for p, h in zip(pressure_s, ramp, strict=False)]
     profile = tmp_path / 'htidal_ramp.dat'
     profile.write_text('\n'.join(lines) + '\n')
 

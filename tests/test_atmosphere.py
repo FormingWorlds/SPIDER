@@ -81,7 +81,7 @@ def test_surface_cools_and_flux_decays_across_macro_steps(blackbody_short):
     # Limit input: the initial condition radiates strictly more than
     # any later output.
     assert fatm[0] > max(fatm[1:])
-    for ts, tk, fa in zip(t_surf, t_skin, fatm):
+    for ts, tk, fa in zip(t_surf, t_skin, fatm, strict=False):
         # Skin closed form Tskin = (Fatm / (2 sigma) + teqm^4)^(1/4);
         # halving the net flux places the skin below the surface.
         assert tk == pytest.approx((fa / (2.0 * SIGMA) + TEQM**4) ** 0.25, rel=1e-6)

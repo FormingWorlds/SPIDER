@@ -58,8 +58,8 @@ def test_solidification_proceeds_monotonically_under_cooling(blackbody_full):
         m_liq.append(atmosphere_si(doc, 'mass_liquid'))
         m_sol.append(atmosphere_si(doc, 'mass_solid'))
         m_man.append(atmosphere_si(doc, 'mass_mantle'))
-    assert all(a >= b for a, b in zip(m_liq, m_liq[1:]))
-    assert all(a <= b for a, b in zip(m_sol, m_sol[1:]))
+    assert all(a >= b for a, b in zip(m_liq, m_liq[1:], strict=False))
+    assert all(a <= b for a, b in zip(m_sol, m_sol[1:], strict=False))
     # Closed system: the mantle mass does not drift.
     assert m_man[0] == pytest.approx(m_man[-1], rel=1e-12)
     # By 1200 yr roughly half the mantle has solidified in this

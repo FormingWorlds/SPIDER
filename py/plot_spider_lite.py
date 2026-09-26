@@ -123,7 +123,7 @@ class MyJSON:
         except FileNotFoundError:
             print(f'output directory not found: {self.indir}', file=sys.stderr)
             sys.exit(1)
-        time_l = [fname for fname in file_l]
+        time_l = list(file_l)
         time_l = list(filter(lambda a: a.endswith('json'), time_l))
         time_l = [int(time.split('.json')[0]) for time in time_l]
         # ascending order
@@ -171,7 +171,7 @@ class MyJSON:
         if dict_d is None:
             return None
         data_l = []
-        for nn, time in enumerate(self.time_l):
+        for nn in range(len(self.time_l)):
             key_l = [nn] + keys
             data_a = self.__get_values_at_time(key_l, **kwargs)
             data_l.append(data_a)

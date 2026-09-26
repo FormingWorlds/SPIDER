@@ -60,13 +60,13 @@ def test_melt_density_matches_independent_bilinear_evaluation(c_test):
     """
     out = _melt_eval(c_test, PROBE_P, PROBE_S)
     xa, ya, za = read_2d_table(TABLE_DIR / 'density_melt.dat')
-    expected = [bilinear(xa, ya, za, p, s) for p, s in zip(PROBE_P, PROBE_S)]
+    expected = [bilinear(xa, ya, za, p, s) for p, s in zip(PROBE_P, PROBE_S, strict=False)]
     assert out['rho'] == pytest.approx(expected, rel=1e-9)
 
     # Wrong-table discrimination: the solid table at the same probe
     # points gives densities well outside the tolerance.
     solid = _melt_eval(c_test, PROBE_P, PROBE_S, extra=('-eos_prefix', 'solid'))
-    for rho_melt, rho_solid in zip(out['rho'], solid['rho']):
+    for rho_melt, rho_solid in zip(out['rho'], solid['rho'], strict=False):
         assert abs(rho_melt - rho_solid) > 0.01 * rho_melt
     # Sign and scale guards: silicate densities at 7-90 GPa sit in the
     # thousands of kg/m3; a nondimensional leak would sit near unity.
@@ -88,10 +88,10 @@ def test_thermodynamic_quantities_positive_and_rho_monotonic_in_pressure(c_test)
         assert all(v > 0 for v in out[key]), f'{key} must stay positive'
     # Compression along an isentrope: density strictly increases with P.
     rho = out['rho']
-    assert all(a < b for a, b in zip(rho, rho[1:]))
+    assert all(a < b for a, b in zip(rho, rho[1:], strict=False))
     # Thermal expansivity decreases under compression for this EOS.
     alpha = out['alpha']
-    assert all(a > b for a, b in zip(alpha, alpha[1:]))
+    assert all(a > b for a, b in zip(alpha, alpha[1:], strict=False))
 
 
 @pytest.mark.physics_invariant
