@@ -16,6 +16,14 @@ pytestmark = [pytest.mark.unit, pytest.mark.timeout(30)]
 SCRIPT = Path(__file__).resolve().parents[1] / 'tools' / 'get_petsc.sh'
 
 
+# A stub configure: records its arguments, its environment and four named variables.
+CONFIGURE_STUB = """#!/bin/bash
+printf "%s\\n" "$@" > args
+export -p > env
+for v in LDFLAGS LIBRARY_PATH LIBS CPATH; do printf "%s=%s\\n" "$v" "${!v-unset}"; done > named
+"""
+
+
 def test_configure_on_macos_gets_no_library_path(tmp_path):
     """On macOS with a system MPI, PETSc configure gets LDFLAGS=-Wl,-w and no -L in any
     argument or exported variable, so no library directory comes ahead of the SUNDIALS 2.5
@@ -25,7 +33,7 @@ def test_configure_on_macos_gets_no_library_path(tmp_path):
     block = text[start : text.index('# 9. Build PETSc')]
     for name in ('xcrun', 'mpicc', 'mpirun'):
         (tmp_path / name).write_text('#!/bin/bash\necho /sdk\n')
-    (tmp_path / 'configure').write_text('#!/bin/bash\nprintf "%s\\n" "$@" > args\nenv > env\n')
+    (tmp_path / 'configure').write_text(CONFIGURE_STUB)
     for stub in tmp_path.iterdir():
         stub.chmod(0o755)
     snippet = 'set -euo pipefail\nannounce() { :; }\nOSTYPE=darwin24\nworkpath=.\n' + block
@@ -40,5 +48,7 @@ def test_configure_on_macos_gets_no_library_path(tmp_path):
     args = (tmp_path / 'args').read_text().splitlines()
     assert {'LDFLAGS=-Wl,-w', '--download-sundials2'} <= set(args)
     assert [a for a in args if '-L' in a] == []
-    assert [v for v in (tmp_path / 'env').read_text().splitlines() if '-L' in v] == []
+    named = (tmp_path / 'named').read_text().split()
+    assert named == [f'{v}=unset' for v in ('LDFLAGS', 'LIBRARY_PATH', 'LIBS', 'CPATH')]
+    assert 'homebrew/lib' not in (tmp_path / 'env').read_text()
     assert '--download-mpich' not in args

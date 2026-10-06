@@ -118,3 +118,16 @@ PETSC_ARCH=arch-xxx-yyy
     export PETSC_ARCH=arch-xxx-yyy
     ```
 
+## Troubleshooting
+
+### PETSc configure: "Downloaded sundials2 could not be used"
+
+PETSc configure on macOS stops with:
+
+```
+Downloaded sundials2 could not be used. Please check install in .../arch-darwin-c-opt
+```
+
+and `configure.log` reports `_CVDense` and `_CVSpgmr` as undefined symbols.
+
+A SUNDIALS 7 from Homebrew is in the linker search path ahead of the SUNDIALS 2.5 that PETSc downloads, and SUNDIALS 7 has no `CVDense`. `get_petsc.sh` passes no Homebrew library path, so on Apple Silicon, where Homebrew lives in `/opt/homebrew`, PETSc builds with a Homebrew SUNDIALS installed. On an Intel Mac, Homebrew installs into `/usr/local/lib`, which the linker searches by default, so a Homebrew SUNDIALS can still hide the downloaded one there. `brew list --versions sundials` shows whether Homebrew's SUNDIALS is installed.

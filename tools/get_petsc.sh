@@ -341,9 +341,8 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
     # macOS provides Accelerate framework with BLAS/LAPACK
     blas_flag=""
 
-    # -Wl,-w silences the deprecated-flag warnings macOS 26+ turns into PETSc configure errors.
-    # No Homebrew -L: mpicc carries its own, and a Homebrew SUNDIALS there would hide the
-    # SUNDIALS 2.5 PETSc downloads.
+    # -Wl,-w: macOS 26+ turns deprecated-flag warnings into configure errors. No Homebrew -L:
+    # mpicc brings its own, and a Homebrew SUNDIALS there would hide PETSc's SUNDIALS 2.5.
     ldflags="-Wl,-w"
 fi
 
