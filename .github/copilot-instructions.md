@@ -42,7 +42,7 @@ Sister modules in the ecosystem: ARAGOG (interior thermal evolution, entropy for
 
 1. A C compiler (gcc or clang) and GNU make.
 2. PETSc with SUNDIALS2 (`--download-sundials2`). Two supported paths:
-   - Installer: `./tools/get_petsc.sh` (downloads the PETSc 3.19.0 source archive from OSF and builds it; sets `arch-linux-c-opt` / `arch-darwin-c-opt`).
+   - Installer: `./tools/get_petsc.sh` (downloads the PETSc 3.19.0 source archive from Zenodo, or its DataverseNL mirror, checks its SHA-256 and builds it; sets `arch-linux-c-opt` / `arch-darwin-c-opt`).
    - From source: clone `https://gitlab.com/petsc/petsc.git`, configure with `--with-fc=0 --with-cxx=0 --download-sundials2 --download-mpich --download-f2cblaslapack`.
 3. Python 3.12+ with `pip install -r py/requirements.txt` plus `pytest pytest-timeout` for the test suite.
 

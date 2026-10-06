@@ -3,7 +3,8 @@
 # get_petsc.sh — Download, configure, and compile PETSc for SPIDER
 # =============================================================================
 #
-# Downloads PETSc 3.19.0 from OSF and builds it with sundials2 support.
+# Downloads the PETSc 3.19.0 source archive from Zenodo, or its DataverseNL
+# mirror, checks its SHA-256, and builds it with sundials2 support.
 # SPIDER is a pure C code, so C++ and Fortran compilers are disabled.
 #
 # This script is intended to live inside the SPIDER repository:
@@ -119,10 +120,36 @@ safe_to_remove_dir() {
 }
 
 # -----------------------------------------------------------------------------
+# Verified download: the first source that serves the pinned SHA-256 wins
+# -----------------------------------------------------------------------------
+fetch_verified() {
+    local sha256="$1" dest="$2" url got
+    shift 2
+    for url in "$@"; do
+        [[ -n "$url" ]] || continue
+        announce "Downloading $url"
+        if curl -fLsS --retry 3 "$url" -o "$dest"; then
+            got=$( (shasum -a 256 "$dest" 2>/dev/null || sha256sum "$dest") | awk '{print $1}')
+            [[ "$got" == "$sha256" ]] && return 0
+            console "WARNING: $url served a file with SHA-256 $got, not $sha256"
+        else
+            console "WARNING: download from $url failed"
+        fi
+    done
+    rm -f "$dest"
+    console "ERROR: no source served $(basename "$dest") with SHA-256 $sha256"
+    return 1
+}
+
+# -----------------------------------------------------------------------------
 # Error handling: report which step failed on any non-zero exit
 # -----------------------------------------------------------------------------
 current_step="initialising"
-url="https://osf.io/download/p5vxq/"
+# PETSc 3.19.0 source archive on Zenodo (15805756) and its DataverseNL mirror (empty: none);
+# PETSC_URL and PETSC_MIRROR_URL override them.
+url="${PETSC_URL:-https://zenodo.org/records/15805756/files/petsc.zip?download=1}"
+mirror_url="${PETSC_MIRROR_URL:-}"
+petsc_sha256="c5bdb75048b609627bac7fdc83042078a629f5de0c6508b50166a351d2aa045d"
 logfile=""
 
 on_error() {
@@ -153,8 +180,8 @@ on_error() {
             ;;
         *"Download"*)
             console "   - Check your internet connection"
-            console "   - Verify the OSF URL is accessible: $url"
-            console "   - Try downloading manually: curl -fLsS \"$url\" -o petsc.zip"
+            console "   - Sources tried: $url ${mirror_url:-(no mirror)}"
+            console "   - PETSC_URL and PETSC_MIRROR_URL override them; the SHA-256 must match"
             ;;
         *"Decompress"*)
             console "   - The downloaded archive may be corrupted"
@@ -267,15 +294,13 @@ fi
 mkdir -p "$workpath"
 
 # -----------------------------------------------------------------------------
-# 6. Download PETSc 3.19.0 from OSF
+# 6. Download the PETSc 3.19.0 archive: Zenodo first, then the DataverseNL mirror
 # -----------------------------------------------------------------------------
-current_step="Downloading PETSc archive from OSF"
+current_step="Downloading PETSc archive"
 
 zipfile="$workpath/petsc.zip"
 announce ""
-announce "Downloading PETSc archive from OSF..."
-announce "    $url -> $zipfile"
-curl -fLsS "$url" -o "$zipfile"
+fetch_verified "$petsc_sha256" "$zipfile" "$url" "$mirror_url"
 
 current_step="Decompressing PETSc archive"
 announce "Decompressing..."
