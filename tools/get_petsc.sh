@@ -366,13 +366,9 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
     # macOS provides Accelerate framework with BLAS/LAPACK
     blas_flag=""
 
-    if [[ "$(uname -m)" == "arm64" ]]; then
-        default_brew_prefix="/opt/homebrew"
-    else
-        default_brew_prefix="/usr/local"
-    fi
-    brew_prefix="$(brew --prefix 2>/dev/null || echo "$default_brew_prefix")"
-    ldflags="-L${brew_prefix}/lib -Wl,-w"
+    # -Wl,-w: macOS 26+ turns deprecated-flag warnings into configure errors. No Homebrew -L:
+    # mpicc brings its own, and a Homebrew SUNDIALS there would hide PETSc's SUNDIALS 2.5.
+    ldflags="-Wl,-w"
 fi
 
 if [[ -z "$mpi_flag" ]] && ! command -v mpirun >/dev/null 2>&1; then
