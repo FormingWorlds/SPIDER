@@ -145,10 +145,10 @@ fetch_verified() {
 # Error handling: report which step failed on any non-zero exit
 # -----------------------------------------------------------------------------
 current_step="initialising"
-# PETSc 3.19.0 source archive on Zenodo (15805756) and its DataverseNL mirror (empty: none);
+# PETSc 3.19.0 source archive on Zenodo (15805756) and its DataverseNL mirror (10.34894/BZDJPU);
 # PETSC_URL and PETSC_MIRROR_URL override them.
 url="${PETSC_URL:-https://zenodo.org/records/15805756/files/petsc.zip?download=1}"
-mirror_url="${PETSC_MIRROR_URL:-}"
+mirror_url="${PETSC_MIRROR_URL:-https://dataverse.nl/api/access/datafile/683669}"
 petsc_sha256="c5bdb75048b609627bac7fdc83042078a629f5de0c6508b50166a351d2aa045d"
 logfile=""
 

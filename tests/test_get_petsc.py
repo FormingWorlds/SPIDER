@@ -75,7 +75,7 @@ def test_the_script_pins_the_zenodo_archive_and_its_hash():
         'url="${PETSC_URL:-https://zenodo.org/records/15805756/files/petsc.zip?download=1}"'
         in text
     )
-    assert 'mirror_url="${PETSC_MIRROR_URL:-}"' in text
+    assert 'mirror_url="${PETSC_MIRROR_URL:-https://dataverse.nl/api/access/datafile/683669}"' in text
     (sha,) = re.findall(r'^petsc_sha256="([0-9a-f]{64})"$', text, re.M)
     assert sha == 'c5bdb75048b609627bac7fdc83042078a629f5de0c6508b50166a351d2aa045d'
     assert 'fetch_verified "$petsc_sha256" "$zipfile" "$url" "$mirror_url"' in text
