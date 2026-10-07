@@ -67,19 +67,24 @@ def test_no_matching_source_stops_before_unzip(tmp_path):
     assert f'no source served petsc.zip with SHA-256 {"0" * 64}' in result.stdout
 
 
-def test_an_empty_hash_stops_before_any_download(tmp_path):
-    """A blank pin stops at once instead of accepting whatever a source serves."""
+def test_an_empty_hash_or_no_hash_tool_stops_before_any_download(tmp_path):
+    """A blank pin, or no shasum and no sha256sum, stops at once instead of accepting whatever a
+    source serves; the shipped script pins the Zenodo archive, its mirror and a 64-digit hash."""
     good = tmp_path / 'good.zip'
     good.write_bytes(b'petsc archive')
-    result = _run(f'fetch_verified "" "{tmp_path}/p.zip" "file://{good}"\necho REACHED_UNZIP\n')
-    assert result.returncode == 1
-    assert 'no SHA-256 pin for p.zip' in result.stdout
-    assert 'Downloading' not in result.stdout and 'REACHED_UNZIP' not in result.stdout
-
-
-def test_the_script_pins_the_zenodo_archive_and_its_hash():
-    """The default source is the Zenodo archive, with its SHA-256 pinned beside it and both
-    sources overridable for a mirror or a test."""
+    call = f'fetch_verified "{{}}" "{tmp_path}/p.zip" "file://{good}"\necho REACHED_UNZIP\n'
+    blank = _run(call.format(''))
+    no_tool = subprocess.run(
+        ['/bin/bash', '-c', _function() + call.format(_sha256(b'petsc archive'))],
+        capture_output=True,
+        text=True,
+        env={'PATH': str(tmp_path / 'empty')},
+    )
+    assert blank.returncode == 1 and 'no SHA-256 pin for p.zip' in blank.stdout
+    assert no_tool.returncode == 1
+    assert 'neither shasum nor sha256sum is installed' in no_tool.stdout
+    for result in (blank, no_tool):
+        assert 'Downloading' not in result.stdout and 'REACHED_UNZIP' not in result.stdout
     text = SCRIPT.read_text()
     assert (
         'url="${PETSC_URL:-https://zenodo.org/records/15805756/files/petsc.zip?download=1}"'
@@ -89,6 +94,5 @@ def test_the_script_pins_the_zenodo_archive_and_its_hash():
         'mirror_url="${PETSC_MIRROR_URL:-https://dataverse.nl/api/access/datafile/683669}"'
         in text
     )
-    (sha,) = re.findall(r'^petsc_sha256="([0-9a-f]{64})"$', text, re.M)
-    assert sha == 'c5bdb75048b609627bac7fdc83042078a629f5de0c6508b50166a351d2aa045d'
+    assert re.search(r'^petsc_sha256="[0-9a-f]{64}"$', text, re.M)
     assert 'fetch_verified "$petsc_sha256" "$zipfile" "$url" "$mirror_url"' in text

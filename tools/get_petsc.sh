@@ -129,6 +129,10 @@ fetch_verified() {
         console "ERROR: no SHA-256 pin for $(basename "$dest")"
         return 1
     fi
+    if ! command -v shasum >/dev/null 2>&1 && ! command -v sha256sum >/dev/null 2>&1; then
+        console "ERROR: neither shasum nor sha256sum is installed; install one of them"
+        return 1
+    fi
     for url in "$@"; do
         [[ -n "$url" ]] || continue
         announce "Downloading $url"
