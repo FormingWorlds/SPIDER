@@ -2,11 +2,17 @@
 
 **Source under test**: `twophase.c`
 
+## Cases
+
+### Global melt fraction is the mass-weighted profile mean
+
 **Reference-pinned test**: `tests/test_twophase.py::test_global_melt_fraction_is_the_mass_weighted_profile_mean`
 
-**Anchor**: Analytical identity: the global melt fraction equals Mliq/Mmantle and the mass-weighted mean of the staggered melt-fraction profile.
+**Reference**: Analytical identity: the global melt fraction equals Mliq/Mmantle and the mass-weighted mean of the staggered melt-fraction profile.
 
 **Tolerance**: rel 1e-10 on both identities at the part-solidified 1200-year state.
+
+**Command**: `make`, then `pytest -o addopts= tests/test_twophase.py::test_global_melt_fraction_is_the_mass_weighted_profile_mean`
 
 **Discrimination guards**: An unweighted profile mean differs beyond tolerance (weighting guard); mantle mass closure Mliq + Msol = Mmantle holds at every output to rel 1e-12; solidification is monotone under cooling with the mantle mass constant.
 

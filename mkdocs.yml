@@ -38,27 +38,33 @@ nav:
         - Hybrid equation of state: Explanations/hybrid_eos.md
         - Toy model and numerical schemes: Explanations/toy_model.md
 
+  - Validation:
+      - Overview: Validation/index.md
+      - Equation of state and material properties:
+        - eos.c: Validation/eos.md
+        - eos_lookup.c: Validation/eos_lookup.md
+        - eos_composite.c: Validation/eos_composite.md
+        - eos_adamswilliamson.c: Validation/eos_adamswilliamson.md
+        - matprop.c: Validation/matprop.md
+        - interp.c: Validation/interp.md
+      - Structure and mesh:
+        - mesh.c: Validation/mesh.md
+      - Energy transport and time stepping:
+        - energy.c: Validation/energy.md
+        - rhs.c: Validation/rhs.md
+        - ic.c: Validation/ic.md
+        - bc.c: Validation/bc.md
+      - Melt and phase separation:
+        - twophase.c: Validation/twophase.md
+        - rheologicalfront.c: Validation/rheologicalfront.md
+      - Atmosphere:
+        - atmosphere.c: Validation/atmosphere.md
+      - Chemistry:
+        - reaction.c: Validation/reaction.md
+
   - Reference:
       - Runtime options: Reference/options.md
       - Publications: Reference/publications.md
-
-  - Validation:
-      - Overview: Validation/index.md
-      - atmosphere.c: Validation/atmosphere.md
-      - bc.c: Validation/bc.md
-      - energy.c: Validation/energy.md
-      - eos.c: Validation/eos.md
-      - eos_adamswilliamson.c: Validation/eos_adamswilliamson.md
-      - eos_composite.c: Validation/eos_composite.md
-      - eos_lookup.c: Validation/eos_lookup.md
-      - ic.c: Validation/ic.md
-      - interp.c: Validation/interp.md
-      - matprop.c: Validation/matprop.md
-      - mesh.c: Validation/mesh.md
-      - reaction.c: Validation/reaction.md
-      - rheologicalfront.c: Validation/rheologicalfront.md
-      - rhs.c: Validation/rhs.md
-      - twophase.c: Validation/twophase.md
 
   - Community:
       - Code of Conduct: Community/CODE_OF_CONDUCT.md

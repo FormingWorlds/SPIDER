@@ -2,11 +2,17 @@
 
 **Source under test**: `rheologicalfront.c`
 
+## Cases
+
+### Front location is consistent with melt fraction profile
+
 **Reference-pinned test**: `tests/test_rheologicalfront.py::test_front_location_is_consistent_with_melt_fraction_profile`
 
-**Anchor**: Analytical self-consistency: the reported front index matches the phi_critical = 0.4 crossing of the melt-fraction profile, and the depth equals the surface radius minus the front radius.
+**Reference**: Analytical self-consistency: the reported front index matches the phi_critical = 0.4 crossing of the melt-fraction profile, and the depth equals the surface radius minus the front radius.
 
 **Tolerance**: Front index within one node of the recomputed crossing; rel 1e-6 on the depth identity.
+
+**Command**: `make`, then `pytest -o addopts= tests/test_rheologicalfront.py::test_front_location_is_consistent_with_melt_fraction_profile`
 
 **Discrimination guards**: Depth positivity and the mantle-depth bound; front pressure within the mantle range; the un-formed-front limit at t = 0 reports the core-mantle boundary by convention (pinned as the limit-input contract); the front migrates upward as the mantle solidifies bottom-up.
 

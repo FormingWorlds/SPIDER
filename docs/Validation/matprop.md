@@ -2,11 +2,17 @@
 
 **Source under test**: `matprop.c`
 
+## Cases
+
+### Viscosity recovers configured end members
+
 **Reference-pinned test**: `tests/test_matprop.py::test_viscosity_recovers_configured_end_members`
 
-**Anchor**: Analytical limit: away from the rheological transition the blended viscosity recovers the configured end-members (melt_log10visc = 2, solid_log10visc = 21).
+**Reference**: Analytical limit: away from the rheological transition the blended viscosity recovers the configured end-members (melt_log10visc = 2, solid_log10visc = 21).
 
-**Tolerance**: Calibrated absolute tolerances on log10(viscosity) at strongly molten and strongly solid nodes; see the test comments.
+**Tolerance**: abs 0.01 on log10(viscosity) at the strongly molten nodes and abs 0.05 at the strongly solid nodes.
+
+**Command**: `make`, then `pytest -o addopts= tests/test_matprop.py::test_viscosity_recovers_configured_end_members`
 
 **Discrimination guards**: The recovered end-members differ by more than 10 decades (swapped-phase guard); positivity of density, heat capacity, conductivity, and expansivity at every node; the configured 4.0 W/m/K conductivity is recovered exactly.
 
