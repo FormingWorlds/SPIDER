@@ -8,7 +8,7 @@
 
 **Reference-pinned test**: `tests/test_energy.py::test_disabled_transport_mechanisms_carry_zero_flux`
 
-**Reference**: Analytical limit: a disabled transport mechanism carries zero flux, and with only conduction enabled the total flux equals the conductive flux identically.
+**Reference**: Analytical limit: a disabled transport mechanism carries zero flux, and with only conduction enabled the total flux equals the conductive flux at the interior nodes (the surface node carries the grey-body boundary flux).
 
 **Tolerance**: abs 1e-20 W/m^2 on the disabled fluxes, 25 decades below the active fluxes.
 
