@@ -14,6 +14,6 @@
 
 **Command**: `make tests_c`, then `pytest -o addopts= tests/test_eos_composite.py::test_fusion_equals_liquidus_minus_solidus_and_phi_is_linear_in_entropy`
 
-**Discrimination guards**: A wrong-denominator regression (liquidus entropy instead of fusion) shifts phi from 0.25 to about 0.07, far beyond tolerance; the fusion scale is bounded to the few-hundred J/kg/K range of the dK09 tables; companion tests pin the [0, 1] clamp and the pure-phase limits against the single-phase lookups.
+**Discrimination guards**: A wrong-denominator regression (liquidus entropy instead of fusion) shifts phi from 0.25 to about 0.07, far beyond tolerance; the fusion entropy lies between 100 and 1500 J/kg/K (603.6 J/kg/K at 10 GPa for the dK09 tables); companion tests pin the [0, 1] clamp and the pure-phase limits against the single-phase lookups.
 
 The composite EOS blends the melt and solid lookups across the melting interval. The melt fraction definition, the fusion entropy, and the recovery of the pure end-members away from the interval are each pinned; the truncation contract is made visible through the untruncated diagnostic value.

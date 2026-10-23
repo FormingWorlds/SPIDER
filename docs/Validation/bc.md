@@ -14,7 +14,7 @@
 
 **Command**: `make`, then `pytest -o addopts= tests/test_bc.py::test_prescribed_flux_bc_echoes_value_and_inverts_emissivity`
 
-**Discrimination guards**: The grey-body flux at the same surface temperature differs from the prescribed value by far more than tolerance (dispatch guard); temperature ordering across the mantle (CMB hotter than surface) and the near-zero surface pressure are asserted on the default configuration.
+**Discrimination guards**: The grey-body flux at the same surface temperature differs from the prescribed value by more than 10 percent (dispatch guard), and the emissivity differs from 1 by more than 0.5; the flux is positive and between 1e2 and 1e9 W/m^2. The sibling test `test_mantle_cools_from_the_top_between_surface_and_cmb` (same file) asserts the temperature ordering across the mantle (CMB hotter than surface) and the near-zero surface pressure on the default configuration.
 
 The boundary-condition dispatch is pinned through the prescribed-flux pathway PROTEUS uses in coupled runs: the value handed in through the option must reappear identically in the output, with the emissivity consistently inverted from it.
 
@@ -28,4 +28,4 @@ The boundary-condition dispatch is pinned through the prescribed-flux pathway PR
 
 **Command**: `make`, then `pytest -o addopts= tests/test_bc.py::test_constant_entropy_bc_pins_the_initial_surface`
 
-**Discrimination guards**: The default configuration's surface value (2599.7 J/kg/K from the 2600 adiabat) sits about 50 J/kg/K away; positivity and table-range bounds on the core-side value after the steady rebalance. The prescribed-core-flux comparison against the core-cooling baseline (same file) discriminates the CORE_BC dispatch by the sign of the CMB entropy difference and the doubled CMB heat flux.
+**Discrimination guards**: The default configuration's surface value (2599.7 J/kg/K from the 2600 adiabat) sits about 50 J/kg/K away; positivity and table-range bounds on the core-side value after the steady rebalance. The sibling test `test_prescribed_core_flux_slows_cmb_cooling` (same file) compares against the core-cooling baseline and discriminates the CORE_BC dispatch by the sign of the CMB entropy difference and the doubled CMB heat flux.

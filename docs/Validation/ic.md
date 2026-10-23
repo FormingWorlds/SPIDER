@@ -14,7 +14,7 @@
 
 **Command**: `make`, then `pytest -o addopts= tests/test_ic.py::test_prescribed_adiabat_entropy_sets_the_initial_profile`
 
-**Discrimination guards**: A run with ic_adiabat_entropy = 2400 shifts the profile by exactly 200 J/kg/K (wrong-value discrimination); cooling at later outputs breaks the initial flatness, confirming the IC is not a fixed point of the output pipeline.
+**Discrimination guards**: A run with ic_adiabat_entropy = 2400 shifts the profile by exactly 200 J/kg/K (wrong-value discrimination); the entropy is positive and its mean between 1e3 and 1e4 J/kg/K. The sibling test `test_initial_adiabat_is_nearly_flat_until_cooling_imprints_structure` (same file) checks that cooling at later outputs breaks the initial flatness, so the IC is not a fixed point of the output pipeline.
 
 The initial condition writes the prescribed adiabat onto the mesh. The top-node entropy, the integrated gradient ramp, and the response to a different prescribed value are pinned from the t = 0 output.
 
@@ -40,4 +40,4 @@ The initial condition writes the prescribed adiabat onto the mesh. The top-node 
 
 **Command**: `make`, then `pytest -o addopts= tests/test_ic.py::test_ocean_moles_ic_converts_moles_to_mass`
 
-**Discrimination guards**: Reading the CO2 inventory with the CO molar mass shifts the expected mass by 36 percent; positivity and scale bounds on the smallest inventory.
+**Discrimination guards**: Reading the CO2 inventory with the CO molar mass shifts the expected mass by 36 percent; positivity and scale bounds on the CO2 inventory, the smallest in ocean equivalents (0.0087 oceans; H2 is smaller in mass).

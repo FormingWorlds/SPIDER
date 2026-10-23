@@ -14,6 +14,6 @@
 
 **Command**: `make`, then `pytest -o addopts= tests/test_reaction.py::test_elements_conserved_across_each_reaction_pair`
 
-**Discrimination guards**: Sign structure of the transfers (H2O produced from H2, CO2 from CO in this step); per-volatile reservoir closure to rel 1e-10 and inventory closure to rel 1e-5; transfer magnitudes bounded against the total inventory.
+**Discrimination guards**: Sign structure of the transfers (H2O produced from H2, CO2 from CO in this step); the H2O transfer lies between 1e16 and 1e20 kg and below 1 percent of the H2O inventory. Sibling tests in the same file check the per-volatile reservoir closure to rel 1e-10 (`test_reservoir_closure_for_every_volatile`) and the inventory closure to rel 1e-5 (`test_reaction_transfer_balances_the_initial_inventory`).
 
 The reaction module exchanges mass between volatile pairs subject to elemental conservation. The reaction_kg bookkeeping is pinned so that the element handed off by one partner reappears exactly in the stoichiometric fraction of the other.

@@ -21,7 +21,7 @@ C line coverage as CI measures it, and debugging:
 
 ```bash
 make clean && make -j CFLAGS_EXTRA="--coverage" && make -j tests_c CFLAGS_EXTRA="--coverage"
-pytest -m "(unit or smoke) and not skip" && gcovr --txt --exclude cJSON.c
+pytest -m "(unit or smoke) and not skip" && gcovr --gcov-ignore-parse-errors suspicious_hits.warn_once_per_file --exclude cJSON.c --exclude tests/ --exclude dev/ --txt
 pytest -x -v --showlocals tests/test_<file>.py::test_function
 make clean; make -j CFLAGS_EXTRA="-O0 -fsanitize=address"   # debug or sanitizer build
 ```

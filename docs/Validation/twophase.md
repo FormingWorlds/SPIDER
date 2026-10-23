@@ -14,6 +14,6 @@
 
 **Command**: `make`, then `pytest -o addopts= tests/test_twophase.py::test_global_melt_fraction_is_the_mass_weighted_profile_mean`
 
-**Discrimination guards**: An unweighted profile mean differs beyond tolerance (weighting guard); mantle mass closure Mliq + Msol = Mmantle holds at every output to rel 1e-12; solidification is monotone under cooling with the mantle mass constant.
+**Discrimination guards**: An unweighted profile mean differs by more than 1e-3 (weighting guard); the global melt fraction lies between 0 and 1 and, at 1200 yr, between 0.2 and 0.9. Sibling tests in the same file check the mantle mass closure Mliq + Msol = Mmantle at every output to rel 1e-12 (`test_mantle_mass_closure_at_every_output_time`) and the monotone solidification under cooling with the mantle mass constant (`test_solidification_proceeds_monotonically_under_cooling`).
 
 The two-phase bookkeeping integrates the melt distribution into the global masses PROTEUS consumes. Closure, monotone solidification, and the equivalence of the three melt-fraction definitions are pinned across the full frozen-reference run.

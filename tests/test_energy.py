@@ -77,8 +77,8 @@ def test_disabled_transport_mechanisms_carry_zero_flux(blackbody_short, cached_s
     )
     doc_nc = read_output(no_cond, 0)
     jcond_nc = data_si(doc_nc, 'Jcond_b')  # W/m^2
-    # atol=1e-20 W/m^2 sits 25 decades below the active fluxes in this
-    # state (1e5 to 2e9 W/m^2); the observed values are exactly zero.
+    # atol=1e-20 W/m^2 sits 29 decades below the active fluxes in this
+    # state (9e8 to 2e9 W/m^2); the observed values are exactly zero.
     np.testing.assert_allclose(jcond_nc, 0.0, atol=1e-20)
     # Wrong-path guard: convection must remain active, otherwise the
     # zero above would only prove a dead run.
