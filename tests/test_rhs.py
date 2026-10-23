@@ -57,7 +57,7 @@ def test_reported_dsdt_matches_finite_difference_of_outputs(blackbody_dt10, vali
     # Sign guard: the mantle cools everywhere in this configuration.
     assert np.all(midpoint < 0.0)
     # Scale guard: early magma-ocean cooling rates are of order
-    # 1e-8 J/kg/K/s here; ten decades either way flags a unit slip
+    # 1e-8 J/kg/K/s here; four decades either way flags a unit slip
     # (e.g. per year instead of per second).
     assert 1e-12 < np.max(np.abs(midpoint)) < 1e-4
 
@@ -73,12 +73,8 @@ def test_reported_dsdt_matches_finite_difference_of_outputs(blackbody_dt10, vali
         rel = np.abs(fd_slope - midpoint) / np.abs(midpoint)
         bottom.plot(radius_km, rel, 'o', ms=3)
         bottom.axhline(rtol, color=plt.rcParams['text.color'], ls='--', label='tolerance')
-        bottom.set(
-            yscale='log',
-            ylim=(min(1e-3, rel.min() / 2), 1e-1),
-            xlabel='Radius [km]',
-            ylabel='Rel. difference',
-        )
+        bottom.set(yscale='log', xlabel='Radius [km]', ylabel='Rel. difference')
+        bottom.set_ylim(min(1e-3, max(rel.min() / 2, 1e-16)), 1e-1)
         bottom.legend(loc='lower right')
         for ax in (top, bottom):
             ax.minorticks_off()
