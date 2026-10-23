@@ -42,7 +42,7 @@ def test_reported_dsdt_matches_finite_difference_of_outputs(blackbody_dt10, vali
     Analytical anchor: the time derivative assembled by rhs.c must be
     the derivative of the trajectory the timestepper actually follows,
     so the midpoint average of dSdt_s at 10 and 20 years matches
-    (S(20) - S(10)) / dt. Observed agreement is 0.7% at every node
+    (S(20) - S(10)) / dt. Observed agreement is 0.4 to 0.7% across the nodes
     (midpoint rule over 10 years); rel 2e-2 leaves headroom without
     admitting a wrong-term regression, which shifts dSdt by order
     unity.

@@ -8,15 +8,15 @@
 
 **Reference-pinned test**: `tests/test_energy.py::test_disabled_transport_mechanisms_carry_zero_flux`
 
-**Reference**: Analytical limit: a disabled transport mechanism carries zero flux, and with only conduction enabled the total flux equals the conductive flux at the interior nodes (the surface node carries the grey-body boundary flux).
+**Reference**: Analytical limit: a disabled transport mechanism carries zero flux, and with only conduction enabled the total flux equals the conductive flux at every node except the surface node, which carries the grey-body boundary flux.
 
-**Tolerance**: abs 1e-20 W/m^2 on the disabled fluxes, 25 decades below the active fluxes.
+**Tolerance**: abs 1e-20 W/m^2 on the disabled fluxes, at least 17 decades below the active fluxes (convection 9e8 to 2e9 W/m^2 with conduction off; conduction 1.9e-3 to 1.3e-2 W/m^2 in the conduction-only run); rel 1e-12 on the conduction-only identity, and the surface node differs by more than 1e3 W/m^2.
 
 **Command**: `make`, then `pytest -o addopts= tests/test_energy.py::test_disabled_transport_mechanisms_carry_zero_flux`
 
 **Discrimination guards**: Convection stays active when conduction is off (wrong-path guard); at the surface node the grey-body boundary flux differs from the conductive flux, so the identity holds at the interior nodes only; a scale bound on the full-physics flux. The sibling test in the same file asserts that the total flux is the sum of the components at the interior nodes.
 
-The flux assembly is validated through its superposition structure: each transport term can be switched off through its runtime option, and the total must respond exactly. This pins the dispatch wiring between the options, the individual flux routines, and the total used by the time integration.
+The flux assembly is validated through its superposition structure: each transport term can be switched off through its runtime option, and the total must respond to output precision. This pins the dispatch wiring between the options, the individual flux routines, and the total used by the time integration.
 
 ### Radiogenic heating pins two isotope decay
 

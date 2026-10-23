@@ -5,8 +5,9 @@ Enforces the test rules of `tests/AGENTS.md`:
 
 - Every test file must declare a module-level ``pytestmark`` containing a tier
   marker (``unit`` / ``smoke`` / ``integration`` / ``slow``).
-- Test functions must contain at least 2 assertion statements OR a discriminating
-  property-based assertion. Single-assert tests are a known weak pattern.
+- Test functions must contain at least 2 assertions; a ``pytest.raises`` block,
+  its ``match=``, mock ``assert_called*`` calls and ``np.testing.assert_*`` calls
+  count. Single-assert tests are flagged.
 - Forbidden weak assertions when they stand alone as the sole meaningful
   check in the test: ``result is not None``, ``result > 0``,
   ``len(result) > 0``, ``isinstance(result, dict)``, ``result is None``.

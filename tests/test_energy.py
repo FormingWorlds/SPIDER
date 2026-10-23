@@ -66,7 +66,8 @@ def test_disabled_transport_mechanisms_carry_zero_flux(blackbody_short, cached_s
 
     Analytical anchor: a transport mechanism switched off by its option
     must carry identically zero flux, and the remaining mechanisms must
-    assemble the total alone. Both limits run 0 macro steps; the flux
+    assemble the total alone at every node except the surface node, where
+    the grey-body boundary flux applies. Both limits run 0 macro steps; the flux
     arrays are already populated from the initial state.
     """
     # Conduction off: Jcond vanishes while convection keeps transporting.
