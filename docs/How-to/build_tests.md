@@ -92,6 +92,6 @@ Tag such tests `@pytest.mark.physics_invariant`. Tests that pin behaviour agains
 1. Add the source and header, and register the file in the `Makefile`.
 2. Create `tests/test_<stem>.py` with the module-level `pytestmark`.
 3. Add at least one `physics_invariant` test from the families above.
-4. Choose a reference anchor (paper value, analytical limit, or independent cross-check), write the `reference_pinned` test, and add the `docs/Validation/<stem>.md` page recording the anchor, tolerance rationale, and guards.
+4. Choose a reference anchor (paper value, analytical limit, or independent cross-check), write the `reference_pinned` test, and add a subsection to the `docs/Validation/<stem>.md` page with the reference, the tolerance, the test id, the command and the guards; list the case in `docs/Validation/index.md`.
 5. If the source has pure evaluator functions, extend a C test executable under `tests/c/` (or add a new one to the `tests_c` target) and drive it from the unit tier.
 6. Run the local gate: `pytest -m "(unit or smoke) and not skip"`, `bash tools/validate_test_structure.sh`, `python tools/check_test_quality.py --check`.

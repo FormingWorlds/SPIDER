@@ -59,7 +59,7 @@ petsc*/
 
 # site
 site/
-# per-user Claude Code session state; the shared agent rules are AGENTS.md
+# per-user agent session state; the shared agent rules are AGENTS.md
 /.claude/
 
 # C test executables (built by make tests_c; sources stay tracked)

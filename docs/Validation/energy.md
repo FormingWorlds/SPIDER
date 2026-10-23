@@ -14,7 +14,7 @@
 
 **Command**: `make`, then `pytest -o addopts= tests/test_energy.py::test_disabled_transport_mechanisms_carry_zero_flux`
 
-**Discrimination guards**: The complementary mechanism stays nonzero when its sibling is disabled (wrong-path guard); the total flux is asserted to be the sum of the four components at every node in the full-physics configuration; scale bounds on the magma-ocean flux magnitudes.
+**Discrimination guards**: Convection stays active when conduction is off (wrong-path guard); at the surface node the grey-body boundary flux differs from the conductive flux, so the identity holds at the interior nodes only; a scale bound on the full-physics flux. The sibling test in the same file asserts that the total flux is the sum of the components at the interior nodes.
 
 The flux assembly is validated through its superposition structure: each transport term can be switched off through its runtime option, and the total must respond exactly. This pins the dispatch wiring between the options, the individual flux routines, and the total used by the time integration.
 
