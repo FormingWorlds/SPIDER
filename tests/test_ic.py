@@ -199,10 +199,8 @@ def test_abundance_ic_realises_the_requested_inventory(abundance_ic_run):
         # physical_kg is defined as the reservoir sum.
         assert res['physical_kg'] == pytest.approx(realised[volatile], rel=1e-10)
 
-    # Elemental conservation through the equilibrium solve: H and C
-    # totals match the request (observed below 1e-15 relative; rel=1e-9
-    # leaves platform headroom). This is the discriminating check that
-    # the solve redistributed mass without creating or destroying it.
+    # The solve conserves H and C: totals match the request (observed below
+    # 1e-15 relative; rel=1e-9 leaves platform headroom).
     for element in ('H', 'C'):
         assert _element_moles(realised, element) == pytest.approx(
             _element_moles(requested, element), rel=1e-9

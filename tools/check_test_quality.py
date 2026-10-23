@@ -90,13 +90,9 @@ UTILITY_SOURCES = {
     'util.c',
 }
 
-# Physics source files (C, repo root), derived from the tree so that a
-# newly added source is physics-required by default (fail-closed) until
-# it is explicitly classified as utility above. Each physics source must
-# have a 1:1 test file at ``tests/test_<source stem>.py`` (the rule in
-# tests/AGENTS.md) with at least one
-# @pytest.mark.physics_invariant test and at least one
-# @pytest.mark.reference_pinned test.
+# Physics sources: every root C file not listed as utility (fail-closed); each
+# needs tests/test_<stem>.py with a physics_invariant and a reference_pinned
+# test (tests/AGENTS.md).
 PHYSICS_SOURCES = {p.name for p in REPO_ROOT.glob('*.c')} - UTILITY_SOURCES
 
 
