@@ -70,10 +70,14 @@ def test_reported_dsdt_matches_finite_difference_of_outputs(blackbody_dt10, vali
         top.plot(radius_km, -fd_slope, '--', label='slope of S between the outputs')
         top.set_ylabel('-dS/dt [W/kg/K]')
         top.legend()
-        bottom.plot(radius_km, np.abs(fd_slope - midpoint) / np.abs(midpoint), 'o', ms=3)
+        rel = np.abs(fd_slope - midpoint) / np.abs(midpoint)
+        bottom.plot(radius_km, rel, 'o', ms=3)
         bottom.axhline(rtol, color=plt.rcParams['text.color'], ls='--', label='tolerance')
         bottom.set(
-            yscale='log', ylim=(1e-3, 1e-1), xlabel='Radius [km]', ylabel='Rel. difference'
+            yscale='log',
+            ylim=(min(1e-3, rel.min() / 2), 1e-1),
+            xlabel='Radius [km]',
+            ylabel='Rel. difference',
         )
         bottom.legend(loc='lower right')
         for ax in (top, bottom):
