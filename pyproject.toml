@@ -13,8 +13,8 @@ markers = [
     "smoke: short real spider runs on minimal configurations (< 30 s each)",
     "integration: full regression cases against frozen expected output (nightly)",
     "slow: long validation runs and cross-implementation checks (nightly)",
-    "physics_invariant: marks tests that assert a physical invariant (conservation, positivity, boundedness, monotonicity, symmetry). See .github/.claude/rules/spider-tests.md section 3.",
-    "reference_pinned: marks tests that pin behavior against a published benchmark, analytical limit, or cross-implementation cross-check. Cite the source in the test docstring. Each physics source must contain at least one. See .github/.claude/rules/spider-tests.md section 3.",
+    "physics_invariant: marks tests that assert a physical invariant (conservation, positivity, boundedness, monotonicity, symmetry). See tests/AGENTS.md.",
+    "reference_pinned: marks tests that pin behavior against a published benchmark, analytical limit, or cross-implementation cross-check. Cite the source in the test docstring. Each physics source must contain at least one. See tests/AGENTS.md.",
 ]
 
 # C line coverage gates, measured with gcovr on a --coverage build.

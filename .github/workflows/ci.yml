@@ -70,6 +70,8 @@ jobs:
       run: bash tools/validate_test_structure.sh
     - name: Run test-quality lint
       run: python tools/check_test_quality.py --check
+    - name: Check agent instruction files
+      run: python tools/agents/check_agents_md.py
     - name: Check the runtime-options reference is current
       run: python tools/generate_options_reference.py --check
     - name: Check the coverage gates against the base branch
