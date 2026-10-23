@@ -36,7 +36,7 @@ def blackbody_dt10(cached_spider_run):
 
 @pytest.mark.physics_invariant
 @pytest.mark.reference_pinned
-def test_reported_dsdt_matches_finite_difference_of_outputs(blackbody_dt10):
+def test_reported_dsdt_matches_finite_difference_of_outputs(blackbody_dt10, validation_plot):
     """dSdt_s agrees with the slope of the entropy between outputs.
 
     Analytical anchor: the time derivative assembled by rhs.c must be
@@ -52,13 +52,36 @@ def test_reported_dsdt_matches_finite_difference_of_outputs(blackbody_dt10):
     dt = 10.0 * SECONDS_PER_YEAR
     fd_slope = (data_si(d2, 'S_s') - data_si(d1, 'S_s')) / dt
     midpoint = 0.5 * (data_si(d1, 'dSdt_s') + data_si(d2, 'dSdt_s'))
-    np.testing.assert_allclose(fd_slope, midpoint, rtol=2e-2)
+    rtol = 2e-2
+    np.testing.assert_allclose(fd_slope, midpoint, rtol=rtol)
     # Sign guard: the mantle cools everywhere in this configuration.
     assert np.all(midpoint < 0.0)
     # Scale guard: early magma-ocean cooling rates are of order
     # 1e-8 J/kg/K/s here; ten decades either way flags a unit slip
     # (e.g. per year instead of per second).
     assert 1e-12 < np.max(np.abs(midpoint)) < 1e-4
+
+    def figure():
+        import matplotlib.pyplot as plt
+
+        radius_km = data_si(d1, 'radius_s') / 1e3
+        fig, (top, bottom) = plt.subplots(2, 1, sharex=True, figsize=(6.4, 5.6))
+        top.plot(radius_km, -midpoint, label='reported, midpoint of 10 and 20 yr')
+        top.plot(radius_km, -fd_slope, '--', label='slope of S between the outputs')
+        top.set_ylabel('-dS/dt [W/kg/K]')
+        top.legend()
+        bottom.plot(radius_km, np.abs(fd_slope - midpoint) / np.abs(midpoint), 'o', ms=3)
+        bottom.axhline(rtol, color=plt.rcParams['text.color'], ls='--', label='tolerance')
+        bottom.set(
+            yscale='log', ylim=(1e-3, 1e-1), xlabel='Radius [km]', ylabel='Rel. difference'
+        )
+        bottom.legend(loc='lower right')
+        for ax in (top, bottom):
+            ax.minorticks_off()
+        fig.tight_layout()
+        return fig
+
+    validation_plot(figure, 'rhs_dsdt_finite_difference')
 
 
 @pytest.mark.physics_invariant
