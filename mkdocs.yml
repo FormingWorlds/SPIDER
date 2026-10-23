@@ -6,12 +6,12 @@ repo_name: GitHub
 copyright: '© 2023-2026 <a href="https://formingworlds.space">Forming Worlds Lab</a>'
 
 nav:
-  - Home: 
+  - Home:
     - About: index.md
     - Getting started: getting_started.md
 
   - How-to guides:
-      - Installation: 
+      - Installation:
         - Quick installation: How-to/installation.md
         - Quadruple precision: How-to/quadruple_installation.md
       - Testing: How-to/test.md
@@ -71,7 +71,7 @@ nav:
       - Contact: Community/contact.md
       - Developers: https://proteus-framework.org/people
       - Issues: https://github.com/FormingWorlds/SPIDER/issues
-      
+
   - Source code: https://github.com/FormingWorlds/SPIDER
 
   - Other PROTEUS modules:
@@ -129,7 +129,7 @@ extra_css:
   - stylesheets/extra.css
   - stylesheets/layout.css
   - stylesheets/footnotes.css
- 
+
 markdown_extensions:
   - admonition
   - attr_list
@@ -168,7 +168,7 @@ extra:
     - icon: fontawesome/brands/github
       link: https://github.com/FormingWorlds/PROTEUS
       name: PROTEUS on GitHub
-      
+
 plugins:
 - search
 - tags
