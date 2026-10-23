@@ -12,6 +12,8 @@ repos:
     hooks:
       - id: trailing-whitespace
         args: [--markdown-linebreak-ext=md]
+        # matplotlib writes line-end spaces; the test-written SVGs keep their bytes
+        exclude: ^docs/assets/validation/.*\.svg$
       - id: end-of-file-fixer
       - id: check-case-conflict
       - id: check-docstring-first
