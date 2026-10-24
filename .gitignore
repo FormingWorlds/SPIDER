@@ -54,12 +54,12 @@ verification/
 *.synctex.gz
 *.toc
 
-# petsc directory 
+# petsc directory
 petsc*/
 
-# site 
+# site
 site/
-# personal Claude session state (repo root only; .github/.claude/ stays tracked)
+# per-user agent session state; the shared agent rules are AGENTS.md
 /.claude/
 
 # C test executables (built by make tests_c; sources stay tracked)

@@ -48,7 +48,7 @@ def test_pressure_profile_matches_adams_williamson_closed_form(blackbody_short):
     expected = -RHOS * GRAVITY / BETA * (np.exp(BETA * (RADIUS - radius_b)) - 1.0)
     # rtol=1e-12: mesh.c evaluates the same closed form, so agreement is
     # limited only by the nondimensional round-trip through the JSON
-    # output (observed max rel 7e-15, so the pin has 100x headroom).
+    # output (observed max rel 6e-15, so the pin has 100x headroom).
     np.testing.assert_allclose(pressure_b, expected, rtol=1e-12)
 
     # Limit input: the surface node sits at r = R where the profile

@@ -1,17 +1,18 @@
 #!/usr/bin/env python3
 """AST-based test-quality linter for the SPIDER test suite.
 
-Enforces the rules in `.github/.claude/rules/spider-tests.md` (sections 1 + 7):
+Enforces the test rules of `tests/AGENTS.md`:
 
 - Every test file must declare a module-level ``pytestmark`` containing a tier
   marker (``unit`` / ``smoke`` / ``integration`` / ``slow``).
-- Test functions must contain at least 2 assertion statements OR a discriminating
-  property-based assertion. Single-assert tests are a known weak pattern.
+- Test functions must contain at least 2 assertions; a ``pytest.raises`` block,
+  its ``match=``, mock ``assert_called*`` calls and ``np.testing.assert_*`` calls
+  count. Single-assert tests are flagged.
 - Forbidden weak assertions when they stand alone as the sole meaningful
   check in the test: ``result is not None``, ``result > 0``,
   ``len(result) > 0``, ``isinstance(result, dict)``, ``result is None``.
   A weak assertion that accompanies a stronger primary assertion (the
-  three-class discrimination guard from spider-tests.md section 2 uses
+  discrimination guard of tests/AGENTS.md uses
   ``val > 0`` as a sign guard alongside ``pytest.approx(...)``, for
   example) is NOT flagged.
 - Every test function must have a docstring.
@@ -65,7 +66,6 @@ TIER_MARKERS = {'unit', 'smoke', 'integration', 'slow'}
 # Optional dependencies. Any test module that imports one of these MUST
 # precede the import with ``pytest.importorskip('<name>')`` at module
 # scope, otherwise the minimal CI Python environment fails collection.
-# Source rule: spider-tests.md section 6.
 OPTIONAL_DEPS = {
     'matplotlib',
     'aragog',
@@ -91,13 +91,9 @@ UTILITY_SOURCES = {
     'util.c',
 }
 
-# Physics source files (C, repo root), derived from the tree so that a
-# newly added source is physics-required by default (fail-closed) until
-# it is explicitly classified as utility above. Each physics source must
-# have a 1:1 test file at ``tests/test_<source stem>.py`` (the rule in
-# spider-tests.md section 12) with at least one
-# @pytest.mark.physics_invariant test and at least one
-# @pytest.mark.reference_pinned test.
+# Physics sources: every root C file not listed as utility (fail-closed); each
+# needs tests/test_<stem>.py with a physics_invariant and a reference_pinned
+# test (tests/AGENTS.md).
 PHYSICS_SOURCES = {p.name for p in REPO_ROOT.glob('*.c')} - UTILITY_SOURCES
 
 

@@ -140,8 +140,7 @@ def _volatile_reservoirs_kg(doc, volatile):
 def _element_moles(masses_kg, element):
     """Total moles of one element across the four volatile inventories."""
     return sum(
-        masses_kg[v] / MOLAR_MASS[v] * STOICHIOMETRY[v].get(element, 0)
-        for v in MOLAR_MASS
+        masses_kg[v] / MOLAR_MASS[v] * STOICHIOMETRY[v].get(element, 0) for v in MOLAR_MASS
     )
 
 
@@ -158,13 +157,20 @@ def abundance_ic_run(cached_spider_run):
     return cached_spider_run(
         opts_file='reaction.opts',
         overrides=(
-            '-IC_ATMOSPHERE', '1',
-            '-nstepsmacro', '0',
-            '-n', '50',
-            '-H2O_initial_total_abundance', '800.0',
-            '-H2_initial_total_abundance', '0.6',
-            '-CO2_initial_total_abundance', '7.0',
-            '-CO_initial_total_abundance', '18.0',
+            '-IC_ATMOSPHERE',
+            '1',
+            '-nstepsmacro',
+            '0',
+            '-n',
+            '50',
+            '-H2O_initial_total_abundance',
+            '800.0',
+            '-H2_initial_total_abundance',
+            '0.6',
+            '-CO2_initial_total_abundance',
+            '7.0',
+            '-CO_initial_total_abundance',
+            '18.0',
         ),
         name='ic_abundance',
     )
@@ -199,10 +205,8 @@ def test_abundance_ic_realises_the_requested_inventory(abundance_ic_run):
         # physical_kg is defined as the reservoir sum.
         assert res['physical_kg'] == pytest.approx(realised[volatile], rel=1e-10)
 
-    # Elemental conservation through the equilibrium solve: H and C
-    # totals match the request (observed to 3e-15 relative; rel=1e-9
-    # leaves platform headroom). This is the discriminating check that
-    # the solve redistributed mass without creating or destroying it.
+    # The solve conserves H and C: totals match the request (observed below
+    # 1e-15 relative; rel=1e-9 leaves platform headroom).
     for element in ('H', 'C'):
         assert _element_moles(realised, element) == pytest.approx(
             _element_moles(requested, element), rel=1e-9
@@ -235,13 +239,20 @@ def ocean_moles_ic_run(cached_spider_run):
     return cached_spider_run(
         opts_file='reaction.opts',
         overrides=(
-            '-IC_ATMOSPHERE', '4',
-            '-nstepsmacro', '0',
-            '-n', '50',
-            '-H2O_initial_ocean_moles', '2.43',
-            '-H2_initial_ocean_moles', '0.0163',
-            '-CO2_initial_ocean_moles', '0.0087',
-            '-CO_initial_ocean_moles', '0.0352',
+            '-IC_ATMOSPHERE',
+            '4',
+            '-nstepsmacro',
+            '0',
+            '-n',
+            '50',
+            '-H2O_initial_ocean_moles',
+            '2.43',
+            '-H2_initial_ocean_moles',
+            '0.0163',
+            '-CO2_initial_ocean_moles',
+            '0.0087',
+            '-CO_initial_ocean_moles',
+            '0.0352',
         ),
         name='ic_ocean_moles',
     )

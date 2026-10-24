@@ -13,7 +13,7 @@ The test suite uses pytest:
 
 ```bash
 pip install -r py/requirements.txt
-pip install pytest pytest-timeout
+pip install pytest pytest-timeout 'proteus-mpl>=1.4.0'
 ```
 
 ## 2. Set `PETSC_DIR` and `PETSC_ARCH`
