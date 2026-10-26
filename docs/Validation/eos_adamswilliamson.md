@@ -20,11 +20,16 @@ The text below details the check, its tolerance, and its test command.
 
 **Known limit.** The Adams-Williamson model assumes an idealized profile, rather than a multi-phase EOS.
 
+![Adams-Williamson density against pressure from the closed form and from the code](../assets/validation/eos_adamswilliamson_density.svg#only-light){ width="80%" }
+![Adams-Williamson density against pressure from the closed form and from the code](../assets/validation/eos_adamswilliamson_density_dark.svg#only-dark){ width="80%" }
+
+**How to read the plot.** The x-axis is the pressure and the y-axis the density. The line is the closed form $\rho_s - P\beta/g$ and the dashed line the form with a sign-flipped $\beta$, which the test rejects (context). The circles are the asserted densities of eos_adamswilliamson.c at the surface, at 10 GPa and at 135 GPa. A pass means that the circles lie on the line (relative 1e-12).
+
 ??? info "Test details"
     - Reference: Analytical limit: rho(P) = rhos - P beta / g in closed form, with the blackbody50 PREM lower-mantle fit parameters.
     - Tolerance: rel 1e-12 at the surface (P = 0), 10 GPa, and the approximate core-mantle boundary pressure.
     - Test id: `tests/test_eos_adamswilliamson.py::test_density_matches_the_closed_form_profile`
-    - Command: `make tests_c`, then `pytest -o addopts= tests/test_eos_adamswilliamson.py::test_density_matches_the_closed_form_profile`
+    - Command: `make tests_c`, then `pytest -o addopts= tests/test_eos_adamswilliamson.py::test_density_matches_the_closed_form_profile` (add `--validation-plots` to write the plot pair)
     - Companion test: `tests/test_eos_adamswilliamson.py::test_si_density_invariant_under_nondimensionalisation_choice` asserts SI invariance under the nondimensionalisation choice.
 
 ## Related code

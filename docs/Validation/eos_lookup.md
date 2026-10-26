@@ -20,11 +20,16 @@ The section below details the check, its tolerance, and its test command.
 
 **Known limit.** The test compares table reads against an independent Python read of the same table file, but does not benchmark the underlying ab initio mineral physics.
 
+![Melt density from eos_lookup.c against an independent bilinear read of the table](../assets/validation/eos_lookup_melt_density.svg#only-light){ width="80%" }
+![Melt density from eos_lookup.c against an independent bilinear read of the table](../assets/validation/eos_lookup_melt_density_dark.svg#only-dark){ width="80%" }
+
+**How to read the plot.** The x-axis is the melt density from an independent bilinear read of `density_melt.dat` in numpy and the y-axis the density from eos_lookup.c, at the 3 off-node probes from 7.3 to 89 GPa. The circles are the asserted C values and the line is 1:1. The crosses are the solid-table densities at the same probes, which the test requires to differ by more than 1 %. A pass means that the circles lie on the line (relative 1e-9).
+
 ??? info "Test details"
     - Reference: Cross-implementation cross-check: an independent numpy bilinear evaluation of the shipped melt density table (1TPa-dK09-elec-free set: de Koker and Stixrude 2009 properties as assembled for Bower et al. 2018).
     - Tolerance: rel 1e-9 at three off-node (P, S) probe points spanning 7.3 to 89 GPa.
     - Test id: `tests/test_eos_lookup.py::test_melt_density_matches_independent_bilinear_evaluation`
-    - Command: `make tests_c`, then `pytest -o addopts= tests/test_eos_lookup.py::test_melt_density_matches_independent_bilinear_evaluation`
+    - Command: `make tests_c`, then `pytest -o addopts= tests/test_eos_lookup.py::test_melt_density_matches_independent_bilinear_evaluation` (add `--validation-plots` to write the plot pair)
     - Companion test: `tests/test_eos_lookup.py::test_thermodynamic_quantities_positive_and_rho_monotonic_in_pressure` asserts positive thermodynamic quantities and monotonic density with pressure.
 
 ## Related code

@@ -20,11 +20,16 @@ The sections below detail two validation cases, their tolerances, and their test
 
 **Known limit.** The independent verification reads the same source table file, checking interpolation rather than physical accuracy of the underlying experimental dataset.
 
+![Liquidus entropy against pressure from the table and from eos.c at 3 probes](../assets/validation/eos_phase_boundary.svg#only-light){ width="80%" }
+![Liquidus entropy against pressure from the table and from eos.c at 3 probes](../assets/validation/eos_phase_boundary_dark.svg#only-dark){ width="80%" }
+
+**How to read the plot.** The x-axis is the pressure and the y-axis the entropy of the melt phase boundary. The line is the liquidus table `liquidus_A11_H13.dat` read with numpy (every 10th node, context). The circles are the asserted values of eos.c at the 3 probes: the table edge at 0, a mid-mantle node at 10 GPa and an off-node point at 65.5 GPa. The cross is the solidus at 10 GPa, which the test requires to be more than 100 away. A pass means that the circles lie on the line (relative 1e-12).
+
 ??? info "Test details"
     - Reference: Cross-implementation cross-check of the loaded melt phase boundary against an independent read of liquidus_A11_H13.dat (Andrault et al. 2011 liquidus with the Hirschmann 2013 solidus companion).
     - Tolerance: rel 1e-12 at the P = 0 table edge, a mid-mantle node, and an off-node deep point.
     - Test id: `tests/test_eos.py::test_phase_boundary_matches_independent_table_read`
-    - Command: `make tests_c`, then `pytest -o addopts= tests/test_eos.py::test_phase_boundary_matches_independent_table_read`
+    - Command: `make tests_c`, then `pytest -o addopts= tests/test_eos.py::test_phase_boundary_matches_independent_table_read` (add `--validation-plots` to write the plot pair)
     - Companion test: `tests/test_eos.py::test_viscosity_and_conductivity_dispatch_per_phase` verifies that melt and solid phases receive distinct transport properties.
 
 ## Compositional viscosity matches Spaargaren et al. (2020)
@@ -39,11 +44,16 @@ The sections below detail two validation cases, their tolerances, and their test
 
 **Known limit.** The test re-encodes the coefficients as in `eos.c`. The 2 hand-derived literals catch an error that is in both copies at the 4 compositions they probe; a coefficient that affects neither literal is not caught.
 
+![Spaargaren viscosity prefactor against Mg/Si with the eos.c shifts](../assets/validation/eos_spaargaren_viscosity.svg#only-light){ width="80%" }
+![Spaargaren viscosity prefactor against Mg/Si with the eos.c shifts](../assets/validation/eos_spaargaren_viscosity_dark.svg#only-dark){ width="80%" }
+
+**How to read the plot.** The x-axis is Mg/Si and the y-axis the log10 viscosity prefactor. The line is the piecewise prefactor of Spaargaren et al. (2020) as the test re-encodes it (context), and the hollow squares are its values at the 2 reference compositions, 1.6 and 0.9. The circles are each reference value plus the asserted shift of eos.c, the melt log10 viscosity minus the configured 2.0, at 1.4 and at 1.2. A pass means that the circles lie on the line (absolute 1e-9), 1 above and 1 below its reference.
+
 ??? info "Test details"
     - Reference: The piecewise Mg/Si log10 viscosity prefactor of Spaargaren et al. (2020). The test re-encodes the published coefficients independently of eos.c and additionally pins the two branch-pair shifts as hand-derived literals (0.2074 and -1.35803), so a transcription error in either copy of the formula surfaces.
     - Tolerance: abs 1e-9 on the evaluated shifts (closed-form option arithmetic); abs 1e-4 on the literal transcription pins.
     - Test id: `tests/test_eos.py::test_compositional_viscosity_matches_spaargaren`
-    - Command: `make tests_c`, then `pytest -o addopts= tests/test_eos.py::test_compositional_viscosity_matches_spaargaren`
+    - Command: `make tests_c`, then `pytest -o addopts= tests/test_eos.py::test_compositional_viscosity_matches_spaargaren` (add `--validation-plots` to write the plot pair)
     - Companion test: `tests/test_eos.py::test_activation_terms_shape_the_viscosity_profile` checks activation volume and energy scalings in the viscosity model.
 
 ## Related code

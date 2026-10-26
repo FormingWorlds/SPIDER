@@ -50,7 +50,7 @@ def _melt_eval(c_test, p_list, s_list, extra=()):
 
 @pytest.mark.physics_invariant
 @pytest.mark.reference_pinned
-def test_melt_density_matches_independent_bilinear_evaluation(c_test):
+def test_melt_density_matches_independent_bilinear_evaluation(c_test, validation_plot):
     """The C lookup reproduces an independent bilinear read of the same table.
 
     Cross-implementation cross-check: tests/_table_utils.py evaluates
@@ -72,6 +72,25 @@ def test_melt_density_matches_independent_bilinear_evaluation(c_test):
     # thousands of kg/m3; a nondimensional leak would sit near unity.
     assert all(rho > 0 for rho in out['rho'])
     assert all(2.0e3 < rho < 8.0e3 for rho in out['rho'])
+
+    def figure():
+        import matplotlib.pyplot as plt
+
+        lo, hi = (
+            0.95 * min(expected + list(solid['rho'])),
+            1.05 * max(expected + list(solid['rho'])),
+        )
+        fig, ax = plt.subplots(figsize=(6, 4))
+        ax.plot([lo, hi], [lo, hi], label='1:1')
+        ax.plot(expected, out['rho'], 'o', zorder=3, label='C melt density at the 3 probes')
+        ax.plot(expected, solid['rho'], 'x', ms=10, label='Solid table at the same probes')
+        ax.set_xlabel('Bilinear read of density_melt.dat [kg m$^{-3}$]')
+        ax.set_ylabel('eos_lookup.c [kg m$^{-3}$]')
+        ax.legend(fontsize=8)
+        fig.tight_layout()
+        return fig
+
+    validation_plot(figure, 'eos_lookup_melt_density')
 
 
 @pytest.mark.physics_invariant

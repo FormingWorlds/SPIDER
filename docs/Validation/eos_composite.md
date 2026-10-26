@@ -20,11 +20,16 @@ The section below details the validation check, its tolerance, and its test comm
 
 **Known limit.** S_liq, S_sol and the fusion entropy come from the code's own outputs, so the test checks internal consistency: the melt fraction is compared with (S - S_sol)/fusion from those values, not with a pinned 0.25.
 
+![Melt fraction against entropy at 10 GPa between the solidus and the liquidus](../assets/validation/eos_composite_melt_fraction.svg#only-light){ width="80%" }
+![Melt fraction against entropy at 10 GPa between the solidus and the liquidus](../assets/validation/eos_composite_melt_fraction_dark.svg#only-dark){ width="80%" }
+
+**How to read the plot.** The x-axis is the entropy at 10 GPa and the y-axis the melt fraction. The dotted lines are the solidus and liquidus that eos_composite.c reports, and the solid line is $(S - S_\mathrm{sol}) / (S_\mathrm{liq} - S_\mathrm{sol})$ between them (context). The dashed line is the form with the liquidus entropy as the denominator, which the test rejects. The circle is the asserted melt fraction at 1675.34 J kg$^{-1}$ K$^{-1}$, a quarter of the way through the interval. A pass means that the circle lies on the solid line at 0.25.
+
 ??? info "Test details"
     - Reference: Analytical limit: by construction of the two-phase region, fusion = S_liq - S_sol and phi = (S - S_sol)/fusion between the phase boundaries.
     - Tolerance: rel 1e-10 on the fusion identity; rel 1e-6 on the melt fraction at one quarter of the melting interval at 10 GPa.
     - Test id: `tests/test_eos_composite.py::test_fusion_equals_liquidus_minus_solidus_and_phi_is_linear_in_entropy`
-    - Command: `make tests_c`, then `pytest -o addopts= tests/test_eos_composite.py::test_fusion_equals_liquidus_minus_solidus_and_phi_is_linear_in_entropy`
+    - Command: `make tests_c`, then `pytest -o addopts= tests/test_eos_composite.py::test_fusion_equals_liquidus_minus_solidus_and_phi_is_linear_in_entropy` (add `--validation-plots` to write the plot pair)
     - Companion test: `tests/test_eos_composite.py::test_phase_fraction_bounded_and_truncation_contract_visible` asserts that the melt fraction is clamped between 0 and 1, and the visibility of untruncated values.
 
 ## Related code

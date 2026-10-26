@@ -33,12 +33,16 @@ def _aw_eval(c_test, p_list, extra=()):
         'test_eos',
         (
             *OPTS,
-            '-eos_type', 'adamswilliamson',
-            '-eos_prefix', 'adams_williamson',
-            '-P_si', ','.join(str(p) for p in p_list),
+            '-eos_type',
+            'adamswilliamson',
+            '-eos_prefix',
+            'adams_williamson',
+            '-P_si',
+            ','.join(str(p) for p in p_list),
             # Entropy is unused by the AW density but the executable
             # requires paired probe points.
-            '-S_si', ','.join('2600.0' for _ in range(n)),
+            '-S_si',
+            ','.join('2600.0' for _ in range(n)),
             *extra,
         ),
     )
@@ -46,7 +50,7 @@ def _aw_eval(c_test, p_list, extra=()):
 
 @pytest.mark.physics_invariant
 @pytest.mark.reference_pinned
-def test_density_matches_the_closed_form_profile(c_test):
+def test_density_matches_the_closed_form_profile(c_test, validation_plot):
     """The AW density reproduces rho(P) = rhos - P * beta / g exactly.
 
     Analytical limit: the Adams-Williamson equation of state is a closed
@@ -70,6 +74,29 @@ def test_density_matches_the_closed_form_profile(c_test):
     # mantle densities, thousands of kg/m^3).
     assert out['rho'][0] < out['rho'][1] < out['rho'][2]
     assert all(3.0e3 < rho < 7.0e3 for rho in out['rho'])
+
+    def figure():
+        import matplotlib.pyplot as plt
+        import numpy as np
+
+        p = np.linspace(0.0, 1.4e11, 29)
+        fig, ax = plt.subplots(figsize=(6, 4))
+        ax.plot(p / 1e9, RHOS - p * BETA / GRAVITY, label=r'$\rho_s - P\beta/g$')
+        ax.plot(p / 1e9, RHOS + p * BETA / GRAVITY, '--', label=r'Sign-flipped $\beta$')
+        ax.plot(
+            np.array(probes) / 1e9,
+            out['rho'],
+            'o',
+            zorder=3,
+            label='eos_adamswilliamson.c at 3 probes',
+        )
+        ax.set_xlabel('Pressure [GPa]')
+        ax.set_ylabel('Density [kg m$^{-3}$]')
+        ax.legend(fontsize=8)
+        fig.tight_layout()
+        return fig
+
+    validation_plot(figure, 'eos_adamswilliamson_density')
 
 
 @pytest.mark.physics_invariant
