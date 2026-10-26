@@ -20,11 +20,16 @@ The sections below detail three validation cases, their tolerances, and their te
 
 **Known limit.** An error in the entropy gradient of the initial profile (`ic_dsdr`) is caught only if it moves the profile mean outside 2600 to 2628.7 J/kg/K. The check does not cover non-adiabatic initial profiles.
 
+![Initial entropy profiles for ic_adiabat_entropy 2600 and 2400](../assets/validation/ic_adiabat_profile.svg#only-light){ width="80%" }
+![Initial entropy profiles for ic_adiabat_entropy 2600 and 2400](../assets/validation/ic_adiabat_profile_dark.svg#only-dark){ width="80%" }
+
+**How to read the plot.** The x-axis is the radius and the y-axis the entropy at the staggered nodes at $t$ = 0. The solid line is the asserted profile for ic_adiabat_entropy = 2600 and the dashed line the rerun with 2400, which the test requires to be 200 J kg$^{-1}$ K$^{-1}$ lower on average. The circle is the asserted top staggered node at 2600, the dotted line the mean of the 2600 profile and the grey band its asserted range, 2600 to 2628.7. A pass means that the circle sits at 2600, the dotted line inside the band, and the dashed line 200 below the solid one.
+
 ??? info "Test details"
     - Reference: Analytical limit: the initial condition prescribes the adiabat entropy (2600 J/kg/K at the top staggered node) with the configured small gradient ramp.
     - Tolerance: rel 1e-3 at the top node (observed exact); the profile mean lies between the adiabat entropy and that value plus |ic_dsdr| times the mantle depth; the 2400 J/kg/K run shifts the mean by 200 J/kg/K to rel 1e-9.
     - Test id: `tests/test_ic.py::test_prescribed_adiabat_entropy_sets_the_initial_profile`
-    - Command: `make`, then `pytest -o addopts= tests/test_ic.py::test_prescribed_adiabat_entropy_sets_the_initial_profile`
+    - Command: `make`, then `pytest -o addopts= tests/test_ic.py::test_prescribed_adiabat_entropy_sets_the_initial_profile` (add `--validation-plots` to write the plot pair)
     - Companion test: `tests/test_ic.py::test_initial_adiabat_is_nearly_flat_until_cooling_imprints_structure` verifies that cooling breaks initial profile uniformity.
 
 ## Abundance IC realises the requested inventory
@@ -39,11 +44,16 @@ The sections below detail three validation cases, their tolerances, and their te
 
 **Known limit.** Volatile oxygen mass is not strictly conserved by volatile species alone because the melt iron buffer exchanges oxygen with dissolved gases.
 
+![Requested and realised volatile masses and the realised over requested element moles](../assets/validation/ic_abundance_inventory.svg#only-light){ width="80%" }
+![Requested and realised volatile masses and the realised over requested element moles](../assets/validation/ic_abundance_inventory_dark.svg#only-dark){ width="80%" }
+
+**How to read the plot.** Left: the grey bars are the requested masses of the 4 volatiles, the requested ppm of the mantle mass, which the test asserts to equal the stored initial_kg (relative 1e-9); the circles are the realised reservoirs after the initial partial-pressure solve, on a log scale. The reactions move mass between the partners, so H$_2$ and CO$_2$ end below their bars and H$_2$O and CO above. Right: the realised over the requested moles of H, C and O, with the dashed line at 1. The test asserts that H and C sit on 1 (relative 1e-9) and that O departs by more than 1e-4 (here 2.2e-3), because the reactions exchange oxygen with the fO$_2$ buffer of the melt. A pass means that the H and C circles sit on the line and the O circle above it.
+
 ??? info "Test details"
     - Reference: Mass-balance identity through the initial partial-pressure solve: initial_kg equals the requested ppm of the mantle mass per volatile, and the realised reservoirs carry the requested hydrogen and carbon mole totals (conserved by the water and carbon dioxide reactions).
     - Tolerance: rel 1e-9 on the stored inventories and the H and C totals (observed below 1e-15).
     - Test id: `tests/test_ic.py::test_abundance_ic_realises_the_requested_inventory`
-    - Command: `make`, then `pytest -o addopts= tests/test_ic.py::test_abundance_ic_realises_the_requested_inventory`
+    - Command: `make`, then `pytest -o addopts= tests/test_ic.py::test_abundance_ic_realises_the_requested_inventory` (add `--validation-plots` to write the plot pair)
     - Companion test: `tests/test_ic.py::test_abundance_and_ocean_mole_solves_agree` verifies consistency between abundance and ocean-mole initialization paths.
 
 ## Ocean-moles IC converts moles to mass
@@ -58,11 +68,16 @@ The sections below detail three validation cases, their tolerances, and their te
 
 **Known limit.** The test uses its own copy of the OCEAN_MOLES constant in `constants.c`, so it checks the conversion, not the definition of the terrestrial ocean mass; a value that is wrong in both places passes.
 
+![Stored initial inventories against moles times OCEAN_MOLES times molar mass](../assets/validation/ic_ocean_moles.svg#only-light){ width="80%" }
+![Stored initial inventories against moles times OCEAN_MOLES times molar mass](../assets/validation/ic_ocean_moles_dark.svg#only-dark){ width="80%" }
+
+**How to read the plot.** The bars are the closed-form masses, moles times OCEAN_MOLES times molar mass, of the 4 volatiles on a log scale, and the circles the stored initial_kg of the run, which the test asserts to match to relative 1e-9. The cross is the CO$_2$ inventory with the CO molar mass, which the test requires to be more than 30 % away. A pass means that each circle sits on the top of its bar and the cross lies well below the CO$_2$ bar.
+
 ??? info "Test details"
     - Reference: The OCEAN_MOLES constant of constants.c (7.68894973907177e22 mol per Earth ocean): initial_kg equals moles times OCEAN_MOLES times the volatile molar mass.
     - Tolerance: rel 1e-9 (closed-form product of stored constants).
     - Test id: `tests/test_ic.py::test_ocean_moles_ic_converts_moles_to_mass`
-    - Command: `make`, then `pytest -o addopts= tests/test_ic.py::test_ocean_moles_ic_converts_moles_to_mass`
+    - Command: `make`, then `pytest -o addopts= tests/test_ic.py::test_ocean_moles_ic_converts_moles_to_mass` (add `--validation-plots` to write the plot pair)
     - Companion test: `tests/test_ic.py::test_abundance_and_ocean_mole_solves_agree` confirms that the ocean-mole and ppm abundance formulations give the same partial pressures to rel 5e-3.
 
 ## Related code
