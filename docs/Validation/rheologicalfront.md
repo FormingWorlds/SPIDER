@@ -18,7 +18,7 @@ The section below details the validation check, its tolerance, and its test comm
 
 **Why it matters.** The front block marks where the mantle turns from mostly molten to mostly solid. PROTEUS reads neither its index nor its depth: it takes `Phi_global` from the same output block and `RF_depth` from the dynamic front.
 
-**Known limit.** The test recomputes the crossing with the same rule as `get_crossover_index` and allows one node of difference, so a one-node misplacement passes; the code takes the first node below `phi_critical` without interpolation. PROTEUS takes `RF_depth` from the dynamic front (`rheological_front_dynamic`, a crossing of the regime at 1.5), which this test does not cover.
+**Known limit.** The test recomputes the crossing with the same rule as `get_crossover_index` and allows one node of difference, so a one-node misplacement passes; the code takes the first node below `phi_critical` without interpolation. PROTEUS takes `RF_depth` from the dynamic front (`rheological_front_dynamic`, the crossing of the convection regime flag at 1.5, between inviscid (2) and viscous (1) convection), which this test does not cover.
 
 ??? info "Test details"
     - Reference: Analytical self-consistency: the reported front index matches the phi_critical = 0.4 crossing of the melt-fraction profile, and the depth equals the surface radius minus the front radius.

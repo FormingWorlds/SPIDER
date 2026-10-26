@@ -56,7 +56,7 @@ The sections below detail three validation cases, their tolerances, and their te
 
 **Why it matters.** The steady-state initial condition starts a run from a profile in energy balance.
 
-**Known limit.** The test uses its own copy of the Stefan-Boltzmann constant in `constants.c`, so a value that is wrong in both places does not fail it.
+**Known limit.** The test uses its own copy of the Stefan-Boltzmann constant in `constants.c`, so a value that is wrong in both places does not fail it; a change in the code larger than the tolerance does.
 
 ??? info "Test details"
     - Reference: Analytical limit: the steady-state initial condition equalises the energy flow through every basic node and closes the surface radiation balance sigma (T_surf^4 - teqm^4) with the Stefan-Boltzmann constant of constants.c.

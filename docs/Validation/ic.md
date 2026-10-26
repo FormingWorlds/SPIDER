@@ -18,7 +18,7 @@ The sections below detail three validation cases, their tolerances, and their te
 
 **Why it matters.** The initial adiabat sets the starting thermal state of the magma ocean. SPIDER integrates cooling forward from this baseline.
 
-**Known limit.** A gradient ramp error shows only if the profile mean leaves 2600 to 2628.7 J/kg/K. The check does not cover non-adiabatic initial profiles.
+**Known limit.** An error in the entropy gradient of the initial profile (`ic_dsdr`) is caught only if it moves the profile mean outside 2600 to 2628.7 J/kg/K. The check does not cover non-adiabatic initial profiles.
 
 ??? info "Test details"
     - Reference: Analytical limit: the initial condition prescribes the adiabat entropy (2600 J/kg/K at the top staggered node) with the configured small gradient ramp.

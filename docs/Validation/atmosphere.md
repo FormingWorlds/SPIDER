@@ -22,7 +22,7 @@ The section below details the validation check, its tolerance, and its test comm
 
 ??? info "Test details"
     - Reference: Analytical limit: the grey-body flux F = emissivity sigma (T_surf^4 - T_eqm^4) with emissivity 1 and T_eqm = 273 K (Stefan-Boltzmann).
-    - Tolerance: rel 1e-6 against the reported surface temperature, using the test's copy of the code value sigma = 5.670367e-8 W m-2 K-4.
+    - Tolerance: rel 1e-6 on the flux, computed from the reported surface temperature using the test's copy of the code value sigma = 5.670367e-8 W m-2 K-4.
     - Test id: `tests/test_atmosphere.py::test_grey_body_flux_matches_stefan_boltzmann_limit`
     - Command: `make`, then `pytest -o addopts= tests/test_atmosphere.py::test_grey_body_flux_matches_stefan_boltzmann_limit`
     - Companion test: `tests/test_atmosphere.py::test_surface_cools_and_flux_decays_across_macro_steps` confirms monotone decline of flux and surface temperature over outputs.

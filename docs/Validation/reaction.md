@@ -18,7 +18,7 @@ The text below details the check, its tolerance, and its test command.
 
 **Why it matters.** In a SPIDER run with volatiles, the reaction module sets the volatile chemistry of the magma ocean and its atmosphere. PROTEUS does not use the reaction part of SPIDER.
 
-**Known limit.** The check covers carbon and hydrogen; volatile oxygen exchanges with the iron buffer of the melt. From reading the code (not tested by a mutation), conservation holds for any equilibrium constant, so a wrong equilibrium constant is not caught.
+**Known limit.** The check covers carbon and hydrogen; volatile oxygen exchanges with the iron buffer of the melt. The test bounds the direction and the size of each transfer, so a wrong equilibrium constant fails only if it reverses a reaction or moves more than 1 % of the water inventory.
 
 ??? info "Test details"
     - Reference: Analytical conservation: closed-system elemental budgets across the H2O/H2 and CO2/CO reaction pairs of the Bower et al. (2021) three-ocean hydrogen configuration.
