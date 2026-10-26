@@ -20,11 +20,16 @@ The text below details the check, its tolerance, and its test command.
 
 **Known limit.** The check covers carbon and hydrogen; volatile oxygen exchanges with the iron buffer of the melt. The test bounds the direction and the size of each transfer, so a wrong equilibrium constant fails only if it reverses a reaction or moves more than 1 % of the water inventory.
 
+![Hydrogen and carbon moved by the H2O/H2 and CO2/CO reactions in 1000 years](../assets/validation/reaction_element_balance.svg#only-light){ width="80%" }
+![Hydrogen and carbon moved by the H2O/H2 and CO2/CO reactions in 1000 years](../assets/validation/reaction_element_balance_dark.svg#only-dark){ width="80%" }
+
+**How to read the plot.** The bars are the asserted element masses moved in the first 1000 yr, on a log scale. For hydrogen: the hydrogen lost by H$_2$ against the hydrogen in the H$_2$O gained; for carbon: the carbon lost by CO against the carbon in the CO$_2$ gained. A pass means that the 2 bars of each pair have the same height (relative 1e-3).
+
 ??? info "Test details"
     - Reference: Analytical conservation: closed-system elemental budgets across the H2O/H2 and CO2/CO reaction pairs of the Bower et al. (2021) three-ocean hydrogen configuration.
     - Tolerance: rel 1e-3 on the hydrogen and carbon transfer balances after one 1000-year step (observed at round-off level, below 1e-15).
     - Test id: `tests/test_reaction.py::test_elements_conserved_across_each_reaction_pair`
-    - Command: `make`, then `pytest -o addopts= tests/test_reaction.py::test_elements_conserved_across_each_reaction_pair`
+    - Command: `make`, then `pytest -o addopts= tests/test_reaction.py::test_elements_conserved_across_each_reaction_pair` (add `--validation-plots` to write the plot pair)
     - Companion test: `tests/test_reaction.py::test_reservoir_closure_for_every_volatile` checks per-volatile mass closure between melt and gas reservoirs.
 
 ## Related code

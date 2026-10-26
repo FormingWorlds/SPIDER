@@ -52,7 +52,9 @@ def plane_table_2d(tmp_path_factory):
 
 @pytest.mark.physics_invariant
 @pytest.mark.reference_pinned
-def test_affine_data_reproduced_exactly_including_last_node(c_test, linear_table_1d):
+def test_affine_data_reproduced_exactly_including_last_node(
+    c_test, linear_table_1d, validation_plot
+):
     """Piecewise-linear interpolation reproduces y = 2x + 1 exactly.
 
     Analytical limit: linear interpolation is exact on affine data at
@@ -74,6 +76,32 @@ def test_affine_data_reproduced_exactly_including_last_node(c_test, linear_table
     # Sign and scale guards on the pinned interior value.
     assert out['y_1d'][1] > 0
     assert 1.0 < out['y_1d'][1] < 21.0
+
+    def figure():
+        import matplotlib.pyplot as plt
+
+        nodes = list(range(11))
+        fig, ax = plt.subplots(figsize=(6, 4))
+        ax.plot(
+            nodes,
+            [2 * x + 1 for x in nodes],
+            's',
+            mfc='none',
+            ms=8,
+            label='Table nodes of $y = 2x + 1$',
+        )
+        ax.plot([0.0, 10.0], [1.0, 21.0], label='$y = 2x + 1$')
+        ax.plot([2.5, 2.5], [5.0, 7.0], 'x', ms=10, label='Nearest nodes at $x$ = 2.5')
+        ax.plot(
+            [0.0, 2.5, 7.0, 10.0], out['y_1d'], 'o', zorder=3, label='interp.c at the 4 queries'
+        )
+        ax.set_xlabel('$x$')
+        ax.set_ylabel('$y$')
+        ax.legend(fontsize=8)
+        fig.tight_layout()
+        return fig
+
+    validation_plot(figure, 'interp_affine')
 
 
 @pytest.mark.physics_invariant

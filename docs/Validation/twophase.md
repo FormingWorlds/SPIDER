@@ -20,11 +20,16 @@ The text below details the check, its tolerance, and its test command.
 
 **Known limit.** The identity compares 2 code paths that share the code's own `mass_s` and `phi_s`, so a wrong shell mass or melt fraction passes.
 
+![Melt fraction profile at 1200 yr with the reported global melt fraction and its means](../assets/validation/twophase_global_melt_fraction.svg#only-light){ width="80%" }
+![Melt fraction profile at 1200 yr with the reported global melt fraction and its means](../assets/validation/twophase_global_melt_fraction_dark.svg#only-dark){ width="80%" }
+
+**How to read the plot.** The x-axis is the radius and the y-axis the melt fraction at the staggered nodes at 1200 yr (solid line, context). The dash-dotted line is the asserted reported phi_global, the dashed line the mass-weighted mean of the profile and the hollow square Mliq / Mmantle; the dotted line is the unweighted mean, which the test requires to be more than 1e-3 away. A pass means that the dash-dotted line, the dashed line and the square coincide (relative 1e-10), above the dotted line.
+
 ??? info "Test details"
     - Reference: Analytical identity: the global melt fraction equals Mliq/Mmantle and the mass-weighted mean of the staggered melt-fraction profile.
     - Tolerance: rel 1e-10 on both identities at the part-solidified 1200-year state.
     - Test id: `tests/test_twophase.py::test_global_melt_fraction_is_the_mass_weighted_profile_mean`
-    - Command: `make`, then `pytest -o addopts= tests/test_twophase.py::test_global_melt_fraction_is_the_mass_weighted_profile_mean`
+    - Command: `make`, then `pytest -o addopts= tests/test_twophase.py::test_global_melt_fraction_is_the_mass_weighted_profile_mean` (add `--validation-plots` to write the plot pair)
     - Companion test: `tests/test_twophase.py::test_mantle_mass_closure_at_every_output_time` asserts mass conservation closure Mliq + Msol = Mmantle across outputs.
 
 ## Related code

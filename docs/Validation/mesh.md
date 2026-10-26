@@ -20,11 +20,16 @@ The section below details the validation check, its tolerance, and its test comm
 
 **Known limit.** The test evaluates the expected pressure at the code's own radii, so a spacing error is not caught. A wrong core-mantle boundary radius is caught only if it moves the maximum pressure out of 5e10 to 5e11 Pa. The profile assumes an idealised Adams-Williamson compressibility rather than a self-consistent mineral structure.
 
+![Basic-node pressure against radius on the Adams-Williamson closed form](../assets/validation/mesh_pressure_profile.svg#only-light){ width="80%" }
+![Basic-node pressure against radius on the Adams-Williamson closed form](../assets/validation/mesh_pressure_profile_dark.svg#only-dark){ width="80%" }
+
+**How to read the plot.** The x-axis is the radius and the y-axis the pressure. The line is the Adams-Williamson closed form (context), and the dashed and dotted lines are the constant-density profile and the form with a sign-flipped $\beta$, which the test rejects at the core-mantle boundary. The circles are the asserted pressures of mesh.c at the basic nodes. A pass means that the circles lie on the line (relative 1e-12).
+
 ??? info "Test details"
     - Reference: Analytical limit: the Adams-Williamson pressure profile P(r) = -(rhos g / beta)(exp(beta (R - r)) - 1) in closed form.
     - Tolerance: rel 1e-12 on the basic-node pressures (observed 6e-15; `mesh.c` evaluates the same closed form through `eos_adamswilliamson.c`, so the agreement is limited by the round trip through the JSON output).
     - Test id: `tests/test_mesh.py::test_pressure_profile_matches_adams_williamson_closed_form`
-    - Command: `make`, then `pytest -o addopts= tests/test_mesh.py::test_pressure_profile_matches_adams_williamson_closed_form`
+    - Command: `make`, then `pytest -o addopts= tests/test_mesh.py::test_pressure_profile_matches_adams_williamson_closed_form` (add `--validation-plots` to write the plot pair)
     - Companion test: `tests/test_mesh.py::test_mesh_orderings_interleave_and_shell_masses_close` verifies node interleaving and shell mass conservation.
 
 ## Related code

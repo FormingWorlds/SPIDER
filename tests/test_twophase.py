@@ -70,7 +70,9 @@ def test_solidification_proceeds_monotonically_under_cooling(blackbody_full):
 
 @pytest.mark.physics_invariant
 @pytest.mark.reference_pinned
-def test_global_melt_fraction_is_the_mass_weighted_profile_mean(blackbody_full):
+def test_global_melt_fraction_is_the_mass_weighted_profile_mean(
+    blackbody_full, validation_plot
+):
     """phi_global equals both Mliq/Mmantle and the mass-weighted phi_s mean.
 
     Analytical identity: the global melt fraction reported with the
@@ -98,3 +100,21 @@ def test_global_melt_fraction_is_the_mass_weighted_profile_mean(blackbody_full):
     # Boundedness and scale guards.
     assert 0.0 <= phi_reported <= 1.0
     assert 0.2 < phi_reported < 0.9
+
+    def figure():
+        import matplotlib.pyplot as plt
+
+        r_s = data_si(doc, 'radius_s') / 1e3
+        fig, ax = plt.subplots(figsize=(6, 4))
+        ax.plot(r_s, phi_s, label='Melt fraction at 1200 yr')
+        ax.axhline(phi_reported, ls='-.', label='Reported phi_global')
+        ax.axhline(weighted, ls='--', label='Mass-weighted mean')
+        ax.axhline(unweighted, ls=':', label='Unweighted mean')
+        ax.plot([r_s.mean()], [m_liq / m_man], 's', mfc='none', ms=10, label='Mliq / Mmantle')
+        ax.set_xlabel('Radius [km]')
+        ax.set_ylabel('Melt fraction')
+        ax.legend(fontsize=8)
+        fig.tight_layout()
+        return fig
+
+    validation_plot(figure, 'twophase_global_melt_fraction')

@@ -118,7 +118,7 @@ def test_reaction_transfer_balances_the_initial_inventory(reaction_run):
 
 @pytest.mark.physics_invariant
 @pytest.mark.reference_pinned
-def test_elements_conserved_across_each_reaction_pair(reaction_run):
+def test_elements_conserved_across_each_reaction_pair(reaction_run, validation_plot):
     """Hydrogen and carbon move between partners without loss.
 
     Analytical anchor: closed-system elemental conservation for the
@@ -155,6 +155,31 @@ def test_elements_conserved_across_each_reaction_pair(reaction_run):
     # inventory; both bounds discriminate unit slips.
     assert 1e16 < abs(h2o['reaction_kg']) < 1e20
     assert abs(h2o['reaction_kg']) < 0.01 * h2o['initial_kg']
+
+    def figure():
+        import matplotlib.pyplot as plt
+
+        fig, ax = plt.subplots(figsize=(6, 4))
+        ax.bar(
+            [-0.2, 0.8],
+            [h2['reaction_kg'], c_lost_by_co],
+            width=0.4,
+            label='Lost by H$_2$ (H), by CO (C)',
+        )
+        ax.bar(
+            [0.2, 1.2],
+            [h_from_h2o, c_gained_by_co2],
+            width=0.4,
+            label='Gained in H$_2$O (H), in CO$_2$ (C)',
+        )
+        ax.set_xticks([0, 1], ['Hydrogen', 'Carbon'])
+        ax.set_yscale('log')
+        ax.set_ylabel('Mass moved in 1000 yr [kg]')
+        ax.legend(fontsize=8)
+        fig.tight_layout()
+        return fig
+
+    validation_plot(figure, 'reaction_element_balance')
 
 
 # The full named-reaction library configuration: seven volatiles and
@@ -197,8 +222,7 @@ def _library_element_moles(doc, element):
     for volatile in LIBRARY_VOLATILES:
         block = doc['atmosphere'][volatile]
         kg = sum(
-            float(field_si(block[key])[0])
-            for key in ('liquid_kg', 'solid_kg', 'atmosphere_kg')
+            float(field_si(block[key])[0]) for key in ('liquid_kg', 'solid_kg', 'atmosphere_kg')
         )
         moles = kg / LIBRARY_MOLAR_MASS[volatile]
         total += moles * LIBRARY_STOICHIOMETRY[volatile].get(element, 0)
@@ -232,8 +256,7 @@ def test_reaction_library_conserves_h_c_n(library_run):
     # requested 20 percent molar share in place.
     n2_block = doc_0['atmosphere']['N2']
     n2_kg = sum(
-        float(field_si(n2_block[key])[0])
-        for key in ('liquid_kg', 'solid_kg', 'atmosphere_kg')
+        float(field_si(n2_block[key])[0]) for key in ('liquid_kg', 'solid_kg', 'atmosphere_kg')
     )
     n_total = _library_element_moles(doc_0, 'N')
     assert 2.0 * n2_kg / LIBRARY_MOLAR_MASS['N2'] > 0.99 * n_total

@@ -20,11 +20,16 @@ The text below details the check, its tolerance, and its test command.
 
 **Known limit.** The main test samples only nearly pure nodes, so a wrong weighting inside the melting interval is not caught there. The companion test `test_viscosity_rises_monotonically_across_rheological_transition` checks that the viscosity rises steadily across the transition, by more than 3 decades, but not its shape.
 
+![log10 viscosity against radius for the hot molten and the cold initial condition](../assets/validation/matprop_viscosity_end_members.svg#only-light){ width="80%" }
+![log10 viscosity against radius for the hot molten and the cold initial condition](../assets/validation/matprop_viscosity_end_members_dark.svg#only-dark){ width="80%" }
+
+**How to read the plot.** The x-axis is the radius and the y-axis the log10 viscosity at the basic nodes. The solid line is the hot initial condition, all 50 nodes molten, asserted at the melt end member 2 (dashed, within 0.01). The dash-dotted line is the cold initial condition at 1600 J kg$^{-1}$ K$^{-1}$, and the circles its asserted nodes with a melt fraction below $10^{-3}$, at the solid end member 21 (dotted, within 0.05). A pass means that the solid line lies on the dashed line and the circles on the dotted line.
+
 ??? info "Test details"
     - Reference: Analytical limit: away from the rheological transition the blended viscosity recovers the configured end-members (melt_log10visc = 2, solid_log10visc = 21).
     - Tolerance: abs 0.01 on log10(viscosity) at the strongly molten nodes and abs 0.05 at the strongly solid nodes.
     - Test id: `tests/test_matprop.py::test_viscosity_recovers_configured_end_members`
-    - Command: `make`, then `pytest -o addopts= tests/test_matprop.py::test_viscosity_recovers_configured_end_members`
+    - Command: `make`, then `pytest -o addopts= tests/test_matprop.py::test_viscosity_recovers_configured_end_members` (add `--validation-plots` to write the plot pair)
     - Companion test: `tests/test_matprop.py::test_material_properties_positive_and_conductivity_constant` asserts positive values for density, heat capacity and thermal expansion, and a constant conductivity; the main test asserts a positive viscosity.
 
 ## Related code

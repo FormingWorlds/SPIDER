@@ -20,11 +20,16 @@ The section below details the validation check, its tolerance, and its test comm
 
 **Known limit.** The test recomputes the crossing with the same rule as `get_crossover_index` and allows one node of difference, so a one-node misplacement passes; the code takes the first node below `phi_critical` without interpolation. PROTEUS takes `RF_depth` from the dynamic front (`rheological_front_dynamic`, the crossing of the convection regime flag at 1.5, between inviscid (2) and viscous (1) convection), which this test does not cover.
 
+![Melt fraction profile at 1200 yr with the critical melt fraction and the reported front](../assets/validation/rheologicalfront_location.svg#only-light){ width="80%" }
+![Melt fraction profile at 1200 yr with the critical melt fraction and the reported front](../assets/validation/rheologicalfront_location_dark.svg#only-dark){ width="80%" }
+
+**How to read the plot.** The x-axis is the radius and the y-axis the melt fraction at the staggered nodes at 1200 yr. The dashed line is $\phi_c$ = 0.4. The hollow square is the first node below $\phi_c$ that the test finds itself, and the circle the asserted front radius, the planet radius minus the reported depth. A pass means that the circle lies within 1 node of the square on the dashed line.
+
 ??? info "Test details"
     - Reference: Analytical self-consistency: the reported front index matches the phi_critical = 0.4 crossing of the melt-fraction profile, and the depth equals the surface radius minus the front radius.
     - Tolerance: Front index within one node of the recomputed crossing; rel 1e-6 on the depth identity.
     - Test id: `tests/test_rheologicalfront.py::test_front_location_is_consistent_with_melt_fraction_profile`
-    - Command: `make`, then `pytest -o addopts= tests/test_rheologicalfront.py::test_front_location_is_consistent_with_melt_fraction_profile`
+    - Command: `make`, then `pytest -o addopts= tests/test_rheologicalfront.py::test_front_location_is_consistent_with_melt_fraction_profile` (add `--validation-plots` to write the plot pair)
     - Companion test: `tests/test_rheologicalfront.py::test_front_rises_from_the_cmb_as_the_mantle_solidifies` verifies upward front migration as the mantle solidifies.
 
 ## Related code

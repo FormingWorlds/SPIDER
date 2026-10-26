@@ -35,7 +35,9 @@ def _front_scalars(doc: dict) -> dict:
 
 @pytest.mark.physics_invariant
 @pytest.mark.reference_pinned
-def test_front_location_is_consistent_with_melt_fraction_profile(blackbody_full):
+def test_front_location_is_consistent_with_melt_fraction_profile(
+    blackbody_full, validation_plot
+):
     """The reported front sits where phi_s crosses phi_critical.
 
     Anchor: analytical self-consistency with the melt-fraction profile
@@ -74,6 +76,36 @@ def test_front_location_is_consistent_with_melt_fraction_profile(blackbody_full)
     # mantle shell and its pressure inside the mantle pressure range.
     assert 0 < front['depth'] < MANTLE_DEPTH
     assert 0 < front['pressure'] < pressure_b.max()
+
+    def figure():
+        import matplotlib.pyplot as plt
+
+        r_s = data_si(doc, 'radius_s') / 1e3
+        fig, ax = plt.subplots(figsize=(6, 4))
+        ax.plot(r_s, phi_s, label='Melt fraction at 1200 yr')
+        ax.axhline(PHI_CRITICAL, ls='--', label='$\\phi_c$ = 0.4')
+        ax.plot(
+            [r_s[crossing]],
+            [phi_s[crossing]],
+            's',
+            mfc='none',
+            ms=10,
+            label='First node below $\\phi_c$',
+        )
+        ax.plot(
+            [(radius_b[0] - front['depth']) / 1e3],
+            [PHI_CRITICAL],
+            'o',
+            zorder=3,
+            label='Reported front radius',
+        )
+        ax.set_xlabel('Radius [km]')
+        ax.set_ylabel('Melt fraction')
+        ax.legend(fontsize=8)
+        fig.tight_layout()
+        return fig
+
+    validation_plot(figure, 'rheologicalfront_location')
 
 
 @pytest.mark.physics_invariant
