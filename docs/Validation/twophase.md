@@ -20,10 +20,10 @@ The text below details the check, its tolerance, and its test command.
 
 **Known limit.** The identity compares 2 code paths that share the code's own `mass_s` and `phi_s`, so a wrong shell mass or melt fraction passes.
 
-![Melt fraction profile at 1200 yr with the reported global melt fraction and its means](../assets/validation/twophase_global_melt_fraction.svg#only-light){ width="80%" }
-![Melt fraction profile at 1200 yr with the reported global melt fraction and its means](../assets/validation/twophase_global_melt_fraction_dark.svg#only-dark){ width="80%" }
+![Reported global melt fraction at 1200 yr against its 3 definitions](../assets/validation/twophase_global_melt_fraction.svg#only-light){ width="80%" }
+![Reported global melt fraction at 1200 yr against its 3 definitions](../assets/validation/twophase_global_melt_fraction_dark.svg#only-dark){ width="80%" }
 
-**How to read the plot.** The x-axis is the radius and the y-axis the melt fraction at the staggered nodes at 1200 yr (solid line, context). The dash-dotted line is the asserted reported phi_global, the dashed line the mass-weighted mean of the profile and the hollow square Mliq / Mmantle; the dotted line is the unweighted mean, which the test requires to be more than 1e-3 away. A pass means that the dash-dotted line, the dashed line and the square coincide (relative 1e-10), above the dotted line.
+**How to read the plot.** The circles are the global melt fraction at 1200 yr in 4 forms: the reported phi_global, Mliq / Mmantle and the mass-weighted mean of the staggered-node melt fraction, which the test requires to agree (relative 1e-10), and the unweighted mean, which it requires to be more than 1e-3 away. The grey band is the reported value $\pm$ 1e-3. Values shown to 2 significant digits, because the run output moves by about 2.5e-6 between PETSc builds. A pass means that the first 3 circles lie in the band and the last one outside it.
 
 ??? info "Test details"
     - Reference: Analytical identity: the global melt fraction equals Mliq/Mmantle and the mass-weighted mean of the staggered melt-fraction profile.

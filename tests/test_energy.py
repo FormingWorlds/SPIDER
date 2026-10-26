@@ -15,6 +15,7 @@ import numpy as np
 import pytest
 
 from tests._json_utils import atmosphere_si, data_si, read_output
+from tests._plot_utils import shown
 
 pytestmark = [pytest.mark.smoke, pytest.mark.timeout(120)]
 
@@ -85,7 +86,8 @@ def test_disabled_transport_mechanisms_carry_zero_flux(
     # Wrong-path guard: convection must remain active, otherwise the
     # zero above would only prove a dead run.
     jconv_nc = data_si(doc_nc, 'Jconv_b')  # W/m^2
-    assert np.abs(jconv_nc).max() > 1e3
+    active_min = 1e3
+    assert np.abs(jconv_nc).max() > active_min
 
     # Everything but conduction off: Jtot reduces to Jcond alone.
     cond_only = cached_spider_run(
@@ -111,7 +113,7 @@ def test_disabled_transport_mechanisms_carry_zero_flux(
     np.testing.assert_allclose(jtot_co[1:], jcond_co[1:], rtol=1e-12, atol=1e-20)
     # Edge case, surface node: the grey-body boundary flux (8e5 W/m^2)
     # overrides the tiny conductive flux (0.01 W/m^2) at index 0.
-    assert abs(jtot_co[0] - jcond_co[0]) > 1e3
+    assert abs(jtot_co[0] - jcond_co[0]) > active_min
 
     # Scale guard on the full-physics reference state: the peak total
     # flux at the fully molten IC is convective and large (observed
@@ -122,21 +124,31 @@ def test_disabled_transport_mechanisms_carry_zero_flux(
     def figure():
         import matplotlib.pyplot as plt
 
-        r_nc = data_si(doc_nc, 'radius_b') / 1e3
-        r_co = data_si(doc_co, 'radius_b') / 1e3
-        off = np.max(
-            [np.abs(data_si(doc_co, n)) for n in ('Jconv_b', 'Jmix_b', 'Jgrav_b')], axis=0
+        off = max(np.abs(data_si(doc_co, n)).max() for n in ('Jconv_b', 'Jmix_b', 'Jgrav_b'))
+        names = [
+            'Off: Jcond',
+            'Only conduction:\nJconv, Jmix, Jgrav',
+            'Off: Jconv',
+            'Only conduction:\nJtot - Jcond, top',
+        ]
+        values = shown(
+            [
+                np.abs(jcond_nc).max(),
+                off,
+                np.abs(jconv_nc).max(),
+                abs(jtot_co[0] - jcond_co[0]),
+            ],
+            digits=2,
         )
         fig, ax = plt.subplots(figsize=(6, 4))
-        ax.plot(r_nc, jconv_nc, label='Conduction off: Jconv')
-        ax.plot(r_nc, jcond_nc, '--', label='Conduction off: Jcond')
-        ax.plot(r_co, jcond_co, '-.', label='Conduction only: Jcond')
-        ax.plot(r_co, off, ':', label='Conduction only: Jconv, Jmix, Jgrav')
+        ax.axhline(active_min, ls='--', label='Lower bound of the 2 active fluxes, 1e3')
+        ax.plot(range(4), values, 'o', zorder=3, label='Largest |flux| over the nodes')
+        ax.set_xticks(range(4), names, fontsize=8)
         ax.set_yscale('symlog', linthresh=1e-3)
         ax.set_yticks([0.0, 1e-2, 1e2, 1e6, 1e10])
-        ax.set_xlabel('Radius [km]')
+        ax.set_ylim(-1e-3, 1e12)
         ax.set_ylabel('Flux [W m$^{-2}$]')
-        ax.legend(fontsize=8)
+        ax.legend(fontsize=8, loc='upper left')
         fig.tight_layout()
         return fig
 
@@ -246,8 +258,13 @@ def test_radiogenic_heating_pins_two_isotope_decay(heating_run, validation_plot)
     3.57676e-6 W/kg, and after 200 years (two al26 half-lives, one k40
     half-life) the total falls to 0.2506 of its initial value.
     """
+    t_late = 200
+
+    def isotopes(t):
+        return H_AL26 * 2.0 ** (-t / 100.0), H_K40 * 2.0 ** (-t / 200.0)
+
     h_0 = data_si(read_output(heating_run, 0), 'Hradio_s')  # W/kg
-    h_200 = data_si(read_output(heating_run, 200), 'Hradio_s')  # W/kg
+    h_200 = data_si(read_output(heating_run, t_late), 'Hradio_s')  # W/kg
 
     # Radiogenic heating is spatially uniform: the same isotopes and
     # concentration heat every shell (rel 1e-12 is roundoff headroom).
@@ -261,7 +278,7 @@ def test_radiogenic_heating_pins_two_isotope_decay(heating_run, validation_plot)
     assert abs(h_0[0] - H_AL26) > 1e-3 * h_0[0]
 
     # Decay pin: the two-isotope weighted decay factor after 200 years.
-    expected_ratio = (H_AL26 * 0.25 + H_K40 * 0.5) / (H_AL26 + H_K40)
+    expected_ratio = sum(isotopes(t_late)) / sum(isotopes(0.0))
     ratio = h_200[0] / h_0[0]
     # rel=1e-4: the run writes output exactly at t = 200 years, so the
     # closed-form factor applies with only output rounding on top.
@@ -279,13 +296,13 @@ def test_radiogenic_heating_pins_two_isotope_decay(heating_run, validation_plot)
         import matplotlib.pyplot as plt
 
         t = np.linspace(0.0, 300.0, 61)
-        al26, k40 = H_AL26 * 2.0 ** (-t / 100.0), H_K40 * 2.0 ** (-t / 200.0)
+        al26, k40 = isotopes(t)
         fig, ax = plt.subplots(figsize=(6, 4))
         ax.plot(t, al26 + k40, label='Sum of the 2 isotopes')
         ax.plot(t, al26, '--', label='al26 alone, half-life 100 yr')
         ax.plot(t, k40, ':', label='k40 alone, half-life 200 yr')
         ax.plot(
-            [0.0, 200.0],
+            [0.0, t_late],
             [h_0[0], h_200[0]],
             'o',
             zorder=3,
@@ -415,13 +432,17 @@ def test_steady_state_ic_balances_interior_and_surface(steady_state_run, validat
 
     # Grey-body pin with the sigma hard-coded in constants.c.
     sigma = 5.670367e-8  # W m^-2 K^-4
-    expected = sigma * (t_surf**4 - 273.0**4)
+
+    def grey_law(t, power=4):
+        return sigma * (t**power - 273.0**power)
+
+    expected = grey_law(t_surf)
     # rel=1e-5: the radiation balance is solved to snes_rtol 1e-9; the
     # margin absorbs output rounding of T_surf.
     assert fatm == pytest.approx(expected, rel=1e-5)
     # Exponent guard: a T^3 slip misses by roughly a factor of T_surf
     # (~2000 at the ~1960 K of this state), far beyond any tolerance.
-    assert abs(fatm - sigma * (t_surf**3 - 273.0**3)) > 0.5 * fatm
+    assert abs(fatm - grey_law(t_surf, 3)) > 0.5 * fatm
     # Sign and scale guards.
     assert fatm > 0
     assert 1e2 < fatm < 1e9  # W/m^2
@@ -437,8 +458,8 @@ def test_steady_state_ic_balances_interior_and_surface(steady_state_run, validat
         left.set_yticks([0.0, etot.max()])
         left.set_xlabel('Radius [km]')
         left.set_ylabel('Etot [W]')
-        right.plot(t, sigma * (t**4 - 273.0**4), label='$\\sigma(T^4 - 273^4)$')
-        right.plot(t, sigma * (t**3 - 273.0**3), '--', label='$T^3$ form')
+        right.plot(t, grey_law(t), label='$\\sigma(T^4 - 273^4)$')
+        right.plot(t, grey_law(t, 3), '--', label='$T^3$ form')
         right.plot([t_surf], [fatm], 'o', zorder=3, label='Reported Fatm')
         right.set_yscale('log')
         right.set_xlabel('Surface temperature [K]')

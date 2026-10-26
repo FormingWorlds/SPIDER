@@ -15,6 +15,7 @@ from __future__ import annotations
 import pytest
 
 from tests._json_utils import atmosphere_si, read_output
+from tests._plot_utils import shown
 
 pytestmark = [pytest.mark.smoke, pytest.mark.timeout(120)]
 
@@ -41,7 +42,10 @@ def test_grey_body_flux_matches_stefan_boltzmann_limit(blackbody_short, validati
     t_surf = atmosphere_si(doc, 'temperature_surface')  # K
     fatm = atmosphere_si(doc, 'Fatm')  # W/m2
 
-    expected = EMISSIVITY * SIGMA * (t_surf**4 - TEQM**4)
+    def grey_law(t, power=4):
+        return EMISSIVITY * SIGMA * (t**power - TEQM**power)
+
+    expected = grey_law(t_surf)
     # rel=1e-6: the run reproduces the closed form to machine precision;
     # 1e-6 leaves headroom for compiler value reordering only.
     assert fatm == pytest.approx(expected, rel=1e-6)
@@ -49,7 +53,7 @@ def test_grey_body_flux_matches_stefan_boltzmann_limit(blackbody_short, validati
     # Exponent guard: a T^3 slip at T_surf ~ 1860 K gives ~360 W/m2
     # instead of ~6.7e5 W/m2, off by three orders of magnitude and far
     # beyond the pin tolerance.
-    wrong_cubed = EMISSIVITY * SIGMA * (t_surf**3 - TEQM**3)
+    wrong_cubed = grey_law(t_surf, 3)
     assert abs(fatm - wrong_cubed) > 0.5 * fatm
     # Sign guard: the hot interior radiates outward.
     assert fatm > 0
@@ -65,11 +69,11 @@ def test_grey_body_flux_matches_stefan_boltzmann_limit(blackbody_short, validati
         fig, ax = plt.subplots(figsize=(6, 4))
         ax.plot(
             t,
-            EMISSIVITY * SIGMA * (t**4 - TEQM**4),
+            grey_law(t),
             label='Grey body, $\\epsilon\\sigma(T^4 - T_\\mathrm{eqm}^4)$',
         )
-        ax.plot(t, EMISSIVITY * SIGMA * (t**3 - TEQM**3), '--', label='$T^3$ form')
-        ax.plot([t_surf], [fatm], 'o', zorder=3, label='Reported Fatm at 200 yr')
+        ax.plot(t, grey_law(t, 3), '--', label='$T^3$ form')
+        ax.plot([shown(t_surf)], [shown(fatm)], 'o', zorder=3, label='Reported Fatm at 200 yr')
         ax.set_yscale('log')
         ax.set_xlabel('Surface temperature [K]')
         ax.set_ylabel('Surface flux [W m$^{-2}$]')

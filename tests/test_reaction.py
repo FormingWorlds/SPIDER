@@ -14,6 +14,7 @@ from __future__ import annotations
 import pytest
 
 from tests._json_utils import field_si, read_output
+from tests._plot_utils import shown
 
 pytestmark = [pytest.mark.smoke, pytest.mark.timeout(120)]
 
@@ -162,18 +163,19 @@ def test_elements_conserved_across_each_reaction_pair(reaction_run, validation_p
         fig, ax = plt.subplots(figsize=(6, 4))
         ax.bar(
             [-0.2, 0.8],
-            [h2['reaction_kg'], c_lost_by_co],
+            shown([h2['reaction_kg'], c_lost_by_co], digits=2),
             width=0.4,
             label='Lost by H$_2$ (H), by CO (C)',
         )
         ax.bar(
             [0.2, 1.2],
-            [h_from_h2o, c_gained_by_co2],
+            shown([h_from_h2o, c_gained_by_co2], digits=2),
             width=0.4,
             label='Gained in H$_2$O (H), in CO$_2$ (C)',
         )
         ax.set_xticks([0, 1], ['Hydrogen', 'Carbon'])
         ax.set_yscale('log')
+        ax.set_ylim(1e16, 1e19)
         ax.set_ylabel('Mass moved in 1000 yr [kg]')
         ax.legend(fontsize=8)
         fig.tight_layout()

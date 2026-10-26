@@ -82,7 +82,8 @@ def test_phase_boundary_matches_independent_table_read(c_test, validation_plot):
     assert out['phase_boundary_S'][0] == pytest.approx(ya[0], rel=1e-12)
     # Wrong-table guard: the solidus at 10 GPa sits near 1524 J/kg/K,
     # far below the liquidus value near 2128 J/kg/K.
-    assert abs(out['phase_boundary_S'][1] - 1524.43) > 100.0
+    solidus_10gpa = 1524.43
+    assert abs(out['phase_boundary_S'][1] - solidus_10gpa) > 100.0
     # Sign and scale guards: liquidus entropies of the dK09 set are
     # positive and of order a few thousand J/kg/K.
     assert out['phase_boundary_S'][1] > 0
@@ -96,7 +97,7 @@ def test_phase_boundary_matches_independent_table_read(c_test, validation_plot):
         ax.plot(
             xa[keep][::10] / 1e9, ya[keep][::10], label='liquidus_A11_H13.dat, read by numpy'
         )
-        ax.plot([10.0], [1524.43], 'x', ms=10, label='Solidus at 10 GPa')
+        ax.plot([probes[1] / 1e9], [solidus_10gpa], 'x', ms=10, label='Solidus at 10 GPa')
         ax.plot(
             np.array(probes) / 1e9,
             out['phase_boundary_S'],
@@ -136,11 +137,16 @@ def test_compositional_viscosity_matches_spaargaren(c_test, validation_plot):
     shift adds to the configured melt log10visc of 2.0.
     """
     probe = ((1.0e10,), (2600.0,))
-    high = _eval_with(c_test, ('-melt_visc_comp', '1.4', '-melt_visc_ref_comp', '1.6'), *probe)
-    low = _eval_with(c_test, ('-melt_visc_comp', '1.2', '-melt_visc_ref_comp', '0.9'), *probe)
+    comp_high, ref_high, comp_low, ref_low, base_log = 1.4, 1.6, 1.2, 0.9, 2.0
+    high = _eval_with(
+        c_test, ('-melt_visc_comp', comp_high, '-melt_visc_ref_comp', ref_high), *probe
+    )
+    low = _eval_with(
+        c_test, ('-melt_visc_comp', comp_low, '-melt_visc_ref_comp', ref_low), *probe
+    )
 
-    shift_high = _spaargaren_prefactor(1.4) - _spaargaren_prefactor(1.6)
-    shift_low = _spaargaren_prefactor(1.2) - _spaargaren_prefactor(0.9)
+    shift_high = _spaargaren_prefactor(comp_high) - _spaargaren_prefactor(ref_high)
+    shift_low = _spaargaren_prefactor(comp_low) - _spaargaren_prefactor(ref_low)
     # Transcription pins: the helper re-encodes the published piecewise
     # coefficients independently of eos.c; these literals (hand-derived
     # from Spaargaren et al. 2020) guard the helper itself, so a shared
@@ -149,8 +155,8 @@ def test_compositional_viscosity_matches_spaargaren(c_test, validation_plot):
     assert shift_low == pytest.approx(-1.35803, abs=1e-4)
     # abs=1e-9: the prefactor is a closed-form expression of the two
     # option values, so only roundoff enters.
-    assert high['log10visc'][0] == pytest.approx(2.0 + shift_high, abs=1e-9)
-    assert low['log10visc'][0] == pytest.approx(2.0 + shift_low, abs=1e-9)
+    assert high['log10visc'][0] == pytest.approx(base_log + shift_high, abs=1e-9)
+    assert low['log10visc'][0] == pytest.approx(base_log + shift_low, abs=1e-9)
 
     # Branch discrimination: the two configurations shift in opposite
     # directions and differ by more than 1.5 decades, so a collapsed
@@ -161,7 +167,7 @@ def test_compositional_viscosity_matches_spaargaren(c_test, validation_plot):
     # Edge case: with the compositional term disabled (no visc_comp
     # option) the melt viscosity is the bare configured constant.
     base = _eval(c_test, 'melt', *probe)
-    assert base['log10visc'][0] == pytest.approx(2.0, abs=1e-10)
+    assert base['log10visc'][0] == pytest.approx(base_log, abs=1e-10)
 
     def figure():
         import matplotlib.pyplot as plt
@@ -174,18 +180,18 @@ def test_compositional_viscosity_matches_spaargaren(c_test, validation_plot):
             label='Spaargaren et al. (2020) prefactor',
         )
         ax.plot(
-            [1.6, 0.9],
-            [_spaargaren_prefactor(1.6), _spaargaren_prefactor(0.9)],
+            [ref_high, ref_low],
+            [_spaargaren_prefactor(ref_high), _spaargaren_prefactor(ref_low)],
             's',
             mfc='none',
             ms=10,
             label='Reference compositions',
         )
         code = [
-            _spaargaren_prefactor(1.6) + high['log10visc'][0] - 2.0,
-            _spaargaren_prefactor(0.9) + low['log10visc'][0] - 2.0,
+            _spaargaren_prefactor(ref_high) + high['log10visc'][0] - base_log,
+            _spaargaren_prefactor(ref_low) + low['log10visc'][0] - base_log,
         ]
-        ax.plot([1.4, 1.2], code, 'o', zorder=3, label='Reference + eos.c shift')
+        ax.plot([comp_high, comp_low], code, 'o', zorder=3, label='Reference + eos.c shift')
         ax.set_xlabel('Mg/Si')
         ax.set_ylabel('log$_{10}$ viscosity prefactor')
         ax.legend(fontsize=8)

@@ -20,10 +20,10 @@ The sections below detail three validation cases, their tolerances, and their te
 
 **Known limit.** For the conduction-only test, the identity holds at interior nodes only, because the surface node transmits the grey-body boundary flux.
 
-![Flux profiles of the conduction-off and the conduction-only runs on a symmetric log axis](../assets/validation/energy_disabled_transport.svg#only-light){ width="80%" }
-![Flux profiles of the conduction-off and the conduction-only runs on a symmetric log axis](../assets/validation/energy_disabled_transport_dark.svg#only-dark){ width="80%" }
+![Largest flux of each transport term in the conduction-off and the conduction-only runs](../assets/validation/energy_disabled_transport.svg#only-light){ width="80%" }
+![Largest flux of each transport term in the conduction-off and the conduction-only runs](../assets/validation/energy_disabled_transport_dark.svg#only-dark){ width="80%" }
 
-**How to read the plot.** The x-axis is the radius and the y-axis the flux at the basic nodes on a symmetric log axis (linear between $-10^{-3}$ and $10^{-3}$). In the run with conduction off, the solid line is the active convective flux and the dashed line the asserted conductive flux, 0. In the run with conduction only, the dash-dotted line is the conductive flux and the dotted line the largest of the asserted convective, mixing and separation fluxes at each node, 0. A pass means that the dashed and dotted lines lie at 0 (within 1e-20 W/m$^2$) while the other 2 stay far above.
+**How to read the plot.** Each circle is the largest absolute flux over the basic nodes of one run, on a symmetric log axis (linear between $-10^{-3}$ and $10^{-3}$); values shown to 2 significant digits, because the run output moves by up to a few 1e-6 between PETSc builds. The first 2 circles are asserted to be 0, to an absolute tolerance of 1e-20 W/m$^2$: the conductive flux with conduction off, and the convective, mixing and separation fluxes with conduction only. The last 2 are asserted to be above $10^3$ W/m$^2$ (dashed line): the convective flux with conduction off, and the gap between the total and the conductive flux at the top node with conduction only. A pass means that the first 2 circles sit at 0 and the last 2 above the dashed line.
 
 ??? info "Test details"
     - Reference: Analytical limit: a disabled transport mechanism carries zero flux, and with only conduction enabled the total flux equals the conductive flux at every node except the surface node, which carries the grey-body boundary flux.

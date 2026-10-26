@@ -14,6 +14,7 @@ from __future__ import annotations
 import pytest
 
 from tests._json_utils import atmosphere_si, data_si, field_si, read_output
+from tests._plot_utils import shown
 
 pytestmark = [pytest.mark.smoke, pytest.mark.timeout(120)]
 
@@ -86,7 +87,8 @@ def test_global_melt_fraction_is_the_mass_weighted_profile_mean(
     phi_reported = float(field_si(doc['rheological_front_phi']['phi_global'])[0])
     m_liq = atmosphere_si(doc, 'mass_liquid')
     m_man = atmosphere_si(doc, 'mass_mantle')
-    assert phi_reported == pytest.approx(m_liq / m_man, rel=1e-10)
+    liquid_share = m_liq / m_man
+    assert phi_reported == pytest.approx(liquid_share, rel=1e-10)
 
     phi_s = data_si(doc, 'phi_s')
     mass_s = data_si(doc, 'mass_s')
@@ -96,7 +98,8 @@ def test_global_melt_fraction_is_the_mass_weighted_profile_mean(
     # the plain average of phi_s differs from the mass-weighted mean by
     # more than the tolerance.
     unweighted = float(phi_s.mean())
-    assert abs(phi_reported - unweighted) > 1e-3
+    apart = 1e-3
+    assert abs(phi_reported - unweighted) > apart
     # Boundedness and scale guards.
     assert 0.0 <= phi_reported <= 1.0
     assert 0.2 < phi_reported < 0.9
@@ -104,16 +107,16 @@ def test_global_melt_fraction_is_the_mass_weighted_profile_mean(
     def figure():
         import matplotlib.pyplot as plt
 
-        r_s = data_si(doc, 'radius_s') / 1e3
+        names = ['Reported', 'Mliq / Mmantle', 'Mass-weighted', 'Unweighted']
+        values = shown([phi_reported, liquid_share, weighted, unweighted], digits=2)
         fig, ax = plt.subplots(figsize=(6, 4))
-        ax.plot(r_s, phi_s, label='Melt fraction at 1200 yr')
-        ax.axhline(phi_reported, ls='-.', label='Reported phi_global')
-        ax.axhline(weighted, ls='--', label='Mass-weighted mean')
-        ax.axhline(unweighted, ls=':', label='Unweighted mean')
-        ax.plot([r_s.mean()], [m_liq / m_man], 's', mfc='none', ms=10, label='Mliq / Mmantle')
-        ax.set_xlabel('Radius [km]')
-        ax.set_ylabel('Melt fraction')
-        ax.legend(fontsize=8)
+        ax.axhspan(
+            values[0] - apart, values[0] + apart, alpha=0.2, label='Reported value $\\pm$ 1e-3'
+        )
+        ax.plot(range(4), values, 'o', zorder=3, label='Melt fraction at 1200 yr')
+        ax.set_xticks(range(4), names, fontsize=9)
+        ax.set_ylabel('Global melt fraction')
+        ax.legend(fontsize=8, loc='center left')
         fig.tight_layout()
         return fig
 

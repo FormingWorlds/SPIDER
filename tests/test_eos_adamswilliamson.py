@@ -61,14 +61,18 @@ def test_density_matches_the_closed_form_profile(c_test, validation_plot):
     """
     probes = (0.0, 1.0e10, 1.35e11)
     out = _aw_eval(c_test, probes)
-    expected = [RHOS - p * BETA / GRAVITY for p in probes]
+
+    def aw(p, sign=-1.0):
+        return RHOS + sign * p * BETA / GRAVITY
+
+    expected = [aw(p) for p in probes]
     assert out['rho'] == pytest.approx(expected, rel=1e-12)
     # Surface limit: exactly the configured surface density.
     assert out['rho'][0] == pytest.approx(RHOS, rel=1e-12)
     # Sign-of-beta guard: a sign-flipped compressibility would give
     # 3967.8 kg/m^3 at 10 GPa instead of 4190.1; both sit far outside
     # the tolerance.
-    wrong_sign = RHOS + 1.0e10 * BETA / GRAVITY
+    wrong_sign = aw(probes[1], sign=1.0)
     assert abs(out['rho'][1] - wrong_sign) > 100.0
     # Monotonicity under compression and physical scale (silicate
     # mantle densities, thousands of kg/m^3).
@@ -81,8 +85,8 @@ def test_density_matches_the_closed_form_profile(c_test, validation_plot):
 
         p = np.linspace(0.0, 1.4e11, 29)
         fig, ax = plt.subplots(figsize=(6, 4))
-        ax.plot(p / 1e9, RHOS - p * BETA / GRAVITY, label=r'$\rho_s - P\beta/g$')
-        ax.plot(p / 1e9, RHOS + p * BETA / GRAVITY, '--', label=r'Sign-flipped $\beta$')
+        ax.plot(p / 1e9, aw(p), label=r'$\rho_s - P\beta/g$')
+        ax.plot(p / 1e9, aw(p, sign=1.0), '--', label=r'Sign-flipped $\beta$')
         ax.plot(
             np.array(probes) / 1e9,
             out['rho'],

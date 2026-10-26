@@ -17,6 +17,7 @@ import numpy as np
 import pytest
 
 from tests._json_utils import data_si, field_si, read_output
+from tests._plot_utils import shown
 
 pytestmark = [pytest.mark.smoke, pytest.mark.timeout(120)]
 
@@ -80,27 +81,22 @@ def test_front_location_is_consistent_with_melt_fraction_profile(
     def figure():
         import matplotlib.pyplot as plt
 
-        r_s = data_si(doc, 'radius_s') / 1e3
+        r_s = shown(data_si(doc, 'radius_s')[[crossing - 1, crossing]] / 1e3)
         fig, ax = plt.subplots(figsize=(6, 4))
-        ax.plot(r_s, phi_s, label='Melt fraction at 1200 yr')
-        ax.axhline(PHI_CRITICAL, ls='--', label='$\\phi_c$ = 0.4')
+        ax.plot([0, 2], r_s, 's', mfc='none', ms=10, label='Staggered nodes')
         ax.plot(
-            [r_s[crossing]],
-            [phi_s[crossing]],
-            's',
-            mfc='none',
-            ms=10,
-            label='First node below $\\phi_c$',
-        )
-        ax.plot(
-            [(radius_b[0] - front['depth']) / 1e3],
-            [PHI_CRITICAL],
+            [1],
+            [shown((radius_b[0] - front['depth']) / 1e3)],
             'o',
             zorder=3,
             label='Reported front radius',
         )
-        ax.set_xlabel('Radius [km]')
-        ax.set_ylabel('Melt fraction')
+        ax.set_xticks(
+            [0, 1, 2],
+            ['Last node,\n$\\phi \\geq \\phi_c$', 'Front', 'First node,\n$\\phi < \\phi_c$'],
+        )
+        ax.set_xlim(-0.5, 2.5)
+        ax.set_ylabel('Radius [km]')
         ax.legend(fontsize=8)
         fig.tight_layout()
         return fig

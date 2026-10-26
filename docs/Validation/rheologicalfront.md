@@ -20,10 +20,10 @@ The section below details the validation check, its tolerance, and its test comm
 
 **Known limit.** The test recomputes the crossing with the same rule as `get_crossover_index` and allows one node of difference, so a one-node misplacement passes; the code takes the first node below `phi_critical` without interpolation. PROTEUS takes `RF_depth` from the dynamic front (`rheological_front_dynamic`, the crossing of the convection regime flag at 1.5, between inviscid (2) and viscous (1) convection), which this test does not cover.
 
-![Melt fraction profile at 1200 yr with the critical melt fraction and the reported front](../assets/validation/rheologicalfront_location.svg#only-light){ width="80%" }
-![Melt fraction profile at 1200 yr with the critical melt fraction and the reported front](../assets/validation/rheologicalfront_location_dark.svg#only-dark){ width="80%" }
+![Radii of the 2 nodes on each side of the critical melt fraction and of the reported front at 1200 yr](../assets/validation/rheologicalfront_location.svg#only-light){ width="80%" }
+![Radii of the 2 nodes on each side of the critical melt fraction and of the reported front at 1200 yr](../assets/validation/rheologicalfront_location_dark.svg#only-dark){ width="80%" }
 
-**How to read the plot.** The x-axis is the radius and the y-axis the melt fraction at the staggered nodes at 1200 yr. The dashed line is $\phi_c$ = 0.4. The hollow square is the first node below $\phi_c$ that the test finds itself, and the circle the asserted front radius, the planet radius minus the reported depth. A pass means that the circle lies within 1 node of the square on the dashed line.
+**How to read the plot.** The y-axis is the radius. The squares are the 2 staggered nodes that the test finds itself at 1200 yr: the last node with a melt fraction at or above $\phi_c$ = 0.4 (0.403) and the first node below it (0.3995). The circle is the asserted front radius, the planet radius minus the reported depth; radii shown to 3 significant digits. The melt fractions are not drawn: the first node lies 4.5e-4 below $\phi_c$, and the run output moves by about 3e-6 between PETSc builds, so no rounding of them is stable. A pass means that the circle lies between the 2 squares (the test allows 1 node either way).
 
 ??? info "Test details"
     - Reference: Analytical self-consistency: the reported front index matches the phi_critical = 0.4 crossing of the melt-fraction profile, and the depth equals the surface radius minus the front radius.
