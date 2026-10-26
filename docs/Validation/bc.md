@@ -20,11 +20,16 @@ The sections below detail two validation cases, their tolerances, and their test
 
 **Known limit.** The test reads only the reported `Fatm` and emissivity; it does not check that the interior total flux at the surface (`Jtot` at node 0, set in `bc.c`) uses the prescribed value. `SURFACE_BC` is read in `atmosphere.c`, `bc.c` and `energy.c`.
 
+![Reported surface flux of the prescribed-flux run against the grey-body law with emissivity 1 and with the reported emissivity](../assets/validation/bc_prescribed_flux.svg#only-light){ width="80%" }
+![Reported surface flux of the prescribed-flux run against the grey-body law with emissivity 1 and with the reported emissivity](../assets/validation/bc_prescribed_flux_dark.svg#only-dark){ width="80%" }
+
+**How to read the plot.** The x-axis is the surface temperature and the y-axis the surface flux on a log scale. The dotted line is the prescribed flux, 1e5 W/m$^2$, and the circle the asserted Fatm at the reported surface temperature. The solid line is the grey-body law with emissivity 1, which the test requires to be more than 10 % away at that temperature. The dashed line is the grey-body law with the asserted inverted emissivity (about 0.12). A pass means that the circle sits on the dotted line and on the dashed line, far below the solid one.
+
 ??? info "Test details"
     - Reference: Analytical identity: with SURFACE_BC 4 the surface flux equals the prescribed value, and the reported emissivity is its grey-body inversion.
     - Tolerance: rel 1e-9 on the flux echo; rel 1e-6 on the emissivity inversion.
     - Test id: `tests/test_bc.py::test_prescribed_flux_bc_echoes_value_and_inverts_emissivity`
-    - Command: `make`, then `pytest -o addopts= tests/test_bc.py::test_prescribed_flux_bc_echoes_value_and_inverts_emissivity`
+    - Command: `make`, then `pytest -o addopts= tests/test_bc.py::test_prescribed_flux_bc_echoes_value_and_inverts_emissivity` (add `--validation-plots` to write the plot pair)
     - Companion test: `tests/test_bc.py::test_mantle_cools_from_the_top_between_surface_and_cmb` verifies that the core-mantle boundary remains hotter than the surface.
 
 ## Constant-entropy BC pins the initial surface
@@ -39,11 +44,16 @@ The sections below detail two validation cases, their tolerances, and their test
 
 **Known limit.** For constant-entropy boundary conditions, the surface value is assigned directly rather than determined by a physical flux balance.
 
+![Initial entropy profiles with the constant-entropy boundary and with the default boundary](../assets/validation/bc_constant_entropy_surface.svg#only-light){ width="80%" }
+![Initial entropy profiles with the constant-entropy boundary and with the default boundary](../assets/validation/bc_constant_entropy_surface_dark.svg#only-dark){ width="80%" }
+
+**How to read the plot.** The x-axis is the radius and the y-axis the entropy at the basic nodes at $t$ = 0. The solid line is the asserted profile of the constant-entropy run and the dashed line the default run (context, its surface value is the 2599.7 that the test requires to be more than 40 away). The circle is the asserted surface node and the hollow square the option value 2550 J kg$^{-1}$ K$^{-1}$. A pass means that the circle sits in the square and the deep end of the solid line lies between 2400 and 2700.
+
 ??? info "Test details"
     - Reference: Analytical identity: the constant-entropy boundary writes ic_surface_entropy (2550 J/kg/K) onto the surface basic node, preserved through the steady-state energy solve into the initial output.
     - Tolerance: rel 1e-10 (assigned, not solved); the core-side entropy between 2400 and 2700 J/kg/K.
     - Test id: `tests/test_bc.py::test_constant_entropy_bc_pins_the_initial_surface`
-    - Command: `make`, then `pytest -o addopts= tests/test_bc.py::test_constant_entropy_bc_pins_the_initial_surface`
+    - Command: `make`, then `pytest -o addopts= tests/test_bc.py::test_constant_entropy_bc_pins_the_initial_surface` (add `--validation-plots` to write the plot pair)
     - Companion test: `tests/test_bc.py::test_prescribed_core_flux_slows_cmb_cooling` verifies that core heat flux slows cooling at the core-mantle boundary.
 
 ## Related code

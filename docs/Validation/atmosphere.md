@@ -20,11 +20,16 @@ The section below details the validation check, its tolerance, and its test comm
 
 **Known limit.** The test uses its own copy of the value in `constants.c`, sigma = 5.670367e-8 W m-2 K-4. A change of the constant in the code larger than the tolerance fails the test, but a value that is wrong in both places does not. PROTEUS uses this grey-body branch only with `surface_bc_mode = 'grey_body'`; its default is a prescribed flux (`SURFACE_BC 4`).
 
+![Surface flux of the blackbody50 run at 200 yr on the grey-body law](../assets/validation/atmosphere_grey_body_flux.svg#only-light){ width="80%" }
+![Surface flux of the blackbody50 run at 200 yr on the grey-body law](../assets/validation/atmosphere_grey_body_flux_dark.svg#only-dark){ width="80%" }
+
+**How to read the plot.** The x-axis is the surface temperature and the y-axis the surface flux on a log scale. The line is the grey-body law $\epsilon\sigma(T^4 - T_\mathrm{eqm}^4)$ with emissivity 1 and $T_\mathrm{eqm}$ = 273 K, and the dashed line the $T^3$ form that the test rejects (context). The circle is the asserted Fatm of the blackbody50 run at 200 yr, at its reported surface temperature. A pass means that the circle lies on the line (relative 1e-6).
+
 ??? info "Test details"
     - Reference: Analytical limit: the grey-body flux F = emissivity sigma (T_surf^4 - T_eqm^4) with emissivity 1 and T_eqm = 273 K (Stefan-Boltzmann).
     - Tolerance: rel 1e-6 on the flux, computed from the reported surface temperature using the test's copy of the code value sigma = 5.670367e-8 W m-2 K-4.
     - Test id: `tests/test_atmosphere.py::test_grey_body_flux_matches_stefan_boltzmann_limit`
-    - Command: `make`, then `pytest -o addopts= tests/test_atmosphere.py::test_grey_body_flux_matches_stefan_boltzmann_limit`
+    - Command: `make`, then `pytest -o addopts= tests/test_atmosphere.py::test_grey_body_flux_matches_stefan_boltzmann_limit` (add `--validation-plots` to write the plot pair)
     - Companion test: `tests/test_atmosphere.py::test_surface_cools_and_flux_decays_across_macro_steps` confirms monotone decline of flux and surface temperature over outputs.
 
 ## Related code

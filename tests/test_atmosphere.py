@@ -28,7 +28,7 @@ EMISSIVITY = 1.0  # blackbody50 emissivity0 (SURFACE_BC 1, grey body)
 
 @pytest.mark.physics_invariant
 @pytest.mark.reference_pinned
-def test_grey_body_flux_matches_stefan_boltzmann_limit(blackbody_short):
+def test_grey_body_flux_matches_stefan_boltzmann_limit(blackbody_short, validation_plot):
     """The reported surface flux equals the grey-body analytical limit.
 
     Anchor: the Stefan-Boltzmann grey-body flux
@@ -56,6 +56,28 @@ def test_grey_body_flux_matches_stefan_boltzmann_limit(blackbody_short):
     # Scale guard: magma-ocean fluxes sit at 1e4..1e7 W/m2; a
     # nondimensional value leaking through unscaled would sit near unity.
     assert 1e2 < fatm < 1e9
+
+    def figure():
+        import matplotlib.pyplot as plt
+        import numpy as np
+
+        t = np.linspace(1000.0, 3000.0, 41)
+        fig, ax = plt.subplots(figsize=(6, 4))
+        ax.plot(
+            t,
+            EMISSIVITY * SIGMA * (t**4 - TEQM**4),
+            label='Grey body, $\\epsilon\\sigma(T^4 - T_\\mathrm{eqm}^4)$',
+        )
+        ax.plot(t, EMISSIVITY * SIGMA * (t**3 - TEQM**3), '--', label='$T^3$ form')
+        ax.plot([t_surf], [fatm], 'o', zorder=3, label='Reported Fatm at 200 yr')
+        ax.set_yscale('log')
+        ax.set_xlabel('Surface temperature [K]')
+        ax.set_ylabel('Surface flux [W m$^{-2}$]')
+        ax.legend(fontsize=8)
+        fig.tight_layout()
+        return fig
+
+    validation_plot(figure, 'atmosphere_grey_body_flux')
 
 
 @pytest.mark.physics_invariant
