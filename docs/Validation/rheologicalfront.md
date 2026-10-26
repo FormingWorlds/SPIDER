@@ -4,7 +4,7 @@
 
 This page checks front tracking in `rheologicalfront.c`, which locates the solidification boundary.
 `rheologicalfront.c` detects the critical melt fraction threshold where mantle rheology shifts from liquid-like to solid-like behavior.
-Validation means that we check reported front indices and depths against independent crossings of the melt fraction profile.
+Validation means that we check the reported front index and depth against the crossing of the melt-fraction profile that the test finds with the same scan, a self-consistency check.
 If front tracking fails, the dynamic boundary between convective magma ocean and solid mantle is misplaced.
 The section below details the validation check, its tolerance, and its test command.
 
@@ -23,7 +23,7 @@ The section below details the validation check, its tolerance, and its test comm
 ![Radii of the 2 nodes on each side of the critical melt fraction and of the reported front at 1200 yr](../assets/validation/rheologicalfront_location.svg#only-light){ width="80%" }
 ![Radii of the 2 nodes on each side of the critical melt fraction and of the reported front at 1200 yr](../assets/validation/rheologicalfront_location_dark.svg#only-dark){ width="80%" }
 
-**How to read the plot.** The y-axis is the radius, shown to 3 significant digits. The squares are the 2 staggered nodes (cell centres) at 1200 yr on each side of the critical melt fraction $\phi_c = 0.4$ (0.403 and 0.3995). The circle is the asserted front radius, the planet radius minus the reported depth. The test asserts the reported depth and pressure against the basic-node arrays to relative 1e-6. The melt fractions are not drawn: the first node is only 4.5e-4 below $\phi_c$, so a rounded value is not stable between builds. A pass means that the front node is at most 1 node from the first node below $\phi_c$; here the circle lies between the squares.
+**How to read the plot.** The y-axis is the radius, shown to 3 significant digits. The squares are the 2 staggered nodes (cell centres) at 1200 yr on each side of the critical melt fraction $\phi_c = 0.4$ (0.403 and 0.3995). The circle is the asserted front radius, the planet radius minus the reported depth. The test asserts the reported depth and pressure against the arrays at the basic nodes (cell boundaries) to relative 1e-6. The melt fractions are not drawn: the first node is only 4.5e-4 below $\phi_c$, so a rounded value is not stable between builds. A pass means that the front node is at most 1 node from the first node below $\phi_c$; here the circle lies between the squares.
 
 ??? info "Test details"
     - Reference: Analytical self-consistency: the reported front index matches the phi_critical = 0.4 crossing of the melt-fraction profile, and the depth equals the surface radius minus the front radius.

@@ -12,7 +12,7 @@ The text below details the check, its tolerance, and its test command.
 
 **Why this check exists.** Analytical codes can suffer from sign errors in compressibility, or from wrong fit inputs. A bug in density calculations distorts the pressure field and mesh geometry without an error.
 
-**What it tests.** The test evaluates the formula rho(P) = rhos - P beta / g, using parameters fitted to the PREM lower mantle for blackbody50. It checks density values at the surface (P = 0), at 10 GPa, and at the core-mantle boundary pressure. A sign-flipped compressibility shifts the 10 GPa density by more than 200 kg/m3, which the test guards against. Sibling test `test_si_density_invariant_under_nondimensionalisation_choice` confirms that physical SI density outputs stay unchanged under the nondimensionalisation choice.
+**What it tests.** The model has 3 parameters: the surface density $\rho_s$ (kg/m$^3$), a compressibility parameter $\beta$ (1/m) and the gravity $g$ (m/s$^2$, negative by the SPIDER sign convention). The test evaluates the density $\rho(P) = \rho_s - P\beta/g$ at pressure $P$, with the values of the blackbody50 run (the standard 50-node test run, `tests/opts/blackbody50.opts`), fitted to the lower mantle of the Preliminary Reference Earth Model (PREM). It checks the density at the surface (P = 0), at 10 GPa, and at about 135 GPa, the core-mantle boundary pressure. A sign-flipped $\beta$ gives 3967.8 instead of 4190.1 kg/m$^3$ at 10 GPa; the test asserts a gap above 100 kg/m$^3$. Sibling test `test_si_density_invariant_under_nondimensionalisation_choice` confirms that physical SI density outputs stay unchanged under the nondimensionalisation choice.
 
 **How we know the right answer.** The Adams-Williamson formula provides an exact closed-form density profile. Numerical values in C agree with the analytical profile to rel 1e-12, reducing at the surface to the exact configured surface density.
 
@@ -23,7 +23,7 @@ The text below details the check, its tolerance, and its test command.
 ![Adams-Williamson density against pressure from the closed form and from the code](../assets/validation/eos_adamswilliamson_density.svg#only-light){ width="80%" }
 ![Adams-Williamson density against pressure from the closed form and from the code](../assets/validation/eos_adamswilliamson_density_dark.svg#only-dark){ width="80%" }
 
-**How to read the plot.** The x-axis is the pressure and the y-axis the density. The line is the closed form $\rho_s - P\beta/g$, with surface density $\rho_s$, compressibility parameter $\beta$ and gravity $g$. The dashed line is the form with a sign-flipped $\beta$, which the test rejects (context). The circles are the asserted densities of eos_adamswilliamson.c at the surface, at 10 GPa and at 135 GPa. A pass means that the circles lie on the line (relative 1e-12).
+**How to read the plot.** The x-axis is the pressure in GPa and the y-axis the density in kg/m$^3$. The line is the closed form $\rho_s - P\beta/g$, with surface density $\rho_s$, compressibility parameter $\beta$ and gravity $g$. The dashed line is the form with a sign-flipped $\beta$, which the test rejects (context). The circles are the asserted densities of eos_adamswilliamson.c at the surface, at 10 GPa and at 135 GPa. A pass means that the circles lie on the line (relative 1e-12).
 
 ??? info "Test details"
     - Reference: Analytical limit: rho(P) = rhos - P beta / g in closed form, with the blackbody50 PREM lower-mantle fit parameters.

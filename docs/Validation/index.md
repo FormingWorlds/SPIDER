@@ -2,12 +2,18 @@
 
 ## What this page checks
 
-This page introduces the scientific validation suite for SPIDER, which tests each physics module.
+This page lists the validation cases of SPIDER: each case checks 1 physics source file against a known answer.
 Validation means that we compare model outputs against analytical limits and independent implementations.
 Each physics source file has at least one pinned test, with a stated tolerance and reference value.
-If these components are wrong, the interior thermal evolution that SPIDER computes, alone or inside PROTEUS, is wrong.
+If these components are wrong, the interior thermal evolution that SPIDER computes, alone or inside [PROTEUS](https://proteus-framework.org/PROTEUS), is wrong. PROTEUS is the coupling framework that runs SPIDER as its interior module.
 The table below lists each validation case, organized by physical process.
 A full-run regression against the frozen blackbody50 reference complements these cases (`tests/test_regression.py`).
+
+Terms used on every page:
+
+- **blackbody50**: the standard 50-node test run of SPIDER, set by `tests/opts/blackbody50.opts`, with a grey-body surface (`SURFACE_BC 1`) and no internal heating.
+- **Basic nodes** and **staggered nodes**: the 2 sets of points of the radial mesh. Basic nodes are the cell boundaries, staggered nodes the cell centres.
+- **IC** and **BC**: initial condition and boundary condition.
 
 Tests in the `unit` tier drive the small C test executables in `tests/c` (`make tests_c`); tests in the `smoke` tier run the `spider` binary (`make`) on short configurations. See [Testing SPIDER](../How-to/test.md) for the tiers and the commands.
 

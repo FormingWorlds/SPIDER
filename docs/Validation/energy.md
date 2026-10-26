@@ -3,8 +3,8 @@
 ## What this page checks
 
 This page checks energy flux assembly and internal heating routines in `energy.c`, which control mantle energy transport.
-The energy module calculates convective, conductive, and diffusive fluxes, alongside radiogenic and tidal heating.
-Validation means that we test flux assembly against analytical superposition limits, decay laws, and steady balances.
+The energy module calculates 4 heat fluxes, alongside radiogenic and tidal heating. Jcond is conduction, and Jconv is convection, driven by the entropy gradient. Jmix is mixing of melt and solid, active only where both phases exist. Jgrav is the separation of melt from solid under gravity.
+Validation means that we test flux assembly against analytical superposition limits, decay laws, and the balance of the steady-state initial condition (IC).
 If flux calculation or source terms are wrong, mantle cooling rates and core heat extraction are wrong.
 The sections below detail three validation cases, their tolerances, and their test commands.
 
@@ -12,7 +12,7 @@ The sections below detail three validation cases, their tolerances, and their te
 
 **Why this check exists.** Runtime configuration flags can fail to disconnect disabled flux routines, or leak residual values into total energy balances. A failure in flux superposition produces incorrect thermal gradients without raising an error.
 
-**What it tests.** The test evaluates the flux superposition architecture when specific transport terms are switched off. A disabled transport mechanism must hold zero flux, within abs 1e-20 W/m^2, which is at least 17 decades below the observed active fluxes. With conduction off, convection gives 9e8 to 2e9 W/m^2 (observed; the test asserts more than 1e3). In a conduction-only run, conduction gives 1.9e-3 to 1.3e-2 W/m^2 (observed). Total flux equals conductive flux to rel 1e-12 at every interior node. The surface node differs by more than 1e3 W/m^2.
+**What it tests.** The test evaluates the flux superposition architecture when specific transport terms are switched off. A disabled transport mechanism must hold zero flux at every basic node (cell boundary), within abs 1e-20 W/m^2, which is at least 17 decades below the observed active fluxes. With conduction off, convection gives 9e8 to 2e9 W/m^2 (observed; the test asserts more than 1e3). In a conduction-only run, conduction gives 1.9e-3 to 1.3e-2 W/m^2 (observed). Total flux equals conductive flux to rel 1e-12 at every interior node. The surface node differs by more than 1e3 W/m^2.
 
 **How we know the right answer.** Superposition of disjoint flux mechanisms is an analytical identity: an inactive transport term must vanish to rounding precision, and in the conduction-only run the total flux must equal the conductive flux. The magnitude of the convective flux is not compared with a reference.
 
@@ -36,7 +36,7 @@ The sections below detail three validation cases, their tolerances, and their te
 
 **Why this check exists.** Radioactive decay models can apply incorrect decay constants, confuse isotope abundances, or miscalculate exponential time evolution. A bug in heating terms leads to wrong internal heat production over geological timescales.
 
-**What it tests.** The test evaluates radiogenic heating as the sum of concentration times abundance times heat production over isotopes, decaying as 2^(-(t - t0)/half_life). A two-isotope test configuration with 100-year and 200-year half-lives pins the sum at t = 0, and checks the weighted decay factor 0.2506 after 200 years. A dropped isotope shifts the initial sum by 2.4e-3 relative. The two-isotope factor is discriminated from single-isotope values 0.25 and 0.5, and from the no-decay value 1.0.
+**What it tests.** The test evaluates radiogenic heating as the sum of concentration times abundance times heat production over isotopes, decaying as 2^(-(t - t0)/half_life), with t0 the start time of each isotope (0 here). A two-isotope test configuration with 100-year and 200-year half-lives pins the sum at t = 0, and checks the weighted decay factor 0.2506 after 200 years. A dropped isotope shifts the initial sum by 2.4e-3 relative. The two-isotope factor is discriminated from the single-isotope values: 0.25 for al26 alone (2 half-lives in 200 years) and 0.5 for k40 alone (1 half-life). It also differs from the no-decay value 1.0.
 
 **How we know the right answer.** Radioactive decay follows the analytical exponential decay law. The initial sum is checked to rel 1e-6, and the combined decay factor matches to rel 1e-4.
 
@@ -47,7 +47,7 @@ The sections below detail three validation cases, their tolerances, and their te
 ![Radiogenic heating of the 2-isotope run against time](../assets/validation/energy_radiogenic_decay.svg#only-light){ width="80%" }
 ![Radiogenic heating of the 2-isotope run against time](../assets/validation/energy_radiogenic_decay_dark.svg#only-dark){ width="80%" }
 
-**How to read the plot.** The x-axis is the time and the y-axis the specific radiogenic heating on a log scale. The wide pale line is the closed-form sum of the 2 isotopes. The dashed and dotted lines are the isotopes `al26` and `k40` alone, with test half-lives of 100 and 200 yr (context). The dashed line runs inside the wide line, because `al26` gives more than 99 % of the heating. The circles are the asserted Hradio at 0 and 200 yr: the value at 0 to relative 1e-6, and their ratio, about 0.2506, to 1e-4. A pass means that both circles lie on the wide line.
+**How to read the plot.** The x-axis is the time in yr and the y-axis the specific radiogenic heating in W/kg on a log scale. The wide pale line is the closed-form sum of the 2 isotopes. The dashed and dotted lines are the isotopes `al26` and `k40` alone, with test half-lives of 100 and 200 yr (context). The dashed line runs inside the wide line, because `al26` gives more than 99 % of the heating. The circles are the asserted Hradio at 0 and 200 yr: the value at 0 to relative 1e-6, and their ratio, about 0.2506, to 1e-4. A pass means that both circles lie on the wide line.
 
 ??? info "Test details"
     - Reference: Analytical limit: radiogenic heating is the sum over isotopes of concentration times abundance times heat production, decaying as 2^(-(t - t0)/half_life). A two-isotope configuration with 100-year and 200-year half-lives pins the sum at t = 0 and the weighted decay factor 0.2506 after 200 years.
@@ -60,9 +60,9 @@ The sections below detail three validation cases, their tolerances, and their te
 
 **Why this check exists.** Steady-state solvers can terminate at false equilibria, or fail to balance heat flow across layers. An uncalibrated initial profile introduces unphysical thermal transients at the start of a simulation.
 
-**What it tests.** The test evaluates the steady-state initial condition, which equalises energy flow through every basic node, and closes the surface radiation balance sigma (T_surf^4 - teqm^4) with the Stefan-Boltzmann constant of constants.c. A T^3 exponent slip misses the surface flux by roughly a factor of the surface temperature (about 2000 here).
+**What it tests.** The test evaluates the steady-state initial condition of the blackbody50 run, which has no internal heating. It equalises the energy flow Etot (W) through every basic node, and closes the surface radiation balance $\sigma(T_\mathrm{surf}^4 - T_\mathrm{eqm}^4)$. Here $\sigma$ is the Stefan-Boltzmann constant of constants.c and $T_\mathrm{eqm}$ = 273 K the equilibrium temperature. A $T^3$ exponent slip changes the surface flux by a factor equal to the surface temperature in kelvin, about 2000 here (about 1960 K).
 
-**How we know the right answer.** Conservation of energy in steady state requires equal energy flow through every mantle shell, and balanced radiation at the surface. Energy-flow relative spread remains below 1e-8 (observed 2e-11), and the grey-body balance matches to rel 1e-5.
+**How we know the right answer.** In this configuration without internal heating, conservation of energy in steady state requires equal energy flow through every mantle shell, and balanced radiation at the surface. Energy-flow relative spread remains below 1e-8 (observed 2e-11), and the grey-body balance matches to rel 1e-5.
 
 **Why it matters.** The steady-state initial condition starts a run from a profile in energy balance.
 

@@ -70,7 +70,7 @@ def test_reported_dsdt_matches_finite_difference_of_outputs(blackbody_dt10, vali
         fig, ax = plt.subplots(figsize=(4.8, 4))
         ax.axhspan(scale_lo, scale_hi, alpha=0.15, label='Asserted window, 1e-12 to 1e-4')
         ax.plot([0.0], [shown(peak, 1)], 'o', zorder=3, label='Largest |dS/dt| of the run')
-        ax.set(yscale='log', ylim=(1e-14, 1e-2), xlim=(-1.0, 1.0), ylabel='|dS/dt| [W/kg/K]')
+        ax.set(yscale='log', ylim=(1e-14, 1e-2), xlim=(-1.0, 1.0), ylabel='|dS/dt| [J/kg/K/s]')
         ax.set_xticks([])
         ax.minorticks_off()
         ax.legend(loc='upper right', fontsize=8)
