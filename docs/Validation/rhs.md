@@ -10,7 +10,7 @@ The section below details the validation check, its tolerance, and its test comm
 
 ## Reported dS/dt matches finite difference of outputs
 
-**Why this check exists.** Time derivative assembly can misplace spatial differencing weights, drop heating source terms, or reverse flux divergence signs. An error in derivative evaluation causes unphysical energy drift during timestepping.
+**Why this check exists.** The time derivative that SPIDER reports must be the one the time stepper integrates. A unit or scaling slip in the reported value, or a gross sign flip, makes the reported rate disagree with the trajectory without an error message.
 
 **What it tests.** The test evaluates the reported dS/dt against the finite-difference slope of consecutive outputs over 10-year macro steps. It asserts cooling signs at each node, and bounds the largest |dS/dt| between 1e-12 and 1e-4 J/kg/K/s. This bound rejects unscaled annual rates, while finite differencing catches nondimensional values (around 3e-5 here). Sibling test `test_cooling_sign_structure_and_finiteness` checks that radiogenic and tidal source arrays remain zero and that entropy declines smoothly in the upper molten layer.
 
@@ -23,7 +23,7 @@ The section below details the validation check, its tolerance, and its test comm
 
 **How to read the plot.** Top: the cooling rate -dS/dt that rhs.c reports, as the mean of the 10 and 20 yr outputs (line), and the slope of the entropy between these outputs (dashed), at every staggered node of the blackbody50 run. Bottom: their relative difference per node (dots) and the tolerance of the assertion (dashed); the largest difference is 0.65 percent.
 
-**Known limit.** Discrete finite differencing over 10-year intervals introduces numerical truncation error of up to 0.65 percent relative to instantaneous continuous derivatives.
+**Known limit.** The trajectory comes from the same right-hand side that reports dS/dt, so a wrong right-hand side gives a consistent wrong trajectory and passes; dS/dt is not compared with an independent physical value. The run has no heating, so a dropped heating term cannot show. Finite differencing over 10-year intervals adds a truncation error of up to 0.65 percent.
 
 ??? info "Test details"
     - Reference: Analytical self-consistency: the reported dS/dt matches the finite-difference slope of consecutive outputs over 10-year macro steps.

@@ -10,7 +10,7 @@ The sections below detail three validation cases, their tolerances, and their te
 
 ## Prescribed adiabat entropy sets the initial profile
 
-**Why this check exists.** Initial condition routines can apply gradient ramps incorrectly, misinterpret input entropy parameters, or fail to write values to staggered mesh nodes. A bug in initial condition setup shifts the starting temperature structure, and the later cooling is wrong too.
+**Why this check exists.** Initial condition (IC) routines can misinterpret input entropy parameters or fail to write values to the staggered mesh nodes; a gradient ramp error shows only if the profile mean leaves 2600 to 2628.7 J/kg/K. A bug in initial condition setup shifts the starting temperature structure, and the later cooling is wrong too.
 
 **What it tests.** The test evaluates the prescribed adiabat entropy (2600 J/kg/K at the top staggered node) with the configured gradient ramp. The profile mean lies between the adiabat entropy and that value plus |ic_dsdr| times mantle depth. A run with ic_adiabat_entropy = 2400 shifts the mean by 200 J/kg/K to rel 1e-9, guarding against ignored option inputs. Entropy is positive, with its mean between 1e3 and 1e4 J/kg/K. Top-node entropy matches at t = 0 to rel 1e-3 (observed exact). Sibling test `test_initial_adiabat_is_nearly_flat_until_cooling_imprints_structure` checks that subsequent cooling imprints thermal structure.
 
@@ -56,14 +56,14 @@ The sections below detail three validation cases, their tolerances, and their te
 
 **Why it matters.** Setting volatile budgets in Earth ocean equivalents allows direct comparison with terrestrial water and carbon inventories in planetary models.
 
-**Known limit.** The test takes the numerical constant OCEAN_MOLES from `constants.c`, verifying conversion consistency rather than the definition of terrestrial ocean mass.
+**Known limit.** The test uses its own copy of the OCEAN_MOLES constant of the source, so it checks the conversion, not the definition of the terrestrial ocean mass; a value that is wrong in both places passes.
 
 ??? info "Test details"
     - Reference: The OCEAN_MOLES constant of constants.c (7.68894973907177e22 mol per Earth ocean): initial_kg equals moles times OCEAN_MOLES times the volatile molar mass.
     - Tolerance: rel 1e-9 (closed-form product of stored constants).
     - Test id: `tests/test_ic.py::test_ocean_moles_ic_converts_moles_to_mass`
     - Command: `make`, then `pytest -o addopts= tests/test_ic.py::test_ocean_moles_ic_converts_moles_to_mass`
-    - Companion test: `tests/test_ic.py::test_abundance_and_ocean_mole_solves_agree` confirms that ocean-mole and ppm abundance formulations yield identical states.
+    - Companion test: `tests/test_ic.py::test_abundance_and_ocean_mole_solves_agree` confirms that the ocean-mole and ppm abundance formulations give the same partial pressures to rel 5e-3.
 
 ## Related code
 

@@ -5,7 +5,7 @@
 This page checks the tabulated thermodynamic lookup in `eos_lookup.c`, which reads mineral tables.
 `eos_lookup.c` bilinearly reads thermodynamic properties from pressure-entropy grids.
 Validation means that we check C table reads against an independent Python code.
-If table reads fail, melt density and temperature profiles across the mantle are incorrect.
+If table reads fail, the density and the other tabulated properties of the mantle are wrong; the test compares the density only.
 The section below details the check, its tolerance, and its test command.
 
 ## Melt density matches independent bilinear evaluation
@@ -31,8 +31,3 @@ The section below details the check, its tolerance, and its test command.
 
 - `eos_lookup.c`: `EOSCreate_Lookup`, `EOSEval_Lookup`, `SetInterp2dValue`.
 - `tests/test_eos_lookup.py`: `test_melt_density_matches_independent_bilinear_evaluation`, `test_thermodynamic_quantities_positive_and_rho_monotonic_in_pressure`.
-
-## References
-
-- de Koker, N. and Stixrude, L. (2009). Self-consistent thermodynamic properties of liquid MgSiO3.
-- Bower, D. J. et al. (2018). Numerical methods for magma ocean evolution.

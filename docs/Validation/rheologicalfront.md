@@ -10,15 +10,15 @@ The section below details the validation check, its tolerance, and its test comm
 
 ## Front location is consistent with melt fraction profile
 
-**Why this check exists.** Front finding routines can misplace grid crossings, apply incorrect search directions, or invert coordinate signs. A bug in front tracking misidentifies the boundary between solid and fluid mantle.
+**Why this check exists.** The front depth must follow from the front radius, and the front must lie inside the mantle. A wrong depth formula, an inverted coordinate sign or a front outside the mantle gives a wrong front without an error message.
 
 **What it tests.** The test evaluates analytical self-consistency: reported front index matches the phi_critical = 0.4 crossing of the melt-fraction profile, and depth equals surface radius minus front radius. It checks that the front depth is positive and bounded by mantle depth, with front pressure located inside the mantle range. Sibling tests pin the un-formed-front limit at t = 0, where the front reports the core-mantle boundary by convention (`test_unformed_front_reports_the_cmb_at_the_fully_molten_start`), and upward migration during bottom-up solidification (`test_front_rises_from_the_cmb_as_the_mantle_solidifies`).
 
 **How we know the right answer.** The front location is recomputed independently from the discrete melt-fraction profile and geometry arrays. The depth identity matches to rel 1e-6, and the index matches to one node of the recomputed crossing.
 
-**Why it matters.** The rheological front marks the viscosity transition that PROTEUS reads as dynamic front depth (`RF_depth` in `ReadSPIDER` of `spider.py`).
+**Why it matters.** PROTEUS reads `Phi_global` from this front block (`rheological_front_phi` in `ReadSPIDER` of `spider.py`).
 
-**Known limit.** Due to discrete spatial grid intervals, the front index is resolved to one node of the interpolated profile crossing.
+**Known limit.** The test recomputes the crossing with the same rule as `get_crossover_index` and allows one node of difference, so a one-node misplacement passes; the code takes the first node below `phi_critical` without interpolation. PROTEUS takes `RF_depth` from the dynamic front (`rheological_front_dynamic`, a crossing of the regime at 1.5), which this test does not cover.
 
 ??? info "Test details"
     - Reference: Analytical self-consistency: the reported front index matches the phi_critical = 0.4 crossing of the melt-fraction profile, and the depth equals the surface radius minus the front radius.

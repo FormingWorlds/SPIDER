@@ -18,7 +18,7 @@ The section below details the validation check, its tolerance, and its test comm
 
 **Why it matters.** The composite EOS determines the local melt fraction and effective thermodynamic properties of partially molten mantle shells.
 
-**Known limit.** This test pins the linear entropy lever rule, but does not benchmark non-linear eutectic melting curves.
+**Known limit.** S_liq, S_sol and the fusion entropy come from the code's own outputs, so the test checks internal consistency: the melt fraction is compared with (S - S_sol)/fusion from those values, not with a pinned 0.25.
 
 ??? info "Test details"
     - Reference: Analytical limit: by construction of the two-phase region, fusion = S_liq - S_sol and phi = (S - S_sol)/fusion between the phase boundaries.

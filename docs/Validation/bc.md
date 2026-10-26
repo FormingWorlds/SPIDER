@@ -10,7 +10,7 @@ The sections below detail two validation cases, their tolerances, and their test
 
 ## Prescribed-flux BC echoes value and inverts emissivity
 
-**Why this check exists.** Surface boundary routines can misinterpret options, swap boundary condition flags, or miscalculate equivalent emissivities. A bug in prescribed boundary dispatch causes the interior to use an incorrect surface heat flux, without failing explicitly.
+**Why this check exists.** With a prescribed surface flux, the reported flux must equal the prescribed value and the emissivity must be its grey-body inversion. A wrong boundary-condition (BC) branch or a wrong inversion gives a wrong reported flux or emissivity without an error message.
 
 **What it tests.** The test evaluates boundary condition SURFACE_BC 4, where the surface flux equals the prescribed value. The reported emissivity must equal the grey-body inversion value. The test guards against wrong dispatch, confirming that the grey-body flux at the surface temperature differs from the prescribed value by more than 10 percent, and the emissivity differs from 1 by more than 0.5. The flux must be positive, and lie between 1e2 and 1e9 W/m^2. Sibling test `test_mantle_cools_from_the_top_between_surface_and_cmb` asserts temperature ordering across the mantle, and near-zero surface pressure.
 
@@ -18,7 +18,7 @@ The sections below detail two validation cases, their tolerances, and their test
 
 **Why it matters.** PROTEUS passes the atmospheric radiative flux into SPIDER using option `-SURFACE_BC 4` and `-surface_bc_value`, so SPIDER must echo this flux exactly.
 
-**Known limit.** This test validates prescribed flux injection, but does not test coupled atmospheric radiative transfer within SPIDER itself.
+**Known limit.** The test reads only the reported `Fatm` and emissivity; it does not check that the interior total flux at the surface (`Jtot` at node 0, set in `bc.c`) uses the prescribed value. The `SURFACE_BC` switch is in `atmosphere.c`.
 
 ??? info "Test details"
     - Reference: Analytical identity: with SURFACE_BC 4 the surface flux equals the prescribed value, and the reported emissivity is its grey-body inversion.
@@ -45,6 +45,7 @@ The sections below detail two validation cases, their tolerances, and their test
     - Test id: `tests/test_bc.py::test_constant_entropy_bc_pins_the_initial_surface`
     - Command: `make`, then `pytest -o addopts= tests/test_bc.py::test_constant_entropy_bc_pins_the_initial_surface`
     - Companion test: `tests/test_bc.py::test_prescribed_core_flux_slows_cmb_cooling` verifies that core heat flux slows cooling at the core-mantle boundary.
+    - The test also checks that the core-side entropy lies between 2400 and 2700 J/kg/K.
 
 ## Related code
 

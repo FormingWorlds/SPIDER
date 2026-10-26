@@ -10,7 +10,7 @@ The text below details the check, its tolerance, and its test command.
 
 ## Viscosity recovers configured end members
 
-**Why this check exists.** Rheological blending functions can apply incorrect weighting formulas, swap melt and solid limits, or invert transition bounds. A bug in property blending causes convection solvers to experience wrong viscosities.
+**Why this check exists.** Rheological blending functions can swap the melt and solid limits; the test samples only nearly pure nodes, so a wrong weighting inside the melting interval is not caught. A bug in property blending causes convection solvers to experience wrong viscosities.
 
 **What it tests.** The test evaluates the analytical limit where blended viscosity recovers configured end-members away from the rheological transition (melt_log10visc = 2, solid_log10visc = 21). It checks two extreme states: the hot initial state of the blackbody50 run (t = 0, where all 50 nodes are molten), and a cold 0-step run started from a 1600 J/kg/K adiabat (where at least 5 nodes are solid). The recovered end-members must differ by more than 10 decades, guarding against swapped phases. Sibling test `test_material_properties_positive_and_conductivity_constant` asserts positive values for density, heat capacity, conductivity, and expansivity, alongside configured 4.0 W/m/K conductivity.
 
@@ -25,7 +25,7 @@ The text below details the check, its tolerance, and its test command.
     - Tolerance: abs 0.01 on log10(viscosity) at the strongly molten nodes and abs 0.05 at the strongly solid nodes.
     - Test id: `tests/test_matprop.py::test_viscosity_recovers_configured_end_members`
     - Command: `make`, then `pytest -o addopts= tests/test_matprop.py::test_viscosity_recovers_configured_end_members`
-    - Companion test: `tests/test_matprop.py::test_material_properties_positive_and_conductivity_constant` asserts positive values for properties and constant conductivity.
+    - Companion test: `tests/test_matprop.py::test_material_properties_positive_and_conductivity_constant` asserts positive values for the properties and the viscosity, and a constant conductivity.
 
 ## Related code
 

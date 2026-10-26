@@ -18,7 +18,7 @@ The text below details the check, its tolerance, and its test command.
 
 **Why it matters.** Global melt fraction and mantle phase masses are primary outputs read by PROTEUS (`M_mantle_liquid`, `M_mantle_solid`, and `Phi_global` in `ReadSPIDER` of `spider.py`).
 
-**Known limit.** The identity holds for spherical shell mass weighting, assuming hydrostatic radial shells.
+**Known limit.** The identity is definitional and uses the code's own `mass_s` and `phi_s`, so a wrong shell mass or melt fraction passes.
 
 ??? info "Test details"
     - Reference: Analytical identity: the global melt fraction equals Mliq/Mmantle and the mass-weighted mean of the staggered melt-fraction profile.

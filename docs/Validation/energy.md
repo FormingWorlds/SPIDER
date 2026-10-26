@@ -12,7 +12,7 @@ The sections below detail three validation cases, their tolerances, and their te
 
 **Why this check exists.** Runtime configuration flags can fail to disconnect disabled flux routines, or leak residual values into total energy balances. A failure in flux superposition produces incorrect thermal gradients without raising an error.
 
-**What it tests.** The test evaluates the flux superposition architecture when specific transport terms are switched off. A disabled transport mechanism must hold zero flux, within abs 1e-20 W/m^2, which is at least 17 decades below active fluxes. With conduction off, convection yields 9e8 to 2e9 W/m^2. In a conduction-only run, conduction yields 1.9e-3 to 1.3e-2 W/m^2. Total flux equals conductive flux to rel 1e-12 at every interior node. The surface node differs by more than 1e3 W/m^2.
+**What it tests.** The test evaluates the flux superposition architecture when specific transport terms are switched off. A disabled transport mechanism must hold zero flux, within abs 1e-20 W/m^2, which is at least 17 decades below active fluxes. With conduction off, convection gives 9e8 to 2e9 W/m^2 (observed; the test asserts more than 1e3). In a conduction-only run, conduction gives 1.9e-3 to 1.3e-2 W/m^2 (observed). Total flux equals conductive flux to rel 1e-12 at every interior node. The surface node differs by more than 1e3 W/m^2.
 
 **How we know the right answer.** Superposition of linear or disjoint flux mechanisms is an analytical identity. Inactive transport terms must vanish to rounding precision, while active terms reproduce isolated components.
 
@@ -56,7 +56,7 @@ The sections below detail three validation cases, their tolerances, and their te
 
 **Why it matters.** The steady-state initial condition starts a run from a profile in energy balance.
 
-**Known limit.** The test uses the Stefan-Boltzmann constant from `constants.c`, so an error in the constant definition is not isolated by this check.
+**Known limit.** The test uses its own copy of the Stefan-Boltzmann constant of the source, so a value that is wrong in both places does not fail it.
 
 ??? info "Test details"
     - Reference: Analytical limit: the steady-state initial condition equalises the energy flow through every basic node and closes the surface radiation balance sigma (T_surf^4 - teqm^4) with the Stefan-Boltzmann constant of constants.c.

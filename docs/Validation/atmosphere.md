@@ -18,7 +18,7 @@ The section below details the validation check, its tolerance, and its test comm
 
 **Why it matters.** The atmosphere module computes the surface energy balance, which drives planetary mantle cooling. PROTEUS reads the surface flux `Fatm` as `F_int`, and surface temperature `temperature_surface` as `T_magma`, to couple the interior to the atmosphere.
 
-**Known limit.** The test evaluates the analytical formula using the code constant sigma = 5.670367e-8 W m-2 K-4. An error in `constants.c` would affect both values, and is not detected by this comparison.
+**Known limit.** The test uses its own copy of the source value, sigma = 5.670367e-8 W m-2 K-4. A change of the constant in the code fails the test, but a value that is wrong in both places does not. PROTEUS uses this grey-body branch only with `surface_bc_mode = 'grey_body'`; its default is a prescribed flux (`SURFACE_BC 4`).
 
 ??? info "Test details"
     - Reference: Analytical limit: the grey-body flux F = emissivity sigma (T_surf^4 - T_eqm^4) with emissivity 1 and T_eqm = 273 K (Stefan-Boltzmann).
@@ -29,5 +29,5 @@ The section below details the validation check, its tolerance, and its test comm
 
 ## Related code
 
-- `atmosphere.c`: `set_atmosphere_emissivity_and_flux`, `set_surface_temperature_from_flux`.
+- `atmosphere.c`: `set_atmosphere_emissivity_and_flux`.
 - `tests/test_atmosphere.py`: `test_grey_body_flux_matches_stefan_boltzmann_limit`, `test_surface_cools_and_flux_decays_across_macro_steps`.

@@ -16,7 +16,7 @@ The sections below detail two validation cases, their tolerances, and their test
 
 **How we know the right answer.** The independent reader evaluates the raw table file using Python numpy interpolation. The C interpolation reproduces these reference values to rel 1e-12.
 
-**Why it matters.** The phase boundary determines where melting occurs throughout the mantle. SPIDER evaluates this boundary to compute local melt fraction and global melt volume.
+**Why it matters.** The phase boundary determines where melting occurs throughout the mantle. SPIDER evaluates this boundary to compute the local and global melt fraction.
 
 **Known limit.** The independent verification reads the same source table file, checking interpolation rather than physical accuracy of the underlying experimental dataset.
 
@@ -37,7 +37,7 @@ The sections below detail two validation cases, their tolerances, and their test
 
 **Why it matters.** Compositional controls on mantle viscosity determine how mantle convective vigor responds to planetary bulk composition.
 
-**Known limit.** The benchmark tests numerical implementation of the parameterisation, but does not test mineralogical uncertainties in mantle rheology.
+**Known limit.** The test re-encodes the coefficients as in `eos.c`, so a coefficient that is wrong in both copies is not caught; the 2 hand-derived literals catch a transcription error in either copy.
 
 ??? info "Test details"
     - Reference: The piecewise Mg/Si log10 viscosity prefactor of Spaargaren et al. (2020). The test re-encodes the published coefficients independently of eos.c and additionally pins the two branch-pair shifts as hand-derived literals (0.2074 and -1.35803), so a transcription error in either copy of the formula surfaces.
@@ -50,9 +50,3 @@ The sections below detail two validation cases, their tolerances, and their test
 
 - `eos.c`: `EOSSetUpFromOptions`, `EOSGetPhaseBoundary`, `EOSEvalSetViscosity`.
 - `tests/test_eos.py`: `test_phase_boundary_matches_independent_table_read`, `test_compositional_viscosity_matches_spaargaren`.
-
-## References
-
-- Andrault, D. et al. (2011). Solidus and liquidus for deep mantle minerals.
-- Hirschmann, M. M. (2013). Iron and volatile partitioning during mantle melting.
-- Spaargaren, R. J. et al. (2020). The influence of bulk composition on the rheology of rocky exoplanet mantles.

@@ -3,8 +3,8 @@
 ## What this page checks
 
 This page introduces the scientific validation suite for SPIDER, which tests each physics module.
-Validation means that we compare model outputs against analytical limits, laboratory calibrations, and independent implementations.
-Each physics source file has at least one pinned test, with a stated tolerance, reference value, and discrimination guards.
+Validation means that we compare model outputs against analytical limits and independent implementations.
+Each physics source file has at least one pinned test, with a stated tolerance and reference value.
 If these components are wrong, the interior thermal evolution that SPIDER computes, alone or inside PROTEUS, is wrong.
 The table below lists each validation case, organized by physical process.
 A full-run regression against the frozen blackbody50 reference complements these cases (`tests/test_regression.py`).
