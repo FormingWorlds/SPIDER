@@ -21,7 +21,7 @@ jobs:
     # Builds (or restores) the PETSc dependency. Separated from the test
     # job so the test job can carry a tight wallclock cap while a cold
     # PETSc build from source stays possible.
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
     - uses: actions/checkout@v6
     - name: Runner OS release
@@ -48,7 +48,7 @@ jobs:
 
   test:
     needs: petsc
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     # Hard wallclock cap on the fast tier; slower work belongs in the
     # nightly workflow.
     timeout-minutes: 10
@@ -155,7 +155,7 @@ jobs:
                 --txt --fail-under-line "$FAST"
 
   installer-smoke:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v6
       - name: Install Python requirements
