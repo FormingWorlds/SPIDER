@@ -10,19 +10,26 @@ permissions:
 
 jobs:
   full-suite:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 120
     env:
       PETSC_DIR: ${{ github.workspace }}/petsc
       PETSC_ARCH: arch-test
     steps:
     - uses: actions/checkout@v6
+    - name: Runner OS release
+      id: os
+      run: . /etc/os-release && echo "release=${ID}-${VERSION_ID}" >> "$GITHUB_OUTPUT"
     - name: PETSc cache
       id: petsc-cache
       uses: actions/cache@v5
       with:
         path: petsc
-        key: ${{ runner.os }}-petsc-63b72503
+        key: ${{ runner.os }}-${{ steps.os.outputs.release }}-petsc-63b72503
+    - name: Python 3.12 for the PETSc configure scripts
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.12"
     - name: Build PETSc
       if: steps.petsc-cache.outputs.cache-hit != 'true'
       run: |
