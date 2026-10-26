@@ -14,6 +14,7 @@ import numpy as np
 import pytest
 
 from tests._json_utils import data_si, read_output
+from tests._plot_utils import shown
 
 pytestmark = [pytest.mark.smoke, pytest.mark.timeout(120)]
 
@@ -59,25 +60,20 @@ def test_reported_dsdt_matches_finite_difference_of_outputs(blackbody_dt10, vali
     # Scale guard: early magma-ocean cooling rates are of order
     # 1e-8 J/kg/K/s here; four decades either way flags a unit slip
     # (e.g. per year instead of per second).
-    assert 1e-12 < np.max(np.abs(midpoint)) < 1e-4
+    scale_lo, scale_hi = 1e-12, 1e-4
+    peak = np.max(np.abs(midpoint))
+    assert scale_lo < peak < scale_hi
 
     def figure():
         import matplotlib.pyplot as plt
 
-        radius_km = data_si(d1, 'radius_s') / 1e3
-        fig, (top, bottom) = plt.subplots(2, 1, sharex=True, figsize=(6.4, 5.6))
-        top.plot(radius_km, -midpoint, label='reported, midpoint of 10 and 20 yr')
-        top.plot(radius_km, -fd_slope, '--', label='slope of S between the outputs')
-        top.set_ylabel('-dS/dt [W/kg/K]')
-        top.legend()
-        rel = np.abs(fd_slope - midpoint) / np.abs(midpoint)
-        bottom.plot(radius_km, rel, 'o', ms=3)
-        bottom.axhline(rtol, color=plt.rcParams['text.color'], ls='--', label='tolerance')
-        bottom.set(yscale='log', xlabel='Radius [km]', ylabel='Rel. difference')
-        bottom.set_ylim(min(1e-3, max(rel.min() / 2, 1e-16)), 1e-1)
-        bottom.legend(loc='lower right')
-        for ax in (top, bottom):
-            ax.minorticks_off()
+        fig, ax = plt.subplots(figsize=(4.8, 4))
+        ax.axhspan(scale_lo, scale_hi, alpha=0.15, label='Asserted window, 1e-12 to 1e-4')
+        ax.plot([0.0], [shown(peak, 1)], 'o', zorder=3, label='Largest |dS/dt| of the run')
+        ax.set(yscale='log', ylim=(1e-14, 1e-2), xlim=(-1.0, 1.0), ylabel='|dS/dt| [W/kg/K]')
+        ax.set_xticks([])
+        ax.minorticks_off()
+        ax.legend(loc='upper right', fontsize=8)
         fig.tight_layout()
         return fig
 

@@ -18,10 +18,10 @@ The section below details the validation check, its tolerance, and its test comm
 
 **Why it matters.** The right-hand side assembly provides the core time derivative that PETSc integrates to advance mantle thermal evolution in SPIDER.
 
-![Reported dS/dt and the slope of S between the 10 and 20 yr outputs against radius, and their relative difference with the tolerance](../assets/validation/rhs_dsdt_finite_difference.svg#only-light){ width="80%" }
-![Reported dS/dt and the slope of S between the 10 and 20 yr outputs against radius, and their relative difference with the tolerance](../assets/validation/rhs_dsdt_finite_difference_dark.svg#only-dark){ width="80%" }
+![Largest reported dS/dt magnitude of the run against the asserted window](../assets/validation/rhs_dsdt_finite_difference.svg#only-light){ width="80%" }
+![Largest reported dS/dt magnitude of the run against the asserted window](../assets/validation/rhs_dsdt_finite_difference_dark.svg#only-dark){ width="80%" }
 
-**How to read the plot.** Top: the cooling rate -dS/dt that rhs.c reports, as the mean of the 10 and 20 yr outputs (line). The dashed line is the slope of the entropy between these outputs, at every staggered node of the blackbody50 run. Bottom: their relative difference per node (dots) and the tolerance of the assertion (dashed); the largest difference is 0.65 percent. A pass means that, at every node, the dot lies below the dashed line.
+**How to read the plot.** The y-axis is the largest cooling rate |dS/dt| of the blackbody50 run, on a log scale. The circle is this asserted value, the mean of the 10 and 20 yr outputs, shown to 1 significant digit. The grey band is the asserted window from 1e-12 to 1e-4 W/kg/K. The node profiles are not drawn, because they move by about 7e-4 (relative) between the macOS and Linux builds. The main comparison, with the slope of the specific entropy S between the outputs to relative 2e-2 at every node, is not drawn either. A pass means that the circle lies in the grey band.
 
 **Known limit.** The trajectory comes from the same right-hand side that reports dS/dt, so a wrong right-hand side gives a consistent wrong trajectory and passes; dS/dt is not compared with an independent physical value. The run has no heating, so a dropped heating term cannot show. Finite differencing over 10-year intervals adds a truncation error of up to 0.65 percent.
 
