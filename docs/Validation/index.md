@@ -1,6 +1,13 @@
 # Validation
 
-Each physics source of SPIDER has at least one `reference_pinned` test that compares the code with a published benchmark, an analytical limit or an independent implementation. The pages of this tab list these cases, one page per C source file, grouped by the process they describe. Each case gives its reference, its tolerance, its test id and the command that runs it. A full-run regression against the frozen blackbody50 reference complements these cases (`tests/test_regression.py`).
+## What this page checks
+
+This page introduces the scientific validation suite for SPIDER, which tests each physics module.
+Validation means that we compare model outputs against analytical limits, laboratory calibrations, and independent implementations.
+Each physics source file has at least one pinned test, with a stated tolerance, reference value, and discrimination guards.
+If these components are wrong, the interior thermal evolution that SPIDER computes, alone or inside PROTEUS, is wrong.
+The table below lists each validation case, organized by physical process.
+A full-run regression against the frozen blackbody50 reference complements these cases (`tests/test_regression.py`).
 
 Tests in the `unit` tier drive the small C test executables in `tests/c` (`make tests_c`); tests in the `smoke` tier run the `spider` binary (`make`) on short configurations. See [Testing SPIDER](../How-to/test.md) for the tiers and the commands.
 
