@@ -12,9 +12,9 @@ The sections below detail three validation cases, their tolerances, and their te
 
 **Why this check exists.** Runtime configuration flags can fail to disconnect disabled flux routines, or leak residual values into total energy balances. A failure in flux superposition produces incorrect thermal gradients without raising an error.
 
-**What it tests.** The test evaluates the flux superposition architecture when specific transport terms are switched off. A disabled transport mechanism must hold zero flux, within abs 1e-20 W/m^2, which is at least 17 decades below active fluxes. With conduction off, convection gives 9e8 to 2e9 W/m^2 (observed; the test asserts more than 1e3). In a conduction-only run, conduction gives 1.9e-3 to 1.3e-2 W/m^2 (observed). Total flux equals conductive flux to rel 1e-12 at every interior node. The surface node differs by more than 1e3 W/m^2.
+**What it tests.** The test evaluates the flux superposition architecture when specific transport terms are switched off. A disabled transport mechanism must hold zero flux, within abs 1e-20 W/m^2, which is at least 17 decades below the observed active fluxes. With conduction off, convection gives 9e8 to 2e9 W/m^2 (observed; the test asserts more than 1e3). In a conduction-only run, conduction gives 1.9e-3 to 1.3e-2 W/m^2 (observed). Total flux equals conductive flux to rel 1e-12 at every interior node. The surface node differs by more than 1e3 W/m^2.
 
-**How we know the right answer.** Superposition of linear or disjoint flux mechanisms is an analytical identity. Inactive transport terms must vanish to rounding precision, while active terms reproduce isolated components.
+**How we know the right answer.** Superposition of disjoint flux mechanisms is an analytical identity: an inactive transport term must vanish to rounding precision, and in the conduction-only run the total flux must equal the conductive flux. The magnitude of the convective flux is not compared with a reference.
 
 **Why it matters.** SPIDER models mantle cooling by summing the transport terms, so a leaking term changes every flux of the run.
 
@@ -22,7 +22,7 @@ The sections below detail three validation cases, their tolerances, and their te
 
 ??? info "Test details"
     - Reference: Analytical limit: a disabled transport mechanism carries zero flux, and with only conduction enabled the total flux equals the conductive flux at every node except the surface node, which carries the grey-body boundary flux.
-    - Tolerance: abs 1e-20 W/m^2 on the disabled fluxes, at least 17 decades below the active fluxes (convection 9e8 to 2e9 W/m^2 with conduction off; conduction 1.9e-3 to 1.3e-2 W/m^2 in the conduction-only run); rel 1e-12 on the conduction-only identity, and the surface node differs by more than 1e3 W/m^2.
+    - Tolerance: abs 1e-20 W/m^2 on the disabled fluxes, at least 17 decades below the observed active fluxes (observed: convection 9e8 to 2e9 W/m^2 with conduction off, conduction 1.9e-3 to 1.3e-2 W/m^2 in the conduction-only run); rel 1e-12 on the conduction-only identity, and the surface node differs by more than 1e3 W/m^2.
     - Test id: `tests/test_energy.py::test_disabled_transport_mechanisms_carry_zero_flux`
     - Command: `make`, then `pytest -o addopts= tests/test_energy.py::test_disabled_transport_mechanisms_carry_zero_flux`
     - Companion test: `tests/test_energy.py::test_total_flux_assembles_from_transport_components` verifies that total flux equals the sum of transport components at interior basic nodes.
@@ -56,7 +56,7 @@ The sections below detail three validation cases, their tolerances, and their te
 
 **Why it matters.** The steady-state initial condition starts a run from a profile in energy balance.
 
-**Known limit.** The test uses its own copy of the Stefan-Boltzmann constant of the source, so a value that is wrong in both places does not fail it.
+**Known limit.** The test uses its own copy of the Stefan-Boltzmann constant in `constants.c`, so a value that is wrong in both places does not fail it.
 
 ??? info "Test details"
     - Reference: Analytical limit: the steady-state initial condition equalises the energy flow through every basic node and closes the surface radiation balance sigma (T_surf^4 - teqm^4) with the Stefan-Boltzmann constant of constants.c.

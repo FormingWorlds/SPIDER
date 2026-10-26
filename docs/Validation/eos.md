@@ -37,7 +37,7 @@ The sections below detail two validation cases, their tolerances, and their test
 
 **Why it matters.** Compositional controls on mantle viscosity determine how mantle convective vigor responds to planetary bulk composition.
 
-**Known limit.** The test re-encodes the coefficients as in `eos.c`, so a coefficient that is wrong in both copies is not caught; the 2 hand-derived literals catch a transcription error in either copy.
+**Known limit.** The test re-encodes the coefficients as in `eos.c`. The 2 hand-derived literals catch an error that is in both copies at the 4 compositions they probe; a coefficient that affects neither literal is not caught.
 
 ??? info "Test details"
     - Reference: The piecewise Mg/Si log10 viscosity prefactor of Spaargaren et al. (2020). The test re-encodes the published coefficients independently of eos.c and additionally pins the two branch-pair shifts as hand-derived literals (0.2074 and -1.35803), so a transcription error in either copy of the formula surfaces.

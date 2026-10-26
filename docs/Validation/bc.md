@@ -18,7 +18,7 @@ The sections below detail two validation cases, their tolerances, and their test
 
 **Why it matters.** PROTEUS passes the atmospheric radiative flux into SPIDER using option `-SURFACE_BC 4` and `-surface_bc_value`, so SPIDER must echo this flux exactly.
 
-**Known limit.** The test reads only the reported `Fatm` and emissivity; it does not check that the interior total flux at the surface (`Jtot` at node 0, set in `bc.c`) uses the prescribed value. The `SURFACE_BC` switch is in `atmosphere.c`.
+**Known limit.** The test reads only the reported `Fatm` and emissivity; it does not check that the interior total flux at the surface (`Jtot` at node 0, set in `bc.c`) uses the prescribed value. `SURFACE_BC` is read in `atmosphere.c`, `bc.c` and `energy.c`.
 
 ??? info "Test details"
     - Reference: Analytical identity: with SURFACE_BC 4 the surface flux equals the prescribed value, and the reported emissivity is its grey-body inversion.
@@ -41,11 +41,10 @@ The sections below detail two validation cases, their tolerances, and their test
 
 ??? info "Test details"
     - Reference: Analytical identity: the constant-entropy boundary writes ic_surface_entropy (2550 J/kg/K) onto the surface basic node, preserved through the steady-state energy solve into the initial output.
-    - Tolerance: rel 1e-10 (assigned, not solved).
+    - Tolerance: rel 1e-10 (assigned, not solved); the core-side entropy between 2400 and 2700 J/kg/K.
     - Test id: `tests/test_bc.py::test_constant_entropy_bc_pins_the_initial_surface`
     - Command: `make`, then `pytest -o addopts= tests/test_bc.py::test_constant_entropy_bc_pins_the_initial_surface`
     - Companion test: `tests/test_bc.py::test_prescribed_core_flux_slows_cmb_cooling` verifies that core heat flux slows cooling at the core-mantle boundary.
-    - The test also checks that the core-side entropy lies between 2400 and 2700 J/kg/K.
 
 ## Related code
 

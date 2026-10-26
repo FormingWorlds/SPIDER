@@ -10,7 +10,7 @@ The section below details the validation check, its tolerance, and its test comm
 
 ## Pressure profile matches Adams-Williamson closed form
 
-**Why this check exists.** Radial grid generation can suffer from sign errors in the hydrostatic integral or wrong radial bounds; the test evaluates the expected pressure at the code's own radii, so a spacing error is not caught. An error in mesh setup makes the pressure and volume arrays of every physics module wrong.
+**Why this check exists.** Radial grid generation can suffer from sign errors in the hydrostatic integral or a wrong surface radius. An error in mesh setup makes the pressure and volume arrays of every physics module wrong.
 
 **What it tests.** The test evaluates the native Adams-Williamson pressure profile P(r) = -(rhos g / beta)(exp(beta (R - r)) - 1) in closed form. It checks the basic-node pressures through the mantle. A sign-flipped beta and the linear small-beta approximation both fall far outside tolerance, confirming proper discrimination. Sibling test `test_mesh_orderings_interleave_and_shell_masses_close` checks geometric node interleaving and shell mass conservation. Sibling test `test_external_linear_density_mesh_replaces_the_aw_profile` confirms that external meshes replace native profiles cleanly.
 
@@ -18,7 +18,7 @@ The section below details the validation check, its tolerance, and its test comm
 
 **Why it matters.** The mesh module builds the static spatial and pressure framework that every interior routine in SPIDER evaluates. PROTEUS reads radius arrays `radius_b` and pressure arrays `pressure_s` (in `ReadSPIDER` of `spider.py`).
 
-**Known limit.** The native profile assumes an idealized Adams-Williamson compressibility model rather than self-consistent mineralogical structures.
+**Known limit.** The test evaluates the expected pressure at the code's own radii, so a spacing error or a wrong core-mantle boundary radius is caught only by the loose bound on the maximum pressure. The profile assumes an idealised Adams-Williamson compressibility rather than a self-consistent mineral structure.
 
 ??? info "Test details"
     - Reference: Analytical limit: the Adams-Williamson pressure profile P(r) = -(rhos g / beta)(exp(beta (R - r)) - 1) in closed form.

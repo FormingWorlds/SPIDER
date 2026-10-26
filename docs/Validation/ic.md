@@ -10,7 +10,7 @@ The sections below detail three validation cases, their tolerances, and their te
 
 ## Prescribed adiabat entropy sets the initial profile
 
-**Why this check exists.** Initial condition (IC) routines can misinterpret input entropy parameters or fail to write values to the staggered mesh nodes; a gradient ramp error shows only if the profile mean leaves 2600 to 2628.7 J/kg/K. A bug in initial condition setup shifts the starting temperature structure, and the later cooling is wrong too.
+**Why this check exists.** Initial condition (IC) routines can misinterpret input entropy parameters or fail to write values to the staggered mesh nodes. A bug in IC setup shifts the starting temperature structure, and the later cooling is wrong too.
 
 **What it tests.** The test evaluates the prescribed adiabat entropy (2600 J/kg/K at the top staggered node) with the configured gradient ramp. The profile mean lies between the adiabat entropy and that value plus |ic_dsdr| times mantle depth. A run with ic_adiabat_entropy = 2400 shifts the mean by 200 J/kg/K to rel 1e-9, guarding against ignored option inputs. Entropy is positive, with its mean between 1e3 and 1e4 J/kg/K. Top-node entropy matches at t = 0 to rel 1e-3 (observed exact). Sibling test `test_initial_adiabat_is_nearly_flat_until_cooling_imprints_structure` checks that subsequent cooling imprints thermal structure.
 
@@ -18,7 +18,7 @@ The sections below detail three validation cases, their tolerances, and their te
 
 **Why it matters.** The initial adiabat sets the starting thermal state of the magma ocean. SPIDER integrates cooling forward from this baseline.
 
-**Known limit.** The check tests initialization on the staggered grid, but does not benchmark external non-adiabatic initial profiles.
+**Known limit.** A gradient ramp error shows only if the profile mean leaves 2600 to 2628.7 J/kg/K. The check does not cover non-adiabatic initial profiles.
 
 ??? info "Test details"
     - Reference: Analytical limit: the initial condition prescribes the adiabat entropy (2600 J/kg/K at the top staggered node) with the configured small gradient ramp.
@@ -56,7 +56,7 @@ The sections below detail three validation cases, their tolerances, and their te
 
 **Why it matters.** Setting volatile budgets in Earth ocean equivalents allows direct comparison with terrestrial water and carbon inventories in planetary models.
 
-**Known limit.** The test uses its own copy of the OCEAN_MOLES constant of the source, so it checks the conversion, not the definition of the terrestrial ocean mass; a value that is wrong in both places passes.
+**Known limit.** The test uses its own copy of the OCEAN_MOLES constant in `constants.c`, so it checks the conversion, not the definition of the terrestrial ocean mass; a value that is wrong in both places passes.
 
 ??? info "Test details"
     - Reference: The OCEAN_MOLES constant of constants.c (7.68894973907177e22 mol per Earth ocean): initial_kg equals moles times OCEAN_MOLES times the volatile molar mass.

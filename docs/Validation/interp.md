@@ -16,7 +16,7 @@ The section below details the validation check, its tolerance, and its test comm
 
 **How we know the right answer.** Piecewise-linear interpolation reproduces affine data exactly by mathematical definition. Numerical queries match analytical values to rel 1e-14 across nodes, interior intervals, and endpoints.
 
-**Why it matters.** The interpolation layer feeds the tabulated equation-of-state lookups in SPIDER (`eos_lookup.c`).
+**Why it matters.** The interpolation layer feeds the phase boundary in `eos.c`, the tabulated lookups in `eos_lookup.c`, and tables in `bc.c`, `ic.c` and `parameters.c`.
 
 **Known limit.** The case covers 1-D interpolation with unit scalings; the 2-D bilinear case (`test_bilinear_plane_exact_everywhere_including_grid_corner`) and per-column scaling are not part of it.
 

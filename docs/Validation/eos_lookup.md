@@ -10,7 +10,7 @@ The section below details the check, its tolerance, and its test command.
 
 ## Melt density matches independent bilinear evaluation
 
-**Why this check exists.** Table grid reads can suffer from indexing offsets, wrong corner weights, or swapped column scales. A bug in table reading shifts density values without triggering a runtime error.
+**Why this check exists.** Table grid reads can suffer from indexing offsets or wrong corner weights. A bug in table reading shifts the density without an error message; the test checks the density column only, so a wrong scale on another column is not caught.
 
 **What it tests.** The test evaluates the shipped melt density table (1TPa-dK09-elec-free set: de Koker and Stixrude 2009 properties as assembled for Bower et al. 2018). It compares C outputs with an independent Python bilinear check at three off-node (P, S) probe points spanning 7.3 to 89 GPa. The test guards against reading the wrong table: solid-table density at the same probes differs by more than 1 percent. Positive values and the 2000 to 8000 kg/m3 silicate range bound the density scale. Sibling test `test_si_outputs_invariant_under_nondimensionalisation_choice` confirms consistent SI outputs under scaling choices.
 

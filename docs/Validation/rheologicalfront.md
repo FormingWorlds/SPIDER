@@ -14,9 +14,9 @@ The section below details the validation check, its tolerance, and its test comm
 
 **What it tests.** The test evaluates analytical self-consistency: reported front index matches the phi_critical = 0.4 crossing of the melt-fraction profile, and depth equals surface radius minus front radius. It checks that the front depth is positive and bounded by mantle depth, with front pressure located inside the mantle range. Sibling tests pin the un-formed-front limit at t = 0, where the front reports the core-mantle boundary by convention (`test_unformed_front_reports_the_cmb_at_the_fully_molten_start`), and upward migration during bottom-up solidification (`test_front_rises_from_the_cmb_as_the_mantle_solidifies`).
 
-**How we know the right answer.** The front location is recomputed independently from the discrete melt-fraction profile and geometry arrays. The depth identity matches to rel 1e-6, and the index matches to one node of the recomputed crossing.
+**How we know the right answer.** The test recomputes the front location in Python, with the same rule, from the melt-fraction profile and the geometry arrays. The depth identity matches to rel 1e-6, and the index matches to one node of the recomputed crossing.
 
-**Why it matters.** PROTEUS reads `Phi_global` from this front block (`rheological_front_phi` in `ReadSPIDER` of `spider.py`).
+**Why it matters.** The front block marks where the mantle turns from mostly molten to mostly solid. PROTEUS reads neither its index nor its depth: it takes `Phi_global` from the same output block and `RF_depth` from the dynamic front.
 
 **Known limit.** The test recomputes the crossing with the same rule as `get_crossover_index` and allows one node of difference, so a one-node misplacement passes; the code takes the first node below `phi_critical` without interpolation. PROTEUS takes `RF_depth` from the dynamic front (`rheological_front_dynamic`, a crossing of the regime at 1.5), which this test does not cover.
 

@@ -10,7 +10,7 @@ The text below details the check, its tolerance, and its test command.
 
 ## Elements conserved across each reaction pair
 
-**Why this check exists.** Reaction bookkeeping can violate elemental stoichiometry, misapply molar conversions or swap reactant signs; conservation holds for any equilibrium constant, so a wrong equilibrium constant is not caught. A bug in reaction bookkeeping alters total carbon or hydrogen mass during runs.
+**Why this check exists.** Reaction bookkeeping can violate elemental stoichiometry, misapply molar conversions or swap reactant signs. A bug in reaction bookkeeping changes the total carbon or hydrogen mass during a run.
 
 **What it tests.** The test evaluates closed-system elemental budgets for H2O/H2 and CO2/CO reaction pairs of the Bower et al. (2021) three-ocean hydrogen configuration. It checks hydrogen and carbon transfer balances after one 1000-year step. The test guards reaction signs (H2O produced from H2, CO2 from CO in this step), and bounds H2O transfer between 1e16 and 1e20 kg, below 1 percent of H2O inventory. Sibling tests verify reservoir closure to rel 1e-10 (`test_reservoir_closure_for_every_volatile`), and inventory closure to rel 1e-5 (`test_reaction_transfer_balances_the_initial_inventory`).
 
@@ -18,7 +18,7 @@ The text below details the check, its tolerance, and its test command.
 
 **Why it matters.** In a SPIDER run with volatiles, the reaction module sets the volatile chemistry of the magma ocean and its atmosphere. PROTEUS does not use the reaction part of SPIDER.
 
-**Known limit.** The check tests conservation for carbon and hydrogen pairs, but volatile oxygen exchanges with the melt iron buffer.
+**Known limit.** The check covers carbon and hydrogen; volatile oxygen exchanges with the iron buffer of the melt. From reading the code (not tested by a mutation), conservation holds for any equilibrium constant, so a wrong equilibrium constant is not caught.
 
 ??? info "Test details"
     - Reference: Analytical conservation: closed-system elemental budgets across the H2O/H2 and CO2/CO reaction pairs of the Bower et al. (2021) three-ocean hydrogen configuration.
