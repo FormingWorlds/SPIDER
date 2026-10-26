@@ -32,7 +32,7 @@ jobs:
           ./configure --with-fc=0 --with-cxx=0 --with-cc=gcc --download-sundials2 --download-mpich --download-f2cblaslapack PETSC_ARCH=arch-test
           make all
     - name: Install Python requirements
-      run: pip install -r py/requirements.txt pytest pytest-timeout gcovr 'proteus-mpl>=1.4.0'
+      run: pip install -r py/requirements.txt pytest pytest-timeout gcovr 'proteus-mpl>=1.5.0'
     - name: Build with coverage instrumentation
       run: |
           make -j CFLAGS_EXTRA="--coverage"

@@ -59,7 +59,7 @@ jobs:
         key: ${{ runner.os }}-petsc-63b72503
         fail-on-cache-miss: true
     - name: Install Python requirements
-      run: pip install -r py/requirements.txt pytest pytest-timeout ruff gcovr 'proteus-mpl>=1.4.0'
+      run: pip install -r py/requirements.txt pytest pytest-timeout ruff gcovr 'proteus-mpl>=1.5.0'
     - name: Build with coverage instrumentation
       run: |
           make -j CFLAGS_EXTRA="--coverage"
@@ -149,7 +149,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6
       - name: Install Python requirements
-        run: pip install -r py/requirements.txt pytest pytest-timeout 'proteus-mpl>=1.4.0'
+        run: pip install -r py/requirements.txt pytest pytest-timeout 'proteus-mpl>=1.5.0'
       - name: Run installer
         run: ./tools/get_spider.sh
       - name: Check the installer produced a runnable binary
