@@ -23,7 +23,7 @@ The section below details the check, its tolerance, and its test command.
 ![Melt density from eos_lookup.c against an independent bilinear read of the table](../assets/validation/eos_lookup_melt_density.svg#only-light){ width="80%" }
 ![Melt density from eos_lookup.c against an independent bilinear read of the table](../assets/validation/eos_lookup_melt_density_dark.svg#only-dark){ width="80%" }
 
-**How to read the plot.** The x-axis is the melt density from an independent bilinear read of `density_melt.dat` in numpy and the y-axis the density from eos_lookup.c, at the 3 off-node probes from 7.3 to 89 GPa. The circles are the asserted C values and the line is 1:1. The crosses are the solid-table densities at the same probes, which the test requires to differ by more than 1 %. A pass means that the circles lie on the line (relative 1e-9).
+**How to read the plot.** The x-axis is the melt density from an independent bilinear read of `density_melt.dat` in numpy. The y-axis is the density from eos_lookup.c, at the 3 off-node probes from 7.3 to 89 GPa. The circles are the asserted C values, and the line is 1:1. The crosses are the solid-table densities at the same probes, which must differ by more than 1 %. A pass means that the circles lie on the line (relative 1e-9).
 
 ??? info "Test details"
     - Reference: Cross-implementation cross-check: an independent numpy bilinear evaluation of the shipped melt density table (1TPa-dK09-elec-free set: de Koker and Stixrude 2009 properties as assembled for Bower et al. 2018).

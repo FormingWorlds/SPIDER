@@ -23,7 +23,7 @@ The text below details the check, its tolerance, and its test command.
 ![Reported global melt fraction at 1200 yr against its 3 definitions](../assets/validation/twophase_global_melt_fraction.svg#only-light){ width="80%" }
 ![Reported global melt fraction at 1200 yr against its 3 definitions](../assets/validation/twophase_global_melt_fraction_dark.svg#only-dark){ width="80%" }
 
-**How to read the plot.** The circles are the global melt fraction at 1200 yr in 4 forms: the reported phi_global, Mliq / Mmantle and the mass-weighted mean of the staggered-node melt fraction, which the test requires to agree (relative 1e-10), and the unweighted mean, which it requires to be more than 1e-3 away. The grey band is the reported value $\pm$ 1e-3. Values shown to 2 significant digits, because the run output moves by about 2.5e-6 between PETSc builds. A pass means that the first 3 circles lie in the band and the last one outside it.
+**How to read the plot.** The circles are the global melt fraction at 1200 yr in 4 forms. The first 3 are the reported `phi_global`, the liquid over mantle mass Mliq / Mmantle, and the mass-weighted mean of the staggered-node melt fraction. The test requires these 3 to agree (relative 1e-10), and the unweighted mean to be more than 1e-3 away. The grey band is the reported value $\pm$ 1e-3. Values are shown to 2 significant digits, because the run output moves by about 2.5e-6 between builds of the PETSc library. A pass means that the first 3 circles lie in the band and the last outside it; the test checks the unrounded values.
 
 ??? info "Test details"
     - Reference: Analytical identity: the global melt fraction equals Mliq/Mmantle and the mass-weighted mean of the staggered melt-fraction profile.

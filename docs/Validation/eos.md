@@ -23,7 +23,7 @@ The sections below detail two validation cases, their tolerances, and their test
 ![Liquidus entropy against pressure from the table and from eos.c at 3 probes](../assets/validation/eos_phase_boundary.svg#only-light){ width="80%" }
 ![Liquidus entropy against pressure from the table and from eos.c at 3 probes](../assets/validation/eos_phase_boundary_dark.svg#only-dark){ width="80%" }
 
-**How to read the plot.** The x-axis is the pressure and the y-axis the entropy of the melt phase boundary. The line is the liquidus table `liquidus_A11_H13.dat` read with numpy (every 10th node, context). The circles are the asserted values of eos.c at the 3 probes: the table edge at 0, a mid-mantle node at 10 GPa and an off-node point at 65.5 GPa. The cross is the solidus at 10 GPa, which the test requires to be more than 100 away. A pass means that the circles lie on the line (relative 1e-12).
+**How to read the plot.** The x-axis is the pressure and the y-axis the entropy of the liquidus, the melt phase boundary. The line is the liquidus table `liquidus_A11_H13.dat` read with numpy (every 10th node, context). The circles are the asserted values of eos.c at 3 probes. These are the table edge at 0 GPa, a table node at 10 GPa, and an off-node point at 65.5 GPa. The cross is the solidus at 10 GPa, 1524.43 J kg$^{-1}$ K$^{-1}$, which must differ from the code value by more than 100. A pass means that the circles lie on the line (relative 1e-12).
 
 ??? info "Test details"
     - Reference: Cross-implementation cross-check of the loaded melt phase boundary against an independent read of liquidus_A11_H13.dat (Andrault et al. 2011 liquidus with the Hirschmann 2013 solidus companion).
@@ -47,7 +47,7 @@ The sections below detail two validation cases, their tolerances, and their test
 ![Spaargaren viscosity prefactor against Mg/Si with the eos.c shifts](../assets/validation/eos_spaargaren_viscosity.svg#only-light){ width="80%" }
 ![Spaargaren viscosity prefactor against Mg/Si with the eos.c shifts](../assets/validation/eos_spaargaren_viscosity_dark.svg#only-dark){ width="80%" }
 
-**How to read the plot.** The x-axis is Mg/Si and the y-axis the log10 viscosity prefactor. The line is the piecewise prefactor of Spaargaren et al. (2020) as the test re-encodes it (context), and the hollow squares are its values at the 2 reference compositions, 1.6 and 0.9. The circles are each reference value plus the asserted shift of eos.c, the melt log10 viscosity minus the configured 2.0, at 1.4 and at 1.2. A pass means that the circles lie on the line (absolute 1e-9), 1 above and 1 below its reference.
+**How to read the plot.** The x-axis is the Mg/Si ratio and the y-axis the log10 viscosity prefactor. The line is the piecewise prefactor of Spaargaren et al. (2020), as the test re-encodes it (context). The hollow squares are its values at the 2 reference compositions, 1.6 and 0.9. The circles are each reference value plus the asserted shift of eos.c, at 1.4 and at 1.2. The shift is the melt log10 viscosity minus the configured 2.0. A pass means that the circles lie on the line (absolute 1e-9), the one at 1.4 above its square and the one at 1.2 below.
 
 ??? info "Test details"
     - Reference: The piecewise Mg/Si log10 viscosity prefactor of Spaargaren et al. (2020). The test re-encodes the published coefficients independently of eos.c and additionally pins the two branch-pair shifts as hand-derived literals (0.2074 and -1.35803), so a transcription error in either copy of the formula surfaces.

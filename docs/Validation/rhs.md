@@ -21,7 +21,7 @@ The section below details the validation check, its tolerance, and its test comm
 ![Reported dS/dt and the slope of S between the 10 and 20 yr outputs against radius, and their relative difference with the tolerance](../assets/validation/rhs_dsdt_finite_difference.svg#only-light){ width="80%" }
 ![Reported dS/dt and the slope of S between the 10 and 20 yr outputs against radius, and their relative difference with the tolerance](../assets/validation/rhs_dsdt_finite_difference_dark.svg#only-dark){ width="80%" }
 
-**How to read the plot.** Top: the cooling rate -dS/dt that rhs.c reports, as the mean of the 10 and 20 yr outputs (line), and the slope of the entropy between these outputs (dashed), at every staggered node of the blackbody50 run. Bottom: their relative difference per node (dots) and the tolerance of the assertion (dashed); the largest difference is 0.65 percent.
+**How to read the plot.** Top: the cooling rate -dS/dt that rhs.c reports, as the mean of the 10 and 20 yr outputs (line). The dashed line is the slope of the entropy between these outputs, at every staggered node of the blackbody50 run. Bottom: their relative difference per node (dots) and the tolerance of the assertion (dashed); the largest difference is 0.65 percent.
 
 **Known limit.** The trajectory comes from the same right-hand side that reports dS/dt, so a wrong right-hand side gives a consistent wrong trajectory and passes; dS/dt is not compared with an independent physical value. The run has no heating, so a dropped heating term cannot show. Finite differencing over 10-year intervals adds a truncation error of up to 0.65 percent.
 

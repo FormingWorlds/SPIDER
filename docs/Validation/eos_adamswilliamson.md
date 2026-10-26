@@ -23,7 +23,7 @@ The text below details the check, its tolerance, and its test command.
 ![Adams-Williamson density against pressure from the closed form and from the code](../assets/validation/eos_adamswilliamson_density.svg#only-light){ width="80%" }
 ![Adams-Williamson density against pressure from the closed form and from the code](../assets/validation/eos_adamswilliamson_density_dark.svg#only-dark){ width="80%" }
 
-**How to read the plot.** The x-axis is the pressure and the y-axis the density. The line is the closed form $\rho_s - P\beta/g$ and the dashed line the form with a sign-flipped $\beta$, which the test rejects (context). The circles are the asserted densities of eos_adamswilliamson.c at the surface, at 10 GPa and at 135 GPa. A pass means that the circles lie on the line (relative 1e-12).
+**How to read the plot.** The x-axis is the pressure and the y-axis the density. The line is the closed form $\rho_s - P\beta/g$, with surface density $\rho_s$, compressibility parameter $\beta$ and gravity $g$. The dashed line is the form with a sign-flipped $\beta$, which the test rejects (context). The circles are the asserted densities of eos_adamswilliamson.c at the surface, at 10 GPa and at 135 GPa. A pass means that the circles lie on the line (relative 1e-12).
 
 ??? info "Test details"
     - Reference: Analytical limit: rho(P) = rhos - P beta / g in closed form, with the blackbody50 PREM lower-mantle fit parameters.

@@ -23,7 +23,7 @@ The section below details the validation check, its tolerance, and its test comm
 ![Basic-node pressure against radius on the Adams-Williamson closed form](../assets/validation/mesh_pressure_profile.svg#only-light){ width="80%" }
 ![Basic-node pressure against radius on the Adams-Williamson closed form](../assets/validation/mesh_pressure_profile_dark.svg#only-dark){ width="80%" }
 
-**How to read the plot.** The x-axis is the radius and the y-axis the pressure. The line is the Adams-Williamson closed form (context), and the dashed and dotted lines are the constant-density profile and the form with a sign-flipped $\beta$, which the test rejects at the core-mantle boundary. The circles are the asserted pressures of mesh.c at the basic nodes. A pass means that the circles lie on the line (relative 1e-12).
+**How to read the plot.** The x-axis is the radius and the y-axis the pressure. The line is the Adams-Williamson closed form (context). The dashed and dotted lines are the constant-density profile and the form with a sign-flipped compressibility parameter $\beta$. The test rejects both at the core-mantle boundary. The circles are the asserted pressures of mesh.c at the basic nodes (the cell boundaries of the mesh). A pass means that the circles lie on the line (relative 1e-12).
 
 ??? info "Test details"
     - Reference: Analytical limit: the Adams-Williamson pressure profile P(r) = -(rhos g / beta)(exp(beta (R - r)) - 1) in closed form.

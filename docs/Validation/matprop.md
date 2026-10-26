@@ -23,7 +23,7 @@ The text below details the check, its tolerance, and its test command.
 ![log10 viscosity against radius for the hot molten and the cold initial condition](../assets/validation/matprop_viscosity_end_members.svg#only-light){ width="80%" }
 ![log10 viscosity against radius for the hot molten and the cold initial condition](../assets/validation/matprop_viscosity_end_members_dark.svg#only-dark){ width="80%" }
 
-**How to read the plot.** The x-axis is the radius and the y-axis the log10 viscosity at the basic nodes. The solid line is the hot initial condition, all 50 nodes molten, asserted at the melt end member 2 (dashed, within 0.01). The dash-dotted line is the cold initial condition at 1600 J kg$^{-1}$ K$^{-1}$, and the circles its asserted nodes with a melt fraction below $10^{-3}$, at the solid end member 21 (dotted, within 0.05). A pass means that the solid line lies on the dashed line and the circles on the dotted line.
+**How to read the plot.** The x-axis is the radius and the y-axis the log10 viscosity in Pa s at the basic nodes (the cell boundaries of the mesh). The solid line is the hot initial condition, with all 50 nodes molten. It is asserted at the melt end member, the configured melt viscosity of $10^2$ Pa s (dashed, to 0.01 in log10). The dash-dotted line is the cold initial condition at 1600 J kg$^{-1}$ K$^{-1}$. Its circles are the asserted nodes with a melt fraction below $10^{-3}$, at the solid end member $10^{21}$ Pa s (dotted, to 0.05). A pass means that the solid line lies on the dashed line and the circles on the dotted line.
 
 ??? info "Test details"
     - Reference: Analytical limit: away from the rheological transition the blended viscosity recovers the configured end-members (melt_log10visc = 2, solid_log10visc = 21).
