@@ -21,15 +21,22 @@ jobs:
     # Builds (or restores) the PETSc dependency. Separated from the test
     # job so the test job can carry a tight wallclock cap while a cold
     # PETSc build from source stays possible.
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
     - uses: actions/checkout@v6
+    - name: Runner OS release
+      id: os
+      run: . /etc/os-release && echo "release=${ID}-${VERSION_ID}" >> "$GITHUB_OUTPUT"
     - name: PETSc cache
       id: petsc-cache
       uses: actions/cache@v5
       with:
         path: petsc
-        key: ${{ runner.os }}-petsc-63b72503
+        key: ${{ runner.os }}-${{ steps.os.outputs.release }}-petsc-63b72503
+    - name: Python 3.12 for the PETSc configure scripts
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.12"
     - name: Build PETSc
       if: steps.petsc-cache.outputs.cache-hit != 'true'
       run: |
@@ -41,7 +48,7 @@ jobs:
 
   test:
     needs: petsc
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     # Hard wallclock cap on the fast tier; slower work belongs in the
     # nightly workflow.
     timeout-minutes: 10
@@ -52,11 +59,14 @@ jobs:
     - uses: actions/checkout@v6
       with:
         fetch-depth: 0
+    - name: Runner OS release
+      id: os
+      run: . /etc/os-release && echo "release=${ID}-${VERSION_ID}" >> "$GITHUB_OUTPUT"
     - name: PETSc cache
       uses: actions/cache@v5
       with:
         path: petsc
-        key: ${{ runner.os }}-petsc-63b72503
+        key: ${{ runner.os }}-${{ steps.os.outputs.release }}-petsc-63b72503
         fail-on-cache-miss: true
     - name: Install Python requirements
       run: pip install -r py/requirements.txt pytest pytest-timeout ruff gcovr 'proteus-mpl>=1.5.0'
@@ -145,7 +155,7 @@ jobs:
                 --txt --fail-under-line "$FAST"
 
   installer-smoke:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v6
       - name: Install Python requirements
