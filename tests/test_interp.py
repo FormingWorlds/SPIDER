@@ -85,12 +85,13 @@ def test_affine_data_reproduced_exactly_including_last_node(
 
     def figure():
         import matplotlib.pyplot as plt
+        import numpy as np
 
-        nodes = list(range(11))
+        nodes = np.loadtxt(linear_table_1d)
         fig, ax = plt.subplots(figsize=(6, 4))
         ax.plot(
-            nodes,
-            [affine(x) for x in nodes],
+            nodes[:, 0],
+            nodes[:, 1],
             's',
             mfc='none',
             ms=8,

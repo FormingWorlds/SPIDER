@@ -253,7 +253,7 @@ def test_abundance_ic_realises_the_requested_inventory(abundance_ic_run, validat
 
         names = list(ABUNDANCE_PPM)
         x = np.arange(len(names))
-        fig, (left, right) = plt.subplots(1, 2, figsize=(8, 3.6))
+        fig, (left, right) = plt.subplots(1, 2, figsize=(8, 4.2))
         left.bar(x, [requested[n] for n in names], width=0.6, alpha=0.35, label='Requested')
         left.plot(x, [realised[n] for n in names], 'o', zorder=3, label='Realised reservoirs')
         left.set_xticks(x, names)
@@ -264,7 +264,7 @@ def test_abundance_ic_realises_the_requested_inventory(abundance_ic_run, validat
         right.axhline(1.0, ls='--')
         right.plot([0, 1, 2], ratio, 'o')
         right.set_xticks([0, 1, 2], ['H', 'C', 'O'])
-        right.set_ylabel('Realised / requested moles')
+        right.set_ylabel('Mole ratio')
         fig.tight_layout()
         return fig
 
@@ -341,7 +341,13 @@ def test_ocean_moles_ic_converts_moles_to_mass(ocean_moles_ic_run, validation_pl
         names = list(MOLES_OCEANS)
         x = np.arange(len(names))
         fig, ax = plt.subplots(figsize=(6, 4))
-        ax.bar(x, closed, width=0.6, label='Moles $\\times$ OCEAN_MOLES $\\times$ molar mass')
+        ax.bar(
+            x,
+            closed,
+            width=0.6,
+            alpha=0.35,
+            label='Moles $\\times$ OCEAN_MOLES $\\times$ molar mass',
+        )
         ax.plot(x, stored, 'o', zorder=3, label='Stored initial_kg')
         ax.plot(
             [names.index('CO2')], [wrong], 'x', ms=10, label='CO$_2$ with the CO molar mass'

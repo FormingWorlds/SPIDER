@@ -23,7 +23,7 @@ The sections below detail three validation cases, their tolerances, and their te
 ![Initial entropy profiles for ic_adiabat_entropy 2600 and 2400](../assets/validation/ic_adiabat_profile.svg#only-light){ width="80%" }
 ![Initial entropy profiles for ic_adiabat_entropy 2600 and 2400](../assets/validation/ic_adiabat_profile_dark.svg#only-dark){ width="80%" }
 
-**How to read the plot.** The x-axis is the radius and the y-axis the entropy at the staggered nodes (the cell centres of the mesh) at $t$ = 0. The solid line is the asserted profile for `ic_adiabat_entropy` = 2600. The dashed line is the rerun with 2400, which must be 200 J kg$^{-1}$ K$^{-1}$ lower on average. The circle is the asserted top staggered node at 2600. The dotted line is the mean of the 2600 profile, and the grey band its asserted range, 2600 to 2628.7. A pass means that the circle sits at 2600, the dotted line inside the band, and the dashed line 200 below the solid one.
+**How to read the plot.** The x-axis is the radius and the y-axis the entropy at the staggered nodes (the cell centres of the mesh) at $t$ = 0. The solid line is the asserted profile for `ic_adiabat_entropy` = 2600. The dashed line is the rerun with 2400, whose mean must be 200 J kg$^{-1}$ K$^{-1}$ lower (relative 1e-9). The circle is the asserted top staggered node, 2600 to relative 1e-3. The dotted line is the mean of the 2600 profile, and the grey band its asserted range, 2600 to 2628.7. A pass means that the circle sits at 2600, the dotted line inside the band, and the dashed line 200 below the solid one.
 
 ??? info "Test details"
     - Reference: Analytical limit: the initial condition prescribes the adiabat entropy (2600 J/kg/K at the top staggered node) with the configured small gradient ramp.

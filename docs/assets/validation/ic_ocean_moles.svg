@@ -904,7 +904,7 @@ L 131.485007 69945.473152
 L 131.485007 17.894545 
 L 79.342694 17.894545 
 z
-" clip-path="url(#pf4f4f83d4f)" style="fill: #10151b"/>
+" clip-path="url(#pf4f4f83d4f)" style="fill: #10151b; opacity: 0.35"/>
    </g>
    <g id="patch_4">
     <path d="M 166.24655 69945.473152 
@@ -912,7 +912,7 @@ L 218.388863 69945.473152
 L 218.388863 231.785455 
 L 166.24655 231.785455 
 z
-" clip-path="url(#pf4f4f83d4f)" style="fill: #10151b"/>
+" clip-path="url(#pf4f4f83d4f)" style="fill: #10151b; opacity: 0.35"/>
    </g>
    <g id="patch_5">
     <path d="M 253.150405 69945.473152 
@@ -920,7 +920,7 @@ L 305.292719 69945.473152
 L 305.292719 158.784894 
 L 253.150405 158.784894 
 z
-" clip-path="url(#pf4f4f83d4f)" style="fill: #10151b"/>
+" clip-path="url(#pf4f4f83d4f)" style="fill: #10151b; opacity: 0.35"/>
    </g>
    <g id="patch_6">
     <path d="M 340.054261 69945.473152 
@@ -928,7 +928,7 @@ L 392.196574 69945.473152
 L 392.196574 130.665022 
 L 340.054261 130.665022 
 z
-" clip-path="url(#pf4f4f83d4f)" style="fill: #10151b"/>
+" clip-path="url(#pf4f4f83d4f)" style="fill: #10151b; opacity: 0.35"/>
    </g>
    <g id="line2d_42">
     <defs>
@@ -1251,7 +1251,7 @@ L 249.599268 43.2
 L 249.599268 37.6 
 L 233.599268 37.6 
 z
-" style="fill: #10151b"/>
+" style="fill: #10151b; opacity: 0.35"/>
     </g>
     <g id="text_11">
      <!-- Moles $\times$ OCEAN_MOLES $\times$ molar mass -->

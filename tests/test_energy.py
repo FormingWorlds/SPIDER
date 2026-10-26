@@ -82,12 +82,13 @@ def test_disabled_transport_mechanisms_carry_zero_flux(
     jcond_nc = data_si(doc_nc, 'Jcond_b')  # W/m^2
     # atol=1e-20 W/m^2 sits 29 decades below the active fluxes in this
     # state (9e8 to 2e9 W/m^2); the observed values are exactly zero.
-    np.testing.assert_allclose(jcond_nc, 0.0, atol=1e-20)
+    jcond_nc_max = np.abs(jcond_nc).max()
+    assert jcond_nc_max <= 1e-20
     # Wrong-path guard: convection must remain active, otherwise the
     # zero above would only prove a dead run.
-    jconv_nc = data_si(doc_nc, 'Jconv_b')  # W/m^2
+    jconv_nc_max = np.abs(data_si(doc_nc, 'Jconv_b')).max()  # W/m^2
     active_min = 1e3
-    assert np.abs(jconv_nc).max() > active_min
+    assert jconv_nc_max > active_min
 
     # Everything but conduction off: Jtot reduces to Jcond alone.
     cond_only = cached_spider_run(
@@ -104,8 +105,10 @@ def test_disabled_transport_mechanisms_carry_zero_flux(
         name='conduction_only',
     )
     doc_co = read_output(cond_only, 0)
-    for name in ('Jconv_b', 'Jmix_b', 'Jgrav_b'):
-        np.testing.assert_allclose(data_si(doc_co, name), 0.0, atol=1e-20)
+    off_max = np.max(
+        [np.abs(data_si(doc_co, n)).max() for n in ('Jconv_b', 'Jmix_b', 'Jgrav_b')]
+    )
+    assert off_max <= 1e-20
     jtot_co = data_si(doc_co, 'Jtot_b')  # W/m^2
     jcond_co = data_si(doc_co, 'Jcond_b')  # W/m^2
     # Interior nodes: the assembly collapses to the conductive flux with
@@ -113,7 +116,8 @@ def test_disabled_transport_mechanisms_carry_zero_flux(
     np.testing.assert_allclose(jtot_co[1:], jcond_co[1:], rtol=1e-12, atol=1e-20)
     # Edge case, surface node: the grey-body boundary flux (8e5 W/m^2)
     # overrides the tiny conductive flux (0.01 W/m^2) at index 0.
-    assert abs(jtot_co[0] - jcond_co[0]) > active_min
+    top_gap = abs(jtot_co[0] - jcond_co[0])
+    assert top_gap > active_min
 
     # Scale guard on the full-physics reference state: the peak total
     # flux at the fully molten IC is convective and large (observed
@@ -124,7 +128,6 @@ def test_disabled_transport_mechanisms_carry_zero_flux(
     def figure():
         import matplotlib.pyplot as plt
 
-        off = max(np.abs(data_si(doc_co, n)).max() for n in ('Jconv_b', 'Jmix_b', 'Jgrav_b'))
         names = [
             'Off: Jcond',
             'Only conduction:\nJconv, Jmix, Jgrav',
@@ -132,12 +135,7 @@ def test_disabled_transport_mechanisms_carry_zero_flux(
             'Only conduction:\nJtot - Jcond, top',
         ]
         values = shown(
-            [
-                np.abs(jcond_nc).max(),
-                off,
-                np.abs(jconv_nc).max(),
-                abs(jtot_co[0] - jcond_co[0]),
-            ],
+            [jcond_nc_max, off_max, jconv_nc_max, top_gap],
             digits=2,
         )
         fig, ax = plt.subplots(figsize=(6, 4))
@@ -298,7 +296,7 @@ def test_radiogenic_heating_pins_two_isotope_decay(heating_run, validation_plot)
         t = np.linspace(0.0, 300.0, 61)
         al26, k40 = isotopes(t)
         fig, ax = plt.subplots(figsize=(6, 4))
-        ax.plot(t, al26 + k40, label='Sum of the 2 isotopes')
+        ax.plot(t, al26 + k40, lw=6, alpha=0.35, label='Sum of the 2 isotopes')
         ax.plot(t, al26, '--', label='al26 alone, half-life 100 yr')
         ax.plot(t, k40, ':', label='k40 alone, half-life 200 yr')
         ax.plot(
@@ -310,7 +308,7 @@ def test_radiogenic_heating_pins_two_isotope_decay(heating_run, validation_plot)
         )
         ax.set_yscale('log')
         ax.set_xlabel('Time [yr]')
-        ax.set_ylabel('Radiogenic heating [W kg$^{-1}$]')
+        ax.set_ylabel('Heating [W kg$^{-1}$]')
         ax.legend(fontsize=8)
         fig.tight_layout()
         return fig
