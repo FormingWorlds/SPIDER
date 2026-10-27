@@ -52,7 +52,9 @@ def plane_table_2d(tmp_path_factory):
 
 @pytest.mark.physics_invariant
 @pytest.mark.reference_pinned
-def test_affine_data_reproduced_exactly_including_last_node(c_test, linear_table_1d):
+def test_affine_data_reproduced_exactly_including_last_node(
+    c_test, linear_table_1d, validation_plot
+):
     """Piecewise-linear interpolation reproduces y = 2x + 1 exactly.
 
     Analytical limit: linear interpolation is exact on affine data at
@@ -60,20 +62,55 @@ def test_affine_data_reproduced_exactly_including_last_node(c_test, linear_table
     table node exactly, the edge where an index search may step out of
     the array.
     """
+    slope, intercept, queries = 2.0, 1.0, (0.0, 2.5, 7.0, 10.0)
+
+    def affine(x):
+        return slope * x + intercept
+
     out = c_test(
         'test_interp',
-        ('-file_1d', str(linear_table_1d), '-x_1d', '0.0,2.5,7.0,10.0'),
+        ('-file_1d', str(linear_table_1d), '-x_1d', ','.join(str(q) for q in queries)),
     )
-    assert out['y_1d'] == pytest.approx([1.0, 6.0, 15.0, 21.0], rel=1e-14)
+    assert out['y_1d'] == pytest.approx([affine(q) for q in queries], rel=1e-14)
     # The derivative of the affine data is the constant slope 2.
-    assert out['dydx_1d'] == pytest.approx([2.0] * 4, rel=1e-14)
+    assert out['dydx_1d'] == pytest.approx([slope] * 4, rel=1e-14)
     # Nearest-neighbour discrimination: at x = 2.5 the neighbouring node
     # values are 5 and 7; both sit far outside the tolerance around 6.
-    assert abs(out['y_1d'][1] - 5.0) > 0.5
-    assert abs(out['y_1d'][1] - 7.0) > 0.5
+    neighbours = (affine(2.0), affine(3.0))
+    assert abs(out['y_1d'][1] - neighbours[0]) > 0.5
+    assert abs(out['y_1d'][1] - neighbours[1]) > 0.5
     # Sign and scale guards on the pinned interior value.
     assert out['y_1d'][1] > 0
     assert 1.0 < out['y_1d'][1] < 21.0
+
+    def figure():
+        import matplotlib.pyplot as plt
+        import numpy as np
+
+        nodes = np.loadtxt(linear_table_1d)
+        fig, ax = plt.subplots(figsize=(6, 4))
+        ax.plot(
+            nodes[:, 0],
+            nodes[:, 1],
+            's',
+            mfc='none',
+            ms=8,
+            label='Table nodes of $y = 2x + 1$',
+        )
+        ax.plot(
+            [queries[0], queries[-1]],
+            [affine(queries[0]), affine(queries[-1])],
+            label='$y = 2x + 1$',
+        )
+        ax.plot([queries[1]] * 2, neighbours, 'x', ms=10, label='Nearest nodes at $x$ = 2.5')
+        ax.plot(queries, out['y_1d'], 'o', zorder=3, label='interp.c at the 4 queries')
+        ax.set_xlabel('$x$')
+        ax.set_ylabel('$y$')
+        ax.legend(fontsize=8)
+        fig.tight_layout()
+        return fig
+
+    validation_plot(figure, 'interp_affine')
 
 
 @pytest.mark.physics_invariant

@@ -15,6 +15,7 @@ import numpy as np
 import pytest
 
 from tests._json_utils import atmosphere_si, data_si, read_output
+from tests._plot_utils import shown
 
 pytestmark = [pytest.mark.smoke, pytest.mark.timeout(120)]
 
@@ -61,7 +62,9 @@ def test_total_flux_assembles_from_transport_components(blackbody_short):
 
 @pytest.mark.physics_invariant
 @pytest.mark.reference_pinned
-def test_disabled_transport_mechanisms_carry_zero_flux(blackbody_short, cached_spider_run):
+def test_disabled_transport_mechanisms_carry_zero_flux(
+    blackbody_short, cached_spider_run, validation_plot
+):
     """Each disabled transport mechanism contributes exactly zero flux.
 
     Analytical anchor: a transport mechanism switched off by its option
@@ -79,11 +82,13 @@ def test_disabled_transport_mechanisms_carry_zero_flux(blackbody_short, cached_s
     jcond_nc = data_si(doc_nc, 'Jcond_b')  # W/m^2
     # atol=1e-20 W/m^2 sits 29 decades below the active fluxes in this
     # state (9e8 to 2e9 W/m^2); the observed values are exactly zero.
-    np.testing.assert_allclose(jcond_nc, 0.0, atol=1e-20)
+    jcond_nc_max = np.abs(jcond_nc).max()
+    assert jcond_nc_max <= 1e-20
     # Wrong-path guard: convection must remain active, otherwise the
     # zero above would only prove a dead run.
-    jconv_nc = data_si(doc_nc, 'Jconv_b')  # W/m^2
-    assert np.abs(jconv_nc).max() > 1e3
+    jconv_nc_max = np.abs(data_si(doc_nc, 'Jconv_b')).max()  # W/m^2
+    active_min = 1e3
+    assert jconv_nc_max > active_min
 
     # Everything but conduction off: Jtot reduces to Jcond alone.
     cond_only = cached_spider_run(
@@ -100,8 +105,10 @@ def test_disabled_transport_mechanisms_carry_zero_flux(blackbody_short, cached_s
         name='conduction_only',
     )
     doc_co = read_output(cond_only, 0)
-    for name in ('Jconv_b', 'Jmix_b', 'Jgrav_b'):
-        np.testing.assert_allclose(data_si(doc_co, name), 0.0, atol=1e-20)
+    off_max = np.max(
+        [np.abs(data_si(doc_co, n)).max() for n in ('Jconv_b', 'Jmix_b', 'Jgrav_b')]
+    )
+    assert off_max <= 1e-20
     jtot_co = data_si(doc_co, 'Jtot_b')  # W/m^2
     jcond_co = data_si(doc_co, 'Jcond_b')  # W/m^2
     # Interior nodes: the assembly collapses to the conductive flux with
@@ -109,13 +116,41 @@ def test_disabled_transport_mechanisms_carry_zero_flux(blackbody_short, cached_s
     np.testing.assert_allclose(jtot_co[1:], jcond_co[1:], rtol=1e-12, atol=1e-20)
     # Edge case, surface node: the grey-body boundary flux (8e5 W/m^2)
     # overrides the tiny conductive flux (0.01 W/m^2) at index 0.
-    assert abs(jtot_co[0] - jcond_co[0]) > 1e3
+    top_gap = abs(jtot_co[0] - jcond_co[0])
+    assert top_gap > active_min
 
     # Scale guard on the full-physics reference state: the peak total
     # flux at the fully molten IC is convective and large (observed
     # 2e9 W/m^2); a nondimensional leak would sit near unity.
     jtot_full = data_si(read_output(blackbody_short, 0), 'Jtot_b')
     assert 1e6 < np.abs(jtot_full).max() < 1e12  # W/m^2
+
+    def figure():
+        import matplotlib.pyplot as plt
+
+        names = [
+            'Off: Jcond',
+            'Only conduction:\nJconv, Jmix, Jgrav',
+            'Off: Jconv',
+            'Only conduction:\nJtot - Jcond, top',
+        ]
+        values = shown(
+            [jcond_nc_max, off_max, jconv_nc_max, top_gap],
+            digits=2,
+        )
+        fig, ax = plt.subplots(figsize=(6, 4))
+        ax.axhline(active_min, ls='--', label='Lower bound of the 2 active fluxes, 1e3')
+        ax.plot(range(4), values, 'o', zorder=3, label='Largest |flux| over the nodes')
+        ax.set_xticks(range(4), names, fontsize=8)
+        ax.set_yscale('symlog', linthresh=1e-3)
+        ax.set_yticks([0.0, 1e-2, 1e2, 1e6, 1e10])
+        ax.set_ylim(-1e-3, 1e12)
+        ax.set_ylabel('Flux [W m$^{-2}$]')
+        ax.legend(fontsize=8, loc='upper left')
+        fig.tight_layout()
+        return fig
+
+    validation_plot(figure, 'energy_disabled_transport')
 
 
 @pytest.mark.physics_invariant
@@ -212,7 +247,7 @@ def heating_run(cached_spider_run):
 
 @pytest.mark.physics_invariant
 @pytest.mark.reference_pinned
-def test_radiogenic_heating_pins_two_isotope_decay(heating_run):
+def test_radiogenic_heating_pins_two_isotope_decay(heating_run, validation_plot):
     """Radiogenic heating sums both isotopes and follows exponential decay.
 
     Anchor: analytical limit. Each radionuclide contributes
@@ -221,8 +256,13 @@ def test_radiogenic_heating_pins_two_isotope_decay(heating_run):
     3.57676e-6 W/kg, and after 200 years (two al26 half-lives, one k40
     half-life) the total falls to 0.2506 of its initial value.
     """
+    t_late = 200
+
+    def isotopes(t):
+        return H_AL26 * 2.0 ** (-t / 100.0), H_K40 * 2.0 ** (-t / 200.0)
+
     h_0 = data_si(read_output(heating_run, 0), 'Hradio_s')  # W/kg
-    h_200 = data_si(read_output(heating_run, 200), 'Hradio_s')  # W/kg
+    h_200 = data_si(read_output(heating_run, t_late), 'Hradio_s')  # W/kg
 
     # Radiogenic heating is spatially uniform: the same isotopes and
     # concentration heat every shell (rel 1e-12 is roundoff headroom).
@@ -236,7 +276,7 @@ def test_radiogenic_heating_pins_two_isotope_decay(heating_run):
     assert abs(h_0[0] - H_AL26) > 1e-3 * h_0[0]
 
     # Decay pin: the two-isotope weighted decay factor after 200 years.
-    expected_ratio = (H_AL26 * 0.25 + H_K40 * 0.5) / (H_AL26 + H_K40)
+    expected_ratio = sum(isotopes(t_late)) / sum(isotopes(0.0))
     ratio = h_200[0] / h_0[0]
     # rel=1e-4: the run writes output exactly at t = 200 years, so the
     # closed-form factor applies with only output rounding on top.
@@ -249,6 +289,31 @@ def test_radiogenic_heating_pins_two_isotope_decay(heating_run):
     assert abs(ratio - 0.5) > 0.2
     # Sign guard: heat production is strictly positive.
     assert np.all(h_0 > 0) and np.all(h_200 > 0)
+
+    def figure():
+        import matplotlib.pyplot as plt
+
+        t = np.linspace(0.0, 300.0, 61)
+        al26, k40 = isotopes(t)
+        fig, ax = plt.subplots(figsize=(6, 4))
+        ax.plot(t, al26 + k40, lw=6, alpha=0.35, label='Sum of the 2 isotopes')
+        ax.plot(t, al26, '--', label='al26 alone, half-life 100 yr')
+        ax.plot(t, k40, ':', label='k40 alone, half-life 200 yr')
+        ax.plot(
+            [0.0, t_late],
+            [h_0[0], h_200[0]],
+            'o',
+            zorder=3,
+            label='Reported Hradio at 0 and 200 yr',
+        )
+        ax.set_yscale('log')
+        ax.set_xlabel('Time [yr]')
+        ax.set_ylabel('Heating [W kg$^{-1}$]')
+        ax.legend(fontsize=8)
+        fig.tight_layout()
+        return fig
+
+    validation_plot(figure, 'energy_radiogenic_decay')
 
 
 @pytest.mark.physics_invariant
@@ -343,7 +408,7 @@ def steady_state_run(cached_spider_run):
 
 @pytest.mark.physics_invariant
 @pytest.mark.reference_pinned
-def test_steady_state_ic_balances_interior_and_surface(steady_state_run):
+def test_steady_state_ic_balances_interior_and_surface(steady_state_run, validation_plot):
     """The steady-state IC equalises the energy flow through the mantle.
 
     Anchor: analytical limit. With -ic_steady_state_energy the surface
@@ -365,13 +430,40 @@ def test_steady_state_ic_balances_interior_and_surface(steady_state_run):
 
     # Grey-body pin with the sigma hard-coded in constants.c.
     sigma = 5.670367e-8  # W m^-2 K^-4
-    expected = sigma * (t_surf**4 - 273.0**4)
+
+    def grey_law(t, power=4):
+        return sigma * (t**power - 273.0**power)
+
+    expected = grey_law(t_surf)
     # rel=1e-5: the radiation balance is solved to snes_rtol 1e-9; the
     # margin absorbs output rounding of T_surf.
     assert fatm == pytest.approx(expected, rel=1e-5)
     # Exponent guard: a T^3 slip misses by roughly a factor of T_surf
     # (~2000 at the ~1960 K of this state), far beyond any tolerance.
-    assert abs(fatm - sigma * (t_surf**3 - 273.0**3)) > 0.5 * fatm
+    assert abs(fatm - grey_law(t_surf, 3)) > 0.5 * fatm
     # Sign and scale guards.
     assert fatm > 0
     assert 1e2 < fatm < 1e9  # W/m^2
+
+    def figure():
+        import matplotlib.pyplot as plt
+
+        r_km = data_si(doc, 'radius_b') / 1e3
+        t = np.linspace(1000.0, 3000.0, 21)
+        fig, (left, right) = plt.subplots(1, 2, figsize=(8, 3.6))
+        left.plot(r_km, etot)
+        left.set_ylim(0.0, 1.5 * etot.max())
+        left.set_yticks([0.0, etot.max()])
+        left.set_xlabel('Radius [km]')
+        left.set_ylabel('Etot [W]')
+        right.plot(t, grey_law(t), label='$\\sigma(T^4 - 273^4)$')
+        right.plot(t, grey_law(t, 3), '--', label='$T^3$ form')
+        right.plot([t_surf], [fatm], 'o', zorder=3, label='Reported Fatm')
+        right.set_yscale('log')
+        right.set_xlabel('Surface temperature [K]')
+        right.set_ylabel('Surface flux [W m$^{-2}$]')
+        right.legend(fontsize=8)
+        fig.tight_layout()
+        return fig
+
+    validation_plot(figure, 'energy_steady_state_ic')

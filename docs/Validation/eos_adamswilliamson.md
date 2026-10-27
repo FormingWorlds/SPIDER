@@ -1,19 +1,38 @@
 # eos_adamswilliamson.c: Adams-Williamson analytic density
 
-**Source under test**: `eos_adamswilliamson.c`
+## What this page checks
 
-## Cases
+This page checks the Adams-Williamson model in `eos_adamswilliamson.c`, which builds planetary structure.
+The Adams-Williamson model describes how mantle density increases with depth.
+Validation means that we check computed profiles against the exact analytical formula.
+If the density profile is incorrect, mantle mass, pressure gradients, and shell volumes are wrong.
+The text below details the check, its tolerance, and its test command.
 
-### Density matches the closed-form profile
+## Density matches the closed-form profile
 
-**Reference-pinned test**: `tests/test_eos_adamswilliamson.py::test_density_matches_the_closed_form_profile`
+**Why this check exists.** Analytical codes can suffer from sign errors in compressibility, or from wrong fit inputs. A bug in density calculations distorts the pressure field and mesh geometry without an error.
 
-**Reference**: Analytical limit: rho(P) = rhos - P beta / g in closed form, with the blackbody50 PREM lower-mantle fit parameters.
+**What it tests.** The model has 3 parameters: the surface density $\rho_s$ (kg/m$^3$), a compressibility parameter $\beta$ (1/m) and the gravity $g$ (m/s$^2$, negative by the SPIDER sign convention). The test evaluates the density $\rho(P) = \rho_s - P\beta/g$ at pressure $P$, with the values of the blackbody50 run (the standard 50-node test run, `tests/opts/blackbody50.opts`), fitted to the lower mantle of the Preliminary Reference Earth Model (PREM). It checks the density at the surface (P = 0), at 10 GPa, and at about 135 GPa, the core-mantle boundary pressure. A sign-flipped $\beta$ gives 3967.8 instead of 4190.1 kg/m$^3$ at 10 GPa; the test asserts a gap above 100 kg/m$^3$. Sibling test `test_si_density_invariant_under_nondimensionalisation_choice` confirms that physical SI density outputs stay unchanged under the nondimensionalisation choice.
 
-**Tolerance**: rel 1e-12 at the surface (P = 0), 10 GPa, and the approximate core-mantle boundary pressure.
+**How we know the right answer.** The Adams-Williamson formula provides an exact closed-form density profile. Numerical values in C agree with the analytical profile to rel 1e-12, reducing at the surface to the exact configured surface density.
 
-**Command**: `make tests_c`, then `pytest -o addopts= tests/test_eos_adamswilliamson.py::test_density_matches_the_closed_form_profile`
+**Why it matters.** The Adams-Williamson EOS supplies the static structural profile used by SPIDER native mesh code (`parameters.c` and `mesh.c`).
 
-**Discrimination guards**: A sign-flipped compressibility shifts the 10 GPa density by more than 200 kg/m3; monotonicity under compression and the silicate density range bound the profile; SI invariance under the nondimensionalisation choice is asserted separately.
+**Known limit.** The Adams-Williamson model assumes an idealized profile, rather than a multi-phase EOS.
 
-The Adams-Williamson EOS provides the static structural profile used by the native mesh. Its density is a closed-form expression, so the evaluation is pinned to rounding accuracy, with the surface limit reducing exactly to the configured surface density.
+![Adams-Williamson density against pressure from the closed form and from the code](../assets/validation/eos_adamswilliamson_density.svg#only-light){ width="80%" }
+![Adams-Williamson density against pressure from the closed form and from the code](../assets/validation/eos_adamswilliamson_density_dark.svg#only-dark){ width="80%" }
+
+**How to read the plot.** The x-axis is the pressure in GPa and the y-axis the density in kg/m$^3$. The line is the closed form $\rho_s - P\beta/g$, with surface density $\rho_s$, compressibility parameter $\beta$ and gravity $g$. The dashed line is the form with a sign-flipped $\beta$, which the test rejects (context). The circles are the asserted densities of eos_adamswilliamson.c at the surface, at 10 GPa and at 135 GPa. A pass means that the circles lie on the line (relative 1e-12).
+
+??? info "Test details"
+    - Reference: Analytical limit: rho(P) = rhos - P beta / g in closed form, with the blackbody50 PREM lower-mantle fit parameters.
+    - Tolerance: rel 1e-12 at the surface (P = 0), 10 GPa, and the approximate core-mantle boundary pressure.
+    - Test id: `tests/test_eos_adamswilliamson.py::test_density_matches_the_closed_form_profile`
+    - Command: `make tests_c`, then `pytest -o addopts= tests/test_eos_adamswilliamson.py::test_density_matches_the_closed_form_profile` (add `--validation-plots` to write the plot pair)
+    - Companion test: `tests/test_eos_adamswilliamson.py::test_si_density_invariant_under_nondimensionalisation_choice` asserts SI invariance under the nondimensionalisation choice.
+
+## Related code
+
+- `eos_adamswilliamson.c`: `EOSCreate_AdamsWilliamson`, `EOSEval_AdamsWilliamson`.
+- `tests/test_eos_adamswilliamson.py`: `test_density_matches_the_closed_form_profile`, `test_si_density_invariant_under_nondimensionalisation_choice`.

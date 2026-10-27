@@ -1,19 +1,38 @@
 # eos_lookup.c: Tabulated P-S equation of state
 
-**Source under test**: `eos_lookup.c`
+## What this page checks
 
-## Cases
+This page checks the tabulated thermodynamic lookup in `eos_lookup.c`, which reads mineral tables.
+`eos_lookup.c` bilinearly reads thermodynamic properties from pressure-entropy grids.
+Validation means that we check C table reads against an independent Python code.
+If table reads fail, the density and the other tabulated properties of the mantle are wrong; the test compares the density only.
+The section below details the check, its tolerance, and its test command.
 
-### Melt density matches independent bilinear evaluation
+## Melt density matches independent bilinear evaluation
 
-**Reference-pinned test**: `tests/test_eos_lookup.py::test_melt_density_matches_independent_bilinear_evaluation`
+**Why this check exists.** Table grid reads can suffer from indexing offsets or wrong corner weights. A bug in table reading shifts the density without an error message; the test checks the density column only, so a wrong scale on another column is not caught.
 
-**Reference**: Cross-implementation cross-check: an independent numpy bilinear evaluation of the shipped melt density table (1TPa-dK09-elec-free set: de Koker and Stixrude 2009 properties as assembled for Bower et al. 2018).
+**What it tests.** The test evaluates the shipped melt density table (1TPa-dK09-elec-free set: de Koker and Stixrude 2009 properties as assembled for Bower et al. 2018). It compares C outputs with an independent Python bilinear check at three off-node (P, S) probe points spanning 7.3 to 89 GPa. The test guards against reading the wrong table: solid-table density at the same probes differs by more than 1 percent. Positive values and the 2000 to 8000 kg/m3 silicate range bound the density scale. Sibling test `test_si_outputs_invariant_under_nondimensionalisation_choice` confirms consistent SI outputs under scaling choices.
 
-**Tolerance**: rel 1e-9 at three off-node (P, S) probe points spanning 7.3 to 89 GPa.
+**How we know the right answer.** The table is independently parsed with Python numpy routines, sharing no code with the C side. Matching values pin file parsing, column scaling, index search, and bilinear weighting to rel 1e-9.
 
-**Command**: `make tests_c`, then `pytest -o addopts= tests/test_eos_lookup.py::test_melt_density_matches_independent_bilinear_evaluation`
+**Why it matters.** Lookup tables supply thermodynamic properties to mantle transport and structure routines.
 
-**Discrimination guards**: The solid-table density at the same probes differs by more than 1 percent (wrong-table guard); positivity and the 2000 to 8000 kg/m3 silicate range bound the scale; a separate test asserts SI outputs are invariant under the choice of nondimensionalisation.
+**Known limit.** The test compares table reads against an independent Python read of the same table file, but does not benchmark the underlying ab initio mineral physics.
 
-The lookup EOS is validated against a re-implementation of the same mathematical operation that shares no code with the C side: the table file is parsed and bilinearly interpolated with numpy primitives. Agreement pins file parsing, per-column scaling, index search, and weighting in one comparison.
+![Melt density from eos_lookup.c against an independent bilinear read of the table](../assets/validation/eos_lookup_melt_density.svg#only-light){ width="80%" }
+![Melt density from eos_lookup.c against an independent bilinear read of the table](../assets/validation/eos_lookup_melt_density_dark.svg#only-dark){ width="80%" }
+
+**How to read the plot.** The x-axis is the melt density from an independent bilinear read of `density_melt.dat` in numpy. The y-axis is the density from eos_lookup.c, at the 3 off-node probes from 7.3 to 89 GPa. The circles are the asserted C values, and the line is 1:1. The crosses are the solid-table densities at the same probes, which must differ by more than 1 %. A pass means that the circles lie on the line (relative 1e-9).
+
+??? info "Test details"
+    - Reference: Cross-implementation cross-check: an independent numpy bilinear evaluation of the shipped melt density table (1TPa-dK09-elec-free set: de Koker and Stixrude 2009 properties as assembled for Bower et al. 2018).
+    - Tolerance: rel 1e-9 at three off-node (P, S) probe points spanning 7.3 to 89 GPa.
+    - Test id: `tests/test_eos_lookup.py::test_melt_density_matches_independent_bilinear_evaluation`
+    - Command: `make tests_c`, then `pytest -o addopts= tests/test_eos_lookup.py::test_melt_density_matches_independent_bilinear_evaluation` (add `--validation-plots` to write the plot pair)
+    - Companion test: `tests/test_eos_lookup.py::test_thermodynamic_quantities_positive_and_rho_monotonic_in_pressure` asserts positive thermodynamic quantities and monotonic density with pressure.
+
+## Related code
+
+- `eos_lookup.c`: `EOSCreate_Lookup`, `EOSEval_Lookup`, `SetInterp2dValue`.
+- `tests/test_eos_lookup.py`: `test_melt_density_matches_independent_bilinear_evaluation`, `test_thermodynamic_quantities_positive_and_rho_monotonic_in_pressure`.

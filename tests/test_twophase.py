@@ -14,6 +14,7 @@ from __future__ import annotations
 import pytest
 
 from tests._json_utils import atmosphere_si, data_si, field_si, read_output
+from tests._plot_utils import shown
 
 pytestmark = [pytest.mark.smoke, pytest.mark.timeout(120)]
 
@@ -70,7 +71,9 @@ def test_solidification_proceeds_monotonically_under_cooling(blackbody_full):
 
 @pytest.mark.physics_invariant
 @pytest.mark.reference_pinned
-def test_global_melt_fraction_is_the_mass_weighted_profile_mean(blackbody_full):
+def test_global_melt_fraction_is_the_mass_weighted_profile_mean(
+    blackbody_full, validation_plot
+):
     """phi_global equals both Mliq/Mmantle and the mass-weighted phi_s mean.
 
     Analytical identity: the global melt fraction reported with the
@@ -84,7 +87,8 @@ def test_global_melt_fraction_is_the_mass_weighted_profile_mean(blackbody_full):
     phi_reported = float(field_si(doc['rheological_front_phi']['phi_global'])[0])
     m_liq = atmosphere_si(doc, 'mass_liquid')
     m_man = atmosphere_si(doc, 'mass_mantle')
-    assert phi_reported == pytest.approx(m_liq / m_man, rel=1e-10)
+    liquid_share = m_liq / m_man
+    assert phi_reported == pytest.approx(liquid_share, rel=1e-10)
 
     phi_s = data_si(doc, 'phi_s')
     mass_s = data_si(doc, 'mass_s')
@@ -94,7 +98,26 @@ def test_global_melt_fraction_is_the_mass_weighted_profile_mean(blackbody_full):
     # the plain average of phi_s differs from the mass-weighted mean by
     # more than the tolerance.
     unweighted = float(phi_s.mean())
-    assert abs(phi_reported - unweighted) > 1e-3
+    apart = 1e-3
+    assert abs(phi_reported - unweighted) > apart
     # Boundedness and scale guards.
     assert 0.0 <= phi_reported <= 1.0
     assert 0.2 < phi_reported < 0.9
+
+    def figure():
+        import matplotlib.pyplot as plt
+
+        names = ['Reported', 'Mliq / Mmantle', 'Mass-weighted', 'Unweighted']
+        values = shown([phi_reported, liquid_share, weighted, unweighted], digits=2)
+        fig, ax = plt.subplots(figsize=(6, 4))
+        ax.axhspan(
+            values[0] - apart, values[0] + apart, alpha=0.2, label='Reported value $\\pm$ 1e-3'
+        )
+        ax.plot(range(4), values, 'o', zorder=3, label='Melt fraction at 1200 yr')
+        ax.set_xticks(range(4), names, fontsize=9)
+        ax.set_ylabel('Global melt fraction')
+        ax.legend(fontsize=8, loc='center left')
+        fig.tight_layout()
+        return fig
+
+    validation_plot(figure, 'twophase_global_melt_fraction')

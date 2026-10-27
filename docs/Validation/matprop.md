@@ -1,19 +1,38 @@
 # matprop.c: Blended material properties
 
-**Source under test**: `matprop.c`
+## What this page checks
 
-## Cases
+This page checks material property blending in `matprop.c`, which computes transport coefficients throughout the mantle.
+`matprop.c` blends melt and solid properties over the melting interval to determine local viscosity and conductivities.
+Validation means that we check blended viscosity against configured end-member values in pure phases.
+If material property blending is wrong, mantle convective heat transport and viscosity structures are wrong.
+The text below details the check, its tolerance, and its test command.
 
-### Viscosity recovers configured end members
+## Viscosity recovers configured end members
 
-**Reference-pinned test**: `tests/test_matprop.py::test_viscosity_recovers_configured_end_members`
+**Why this check exists.** Rheological blending functions can swap the melt and solid limits. A bug in property blending causes the convection solver to use wrong viscosities.
 
-**Reference**: Analytical limit: away from the rheological transition the blended viscosity recovers the configured end-members (melt_log10visc = 2, solid_log10visc = 21).
+**What it tests.** The test evaluates the analytical limit where blended viscosity recovers configured end-members away from the rheological transition (melt_log10visc = 2, solid_log10visc = 21). It checks two extreme states: the hot initial state of the blackbody50 run (the standard 50-node test run, `tests/opts/blackbody50.opts`) at t = 0 ( where all 50 nodes are molten), and a cold 0-step run started from a 1600 J/kg/K adiabat (where at least 5 nodes are solid). The recovered end-members must differ by more than 10 decades, guarding against swapped phases. Sibling test `test_material_properties_positive_and_conductivity_constant` asserts positive values for density, heat capacity and thermal expansion, and a constant conductivity, alongside configured 4.0 W/m/K conductivity.
 
-**Tolerance**: abs 0.01 on log10(viscosity) at the strongly molten nodes and abs 0.05 at the strongly solid nodes.
+**How we know the right answer.** Away from the partial-melting interval, blended material properties must approach pure-phase limits asymptotically. Viscosity matches configured values to abs 0.01 on log10(viscosity) at molten nodes and abs 0.05 at solid nodes.
 
-**Command**: `make`, then `pytest -o addopts= tests/test_matprop.py::test_viscosity_recovers_configured_end_members`
+**Why it matters.** Mantle viscosity governs convective heat transport. PROTEUS reads the viscosity array `visc_b` from SPIDER.
 
-**Discrimination guards**: The recovered end-members differ by more than 10 decades (swapped-phase guard); all 50 nodes are molten in the hot state and at least 5 solid in the cold one; the viscosity is positive. The sibling test `test_material_properties_positive_and_conductivity_constant` (same file) asserts the positivity of density, heat capacity, conductivity and expansivity at every node and the configured 4.0 W/m/K conductivity.
+**Known limit.** The main test samples only nearly pure nodes, so a wrong weighting inside the melting interval is not caught there. The companion test `test_viscosity_rises_monotonically_across_rheological_transition` checks that the viscosity rises steadily across the transition, by more than 3 decades, but not its shape.
 
-Material properties are blended across the melting interval from the per-phase EOS evaluations. The viscosity end-members and the viscosity positivity are pinned on two states: the hot initial state of the short blackbody50 run (t = 0, every node molten) and a cold 0-step run started from a 1600 J/kg/K adiabat (solid nodes); the sibling test `test_material_properties_positive_and_conductivity_constant` checks positivity and the constant conductivity on the full run.
+![log10 viscosity against radius for the hot molten and the cold initial condition](../assets/validation/matprop_viscosity_end_members.svg#only-light){ width="80%" }
+![log10 viscosity against radius for the hot molten and the cold initial condition](../assets/validation/matprop_viscosity_end_members_dark.svg#only-dark){ width="80%" }
+
+**How to read the plot.** The x-axis is the radius and the y-axis the log10 viscosity in Pa s at the basic nodes (the cell boundaries of the mesh). The solid line is the hot initial condition, with all 50 nodes molten. It is asserted at the melt end member, the configured melt viscosity of $10^2$ Pa s (dashed, to 0.01 in log10). The dash-dotted line is the cold initial condition at 1600 J kg$^{-1}$ K$^{-1}$. Its circles are the asserted nodes with a melt fraction below $10^{-3}$, at the solid end member $10^{21}$ Pa s (dotted, to 0.05). A pass means that the solid line lies on the dashed line and the circles on the dotted line.
+
+??? info "Test details"
+    - Reference: Analytical limit: away from the rheological transition the blended viscosity recovers the configured end-members (melt_log10visc = 2, solid_log10visc = 21).
+    - Tolerance: abs 0.01 on log10(viscosity) at the strongly molten nodes and abs 0.05 at the strongly solid nodes.
+    - Test id: `tests/test_matprop.py::test_viscosity_recovers_configured_end_members`
+    - Command: `make`, then `pytest -o addopts= tests/test_matprop.py::test_viscosity_recovers_configured_end_members` (add `--validation-plots` to write the plot pair)
+    - Companion test: `tests/test_matprop.py::test_material_properties_positive_and_conductivity_constant` asserts positive values for density, heat capacity and thermal expansion, and a constant conductivity; the main test asserts a positive viscosity.
+
+## Related code
+
+- `matprop.c`: `set_capacitance_staggered`, `set_matprop_basic`.
+- `tests/test_matprop.py`: `test_viscosity_recovers_configured_end_members`, `test_material_properties_positive_and_conductivity_constant`.
