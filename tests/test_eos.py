@@ -31,9 +31,12 @@ def _eval(c_test, prefix, p_list, s_list):
         'test_eos',
         (
             *OPTS,
-            '-eos_prefix', prefix,
-            '-P_si', ','.join(str(p) for p in p_list),
-            '-S_si', ','.join(str(s) for s in s_list),
+            '-eos_prefix',
+            prefix,
+            '-P_si',
+            ','.join(str(p) for p in p_list),
+            '-S_si',
+            ','.join(str(s) for s in s_list),
         ),
     )
 
@@ -60,7 +63,7 @@ def test_viscosity_and_conductivity_dispatch_per_phase(c_test):
 
 @pytest.mark.physics_invariant
 @pytest.mark.reference_pinned
-def test_phase_boundary_matches_independent_table_read(c_test):
+def test_phase_boundary_matches_independent_table_read(c_test, validation_plot):
     """The loaded melt phase boundary reproduces the A11_H13 liquidus table.
 
     Cross-implementation cross-check: tests/_table_utils.py reads
@@ -79,11 +82,36 @@ def test_phase_boundary_matches_independent_table_read(c_test):
     assert out['phase_boundary_S'][0] == pytest.approx(ya[0], rel=1e-12)
     # Wrong-table guard: the solidus at 10 GPa sits near 1524 J/kg/K,
     # far below the liquidus value near 2128 J/kg/K.
-    assert abs(out['phase_boundary_S'][1] - 1524.43) > 100.0
+    solidus_10gpa = 1524.43
+    assert abs(out['phase_boundary_S'][1] - solidus_10gpa) > 100.0
     # Sign and scale guards: liquidus entropies of the dK09 set are
     # positive and of order a few thousand J/kg/K.
     assert out['phase_boundary_S'][1] > 0
     assert 1.5e3 < out['phase_boundary_S'][1] < 4.0e3
+
+    def figure():
+        import matplotlib.pyplot as plt
+
+        keep = xa <= 1.5e11
+        fig, ax = plt.subplots(figsize=(6, 4))
+        ax.plot(
+            xa[keep][::10] / 1e9, ya[keep][::10], label='liquidus_A11_H13.dat, read by numpy'
+        )
+        ax.plot([probes[1] / 1e9], [solidus_10gpa], 'x', ms=10, label='Solidus at 10 GPa')
+        ax.plot(
+            np.array(probes) / 1e9,
+            out['phase_boundary_S'],
+            'o',
+            zorder=3,
+            label='eos.c phase boundary at the 3 probes',
+        )
+        ax.set_xlabel('Pressure [GPa]')
+        ax.set_ylabel('Entropy [J kg$^{-1}$ K$^{-1}$]')
+        ax.legend(fontsize=8)
+        fig.tight_layout()
+        return fig
+
+    validation_plot(figure, 'eos_phase_boundary')
 
 
 def _spaargaren_prefactor(mg_si):
@@ -99,7 +127,7 @@ def _spaargaren_prefactor(mg_si):
 
 @pytest.mark.physics_invariant
 @pytest.mark.reference_pinned
-def test_compositional_viscosity_matches_spaargaren(c_test):
+def test_compositional_viscosity_matches_spaargaren(c_test, validation_plot):
     """The Mg/Si viscosity prefactor reproduces Spaargaren et al. (2020).
 
     Anchor: the piecewise log10 prefactor of Spaargaren et al. (2020).
@@ -109,15 +137,16 @@ def test_compositional_viscosity_matches_spaargaren(c_test):
     shift adds to the configured melt log10visc of 2.0.
     """
     probe = ((1.0e10,), (2600.0,))
+    comp_high, ref_high, comp_low, ref_low, base_log = 1.4, 1.6, 1.2, 0.9, 2.0
     high = _eval_with(
-        c_test, ('-melt_visc_comp', '1.4', '-melt_visc_ref_comp', '1.6'), *probe
+        c_test, ('-melt_visc_comp', comp_high, '-melt_visc_ref_comp', ref_high), *probe
     )
     low = _eval_with(
-        c_test, ('-melt_visc_comp', '1.2', '-melt_visc_ref_comp', '0.9'), *probe
+        c_test, ('-melt_visc_comp', comp_low, '-melt_visc_ref_comp', ref_low), *probe
     )
 
-    shift_high = _spaargaren_prefactor(1.4) - _spaargaren_prefactor(1.6)
-    shift_low = _spaargaren_prefactor(1.2) - _spaargaren_prefactor(0.9)
+    shift_high = _spaargaren_prefactor(comp_high) - _spaargaren_prefactor(ref_high)
+    shift_low = _spaargaren_prefactor(comp_low) - _spaargaren_prefactor(ref_low)
     # Transcription pins: the helper re-encodes the published piecewise
     # coefficients independently of eos.c; these literals (hand-derived
     # from Spaargaren et al. 2020) guard the helper itself, so a shared
@@ -126,8 +155,8 @@ def test_compositional_viscosity_matches_spaargaren(c_test):
     assert shift_low == pytest.approx(-1.35803, abs=1e-4)
     # abs=1e-9: the prefactor is a closed-form expression of the two
     # option values, so only roundoff enters.
-    assert high['log10visc'][0] == pytest.approx(2.0 + shift_high, abs=1e-9)
-    assert low['log10visc'][0] == pytest.approx(2.0 + shift_low, abs=1e-9)
+    assert high['log10visc'][0] == pytest.approx(base_log + shift_high, abs=1e-9)
+    assert low['log10visc'][0] == pytest.approx(base_log + shift_low, abs=1e-9)
 
     # Branch discrimination: the two configurations shift in opposite
     # directions and differ by more than 1.5 decades, so a collapsed
@@ -138,7 +167,38 @@ def test_compositional_viscosity_matches_spaargaren(c_test):
     # Edge case: with the compositional term disabled (no visc_comp
     # option) the melt viscosity is the bare configured constant.
     base = _eval(c_test, 'melt', *probe)
-    assert base['log10visc'][0] == pytest.approx(2.0, abs=1e-10)
+    assert base['log10visc'][0] == pytest.approx(base_log, abs=1e-10)
+
+    def figure():
+        import matplotlib.pyplot as plt
+
+        x = np.linspace(0.6, 2.0, 57)
+        fig, ax = plt.subplots(figsize=(6, 4))
+        ax.plot(
+            x,
+            [_spaargaren_prefactor(xi) for xi in x],
+            label='Spaargaren et al. (2020) prefactor',
+        )
+        ax.plot(
+            [ref_high, ref_low],
+            [_spaargaren_prefactor(ref_high), _spaargaren_prefactor(ref_low)],
+            's',
+            mfc='none',
+            ms=10,
+            label='Reference compositions',
+        )
+        code = [
+            _spaargaren_prefactor(ref_high) + high['log10visc'][0] - base_log,
+            _spaargaren_prefactor(ref_low) + low['log10visc'][0] - base_log,
+        ]
+        ax.plot([comp_high, comp_low], code, 'o', zorder=3, label='Reference + eos.c shift')
+        ax.set_xlabel('Mg/Si')
+        ax.set_ylabel('log$_{10}$ viscosity prefactor')
+        ax.legend(fontsize=8)
+        fig.tight_layout()
+        return fig
+
+    validation_plot(figure, 'eos_spaargaren_viscosity')
 
 
 def _eval_with(c_test, extra, p_list, s_list):
@@ -148,9 +208,12 @@ def _eval_with(c_test, extra, p_list, s_list):
         (
             *OPTS,
             *extra,
-            '-eos_prefix', 'melt',
-            '-P_si', ','.join(str(p) for p in p_list),
-            '-S_si', ','.join(str(s) for s in s_list),
+            '-eos_prefix',
+            'melt',
+            '-P_si',
+            ','.join(str(p) for p in p_list),
+            '-S_si',
+            ','.join(str(s) for s in s_list),
         ),
     )
 
@@ -169,9 +232,7 @@ def test_activation_terms_shape_the_viscosity_profile(c_test):
     probes_p = (0.0, 6.55e10)  # Pa; surface limit and deep mantle
     probes_s = (2600.0, 2600.0)  # J/kg/K
 
-    vol = _eval_with(
-        c_test, ('-melt_activation_volume', '1.0e-6'), probes_p, probes_s
-    )
+    vol = _eval_with(c_test, ('-melt_activation_volume', '1.0e-6'), probes_p, probes_s)
     # Edge limit: no pressure, no activation-volume contribution; the
     # bare constant 2.0 returns exactly.
     assert vol['log10visc'][0] == pytest.approx(2.0, abs=1e-10)
@@ -185,8 +246,10 @@ def test_activation_terms_shape_the_viscosity_profile(c_test):
     damped = _eval_with(
         c_test,
         (
-            '-melt_activation_volume', '1.0e-6',
-            '-melt_activation_volume_pressure_scale', '1.0e10',
+            '-melt_activation_volume',
+            '1.0e-6',
+            '-melt_activation_volume_pressure_scale',
+            '1.0e10',
         ),
         probes_p,
         probes_s,

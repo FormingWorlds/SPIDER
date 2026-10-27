@@ -33,12 +33,16 @@ def _aw_eval(c_test, p_list, extra=()):
         'test_eos',
         (
             *OPTS,
-            '-eos_type', 'adamswilliamson',
-            '-eos_prefix', 'adams_williamson',
-            '-P_si', ','.join(str(p) for p in p_list),
+            '-eos_type',
+            'adamswilliamson',
+            '-eos_prefix',
+            'adams_williamson',
+            '-P_si',
+            ','.join(str(p) for p in p_list),
             # Entropy is unused by the AW density but the executable
             # requires paired probe points.
-            '-S_si', ','.join('2600.0' for _ in range(n)),
+            '-S_si',
+            ','.join('2600.0' for _ in range(n)),
             *extra,
         ),
     )
@@ -46,7 +50,7 @@ def _aw_eval(c_test, p_list, extra=()):
 
 @pytest.mark.physics_invariant
 @pytest.mark.reference_pinned
-def test_density_matches_the_closed_form_profile(c_test):
+def test_density_matches_the_closed_form_profile(c_test, validation_plot):
     """The AW density reproduces rho(P) = rhos - P * beta / g exactly.
 
     Analytical limit: the Adams-Williamson equation of state is a closed
@@ -57,19 +61,46 @@ def test_density_matches_the_closed_form_profile(c_test):
     """
     probes = (0.0, 1.0e10, 1.35e11)
     out = _aw_eval(c_test, probes)
-    expected = [RHOS - p * BETA / GRAVITY for p in probes]
+
+    def aw(p, sign=-1.0):
+        return RHOS + sign * p * BETA / GRAVITY
+
+    expected = [aw(p) for p in probes]
     assert out['rho'] == pytest.approx(expected, rel=1e-12)
     # Surface limit: exactly the configured surface density.
     assert out['rho'][0] == pytest.approx(RHOS, rel=1e-12)
     # Sign-of-beta guard: a sign-flipped compressibility would give
     # 3967.8 kg/m^3 at 10 GPa instead of 4190.1; both sit far outside
     # the tolerance.
-    wrong_sign = RHOS + 1.0e10 * BETA / GRAVITY
+    wrong_sign = aw(probes[1], sign=1.0)
     assert abs(out['rho'][1] - wrong_sign) > 100.0
     # Monotonicity under compression and physical scale (silicate
     # mantle densities, thousands of kg/m^3).
     assert out['rho'][0] < out['rho'][1] < out['rho'][2]
     assert all(3.0e3 < rho < 7.0e3 for rho in out['rho'])
+
+    def figure():
+        import matplotlib.pyplot as plt
+        import numpy as np
+
+        p = np.linspace(0.0, 1.4e11, 29)
+        fig, ax = plt.subplots(figsize=(6, 4))
+        ax.plot(p / 1e9, aw(p), label=r'$\rho_s - P\beta/g$')
+        ax.plot(p / 1e9, aw(p, sign=1.0), '--', label=r'Sign-flipped $\beta$')
+        ax.plot(
+            np.array(probes) / 1e9,
+            out['rho'],
+            'o',
+            zorder=3,
+            label='eos_adamswilliamson.c at 3 probes',
+        )
+        ax.set_xlabel('Pressure [GPa]')
+        ax.set_ylabel('Density [kg m$^{-3}$]')
+        ax.legend(fontsize=8)
+        fig.tight_layout()
+        return fig
+
+    validation_plot(figure, 'eos_adamswilliamson_density')
 
 
 @pytest.mark.physics_invariant

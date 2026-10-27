@@ -62,7 +62,9 @@ def test_phase_fraction_bounded_and_truncation_contract_visible(c_test):
 
 @pytest.mark.physics_invariant
 @pytest.mark.reference_pinned
-def test_fusion_equals_liquidus_minus_solidus_and_phi_is_linear_in_entropy(c_test):
+def test_fusion_equals_liquidus_minus_solidus_and_phi_is_linear_in_entropy(
+    c_test, validation_plot
+):
     """Fusion entropy and melt fraction follow their defining relations.
 
     Analytical limit: by construction of the two-phase region,
@@ -72,23 +74,64 @@ def test_fusion_equals_liquidus_minus_solidus_and_phi_is_linear_in_entropy(c_tes
     (fusion, about 604 J/kg/K here) from the plausible wrong one
     (the liquidus entropy, about 2128 J/kg/K).
     """
-    out = _composite_eval(c_test, (1675.34,))
+    s_probe = 1675.34
+    out = _composite_eval(c_test, (s_probe,))
     liq = out['liquidus_S'][0]
     sol = out['solidus_S'][0]
     fusion = out['fusion'][0]
     assert fusion == pytest.approx(liq - sol, rel=1e-10)
     # Liquidus must sit above solidus for the loaded tables.
     assert liq > sol
+
     # The probe entropy is S_solidus + 0.25 * fusion for the shipped
     # tables (1524.43 + 151.0); a wrong-denominator regression would
     # return (S - sol)/liq of about 0.071 instead of 0.25.
-    s_probe = 1675.34
-    expected_phi = (s_probe - sol) / fusion
+    def phi_law(s):
+        return (s - sol) / fusion
+
+    def wrong_phi(s):
+        return (s - sol) / liq
+
+    expected_phi = phi_law(s_probe)
     assert out['phase_fraction'][0] == pytest.approx(expected_phi, rel=1e-6)
-    assert abs(out['phase_fraction'][0] - (s_probe - sol) / liq) > 0.15
+    assert abs(out['phase_fraction'][0] - wrong_phi(s_probe)) > 0.15
     # Scale guard: the fusion entropy of the dK09 tables at 10 GPa is a
     # few hundred J/kg/K, not a few or a few thousand.
     assert 100.0 < fusion < 1500.0
+
+    def figure():
+        import matplotlib.pyplot as plt
+        import numpy as np
+
+        s = np.linspace(sol - 100.0, liq + 100.0, 41)
+        fig, ax = plt.subplots(figsize=(6, 4))
+        ax.plot(
+            s,
+            np.clip(phi_law(s), 0.0, 1.0),
+            label='$(S - S_\\mathrm{sol}) / (S_\\mathrm{liq} - S_\\mathrm{sol})$',
+        )
+        ax.plot(
+            s,
+            np.clip(wrong_phi(s), 0.0, 1.0),
+            '--',
+            label='$(S - S_\\mathrm{sol}) / S_\\mathrm{liq}$',
+        )
+        ax.axvline(sol, ls=':', label='Solidus and liquidus, eos_composite.c')
+        ax.axvline(liq, ls=':')
+        ax.plot(
+            [s_probe],
+            [out['phase_fraction'][0]],
+            'o',
+            zorder=3,
+            label='Melt fraction at 1675.34',
+        )
+        ax.set_xlabel('Entropy at 10 GPa [J kg$^{-1}$ K$^{-1}$]')
+        ax.set_ylabel('Melt fraction')
+        ax.legend(fontsize=8)
+        fig.tight_layout()
+        return fig
+
+    validation_plot(figure, 'eos_composite_melt_fraction')
 
 
 @pytest.mark.physics_invariant

@@ -34,7 +34,9 @@ RADIUS = 6371000.0  # m, planetary radius
 
 @pytest.mark.physics_invariant
 @pytest.mark.reference_pinned
-def test_pressure_profile_matches_adams_williamson_closed_form(blackbody_short):
+def test_pressure_profile_matches_adams_williamson_closed_form(
+    blackbody_short, validation_plot
+):
     """Basic-node pressures reproduce the analytical Adams-Williamson profile.
 
     Analytical anchor: the hydrostatic Adams-Williamson solution
@@ -45,7 +47,16 @@ def test_pressure_profile_matches_adams_williamson_closed_form(blackbody_short):
     radius_b = data_si(doc, 'radius_b')  # m
     pressure_b = data_si(doc, 'pressure_b')  # Pa
 
-    expected = -RHOS * GRAVITY / BETA * (np.exp(BETA * (RADIUS - radius_b)) - 1.0)
+    def p_aw(depth):
+        return -RHOS * GRAVITY / BETA * (np.exp(BETA * depth) - 1.0)
+
+    def p_linear(depth):
+        return RHOS * abs(GRAVITY) * depth
+
+    def p_flipped(depth):
+        return RHOS * GRAVITY / BETA * (np.exp(-BETA * depth) - 1.0)
+
+    expected = p_aw(RADIUS - radius_b)
     # rtol=1e-12: mesh.c evaluates the same closed form, so agreement is
     # limited only by the nondimensional round-trip through the JSON
     # output (observed max rel 6e-15, so the pin has 100x headroom).
@@ -66,10 +77,39 @@ def test_pressure_profile_matches_adams_williamson_closed_form(blackbody_short):
     # 27% low, both vastly beyond the 1e-12 pin tolerance.
     p_cmb = pressure_b[-1]
     depth_cmb = RADIUS - radius_b[-1]
-    linear = RHOS * abs(GRAVITY) * depth_cmb
-    flipped_beta = RHOS * GRAVITY / BETA * (np.exp(-BETA * depth_cmb) - 1.0)
+    linear = p_linear(depth_cmb)
+    flipped_beta = p_flipped(depth_cmb)
     assert abs(p_cmb - linear) > 0.1 * p_cmb
     assert abs(p_cmb - flipped_beta) > 0.1 * p_cmb
+
+    def figure():
+        import matplotlib.pyplot as plt
+
+        r = np.linspace(radius_b[-1], RADIUS, 31)
+        depth = RADIUS - r
+        fig, ax = plt.subplots(figsize=(6, 4))
+        ax.plot(
+            r / 1e3,
+            p_aw(depth) / 1e9,
+            label='Adams-Williamson closed form',
+        )
+        ax.plot(r / 1e3, p_linear(depth) / 1e9, '--', label='Constant density')
+        ax.plot(
+            r / 1e3,
+            p_flipped(depth) / 1e9,
+            ':',
+            label=r'Sign-flipped $\beta$',
+        )
+        ax.plot(
+            radius_b / 1e3, pressure_b / 1e9, 'o', ms=3, zorder=3, label='mesh.c basic nodes'
+        )
+        ax.set_xlabel('Radius [km]')
+        ax.set_ylabel('Pressure [GPa]')
+        ax.legend(fontsize=8)
+        fig.tight_layout()
+        return fig
+
+    validation_plot(figure, 'mesh_pressure_profile')
 
 
 def _aw_mass_antiderivative(r: np.ndarray) -> np.ndarray:

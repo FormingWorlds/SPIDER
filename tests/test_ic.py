@@ -29,7 +29,7 @@ IC_DSDR = -1.0e-5  # J/kg/K/m, blackbody50 ic_dsdr
 @pytest.mark.physics_invariant
 @pytest.mark.reference_pinned
 def test_prescribed_adiabat_entropy_sets_the_initial_profile(
-    blackbody_short, cached_spider_run
+    blackbody_short, cached_spider_run, validation_plot
 ):
     """The IC recovers ic_adiabat_entropy at the top staggered node.
 
@@ -52,7 +52,8 @@ def test_prescribed_adiabat_entropy_sets_the_initial_profile(
     # The ic_dsdr ramp bounds the mean from above: the mean must lie
     # between the top value and top + |ic_dsdr| * mantle depth
     # (2600 to 2628.7 J/kg/K; observed offset ~14.7 J/kg/K).
-    assert IC_ENTROPY < s_s.mean() < IC_ENTROPY + abs(IC_DSDR) * MANTLE_DEPTH
+    mean_hi = IC_ENTROPY + abs(IC_DSDR) * MANTLE_DEPTH
+    assert IC_ENTROPY < s_s.mean() < mean_hi
 
     # Wrong-value discrimination: rerunning the IC with
     # -ic_adiabat_entropy 2400 shifts every staggered node by exactly
@@ -68,6 +69,29 @@ def test_prescribed_adiabat_entropy_sets_the_initial_profile(
     # thousand J/kg/K; a nondimensional leak would sit near unity.
     assert np.all(s_s > 0)
     assert 1e3 < s_s.mean() < 1e4
+
+    def figure():
+        import matplotlib.pyplot as plt
+
+        r_km = data_si(doc, 'radius_s') / 1e3
+        fig, ax = plt.subplots(figsize=(6, 4))
+        ax.axhspan(
+            IC_ENTROPY,
+            mean_hi,
+            alpha=0.15,
+            label='Asserted range of the mean',
+        )
+        ax.plot(r_km, s_s, label='ic_adiabat_entropy 2600')
+        ax.plot(r_km, s_24, '--', label='ic_adiabat_entropy 2400')
+        ax.axhline(s_s.mean(), ls=':', label='Mean of the 2600 profile')
+        ax.plot([r_km[0]], [s_s[0]], 'o', zorder=3, label='Top staggered node')
+        ax.set_xlabel('Radius [km]')
+        ax.set_ylabel('Entropy [J kg$^{-1}$ K$^{-1}$]')
+        ax.legend(fontsize=8)
+        fig.tight_layout()
+        return fig
+
+    validation_plot(figure, 'ic_adiabat_profile')
 
 
 @pytest.mark.physics_invariant
@@ -178,7 +202,7 @@ def abundance_ic_run(cached_spider_run):
 
 @pytest.mark.physics_invariant
 @pytest.mark.reference_pinned
-def test_abundance_ic_realises_the_requested_inventory(abundance_ic_run):
+def test_abundance_ic_realises_the_requested_inventory(abundance_ic_run, validation_plot):
     """The abundance IC conserves the requested elemental inventories.
 
     Anchor: mass-balance identity through the initial-pressure solve.
@@ -207,24 +231,44 @@ def test_abundance_ic_realises_the_requested_inventory(abundance_ic_run):
 
     # The solve conserves H and C: totals match the request (observed below
     # 1e-15 relative; rel=1e-9 leaves platform headroom).
+    moles = {e: (_element_moles(realised, e), _element_moles(requested, e)) for e in 'HCO'}
     for element in ('H', 'C'):
-        assert _element_moles(realised, element) == pytest.approx(
-            _element_moles(requested, element), rel=1e-9
-        )
+        assert moles[element][0] == pytest.approx(moles[element][1], rel=1e-9)
 
     # Oxygen exchange: the realised volatile O inventory departs from
     # the requested one (observed 2.2e-3 relative; the threshold sits
     # twentyfold below) because the fO2 buffer participates in both
     # reactions. An inert fO2 pathway would conserve O to the same
     # 1e-9 the H and C totals meet.
-    o_req = _element_moles(requested, 'O')
-    o_real = _element_moles(realised, 'O')
+    o_real, o_req = moles['O']
     assert abs(o_real - o_req) > 1e-4 * o_req
 
     # Edge case: the reactions moved water mass at the IC (observed
     # 3.6e-3 relative), so the realised H2O reservoirs sit resolvably
     # off the bare request.
     assert abs(realised['H2O'] - requested['H2O']) > 1e-4 * requested['H2O']
+
+    def figure():
+        import matplotlib.pyplot as plt
+
+        names = list(ABUNDANCE_PPM)
+        x = np.arange(len(names))
+        fig, (left, right) = plt.subplots(1, 2, figsize=(8, 4.2))
+        left.bar(x, [requested[n] for n in names], width=0.6, alpha=0.35, label='Requested')
+        left.plot(x, [realised[n] for n in names], 'o', zorder=3, label='Realised reservoirs')
+        left.set_xticks(x, names)
+        left.set_yscale('log')
+        left.set_ylabel('Mass [kg]')
+        left.legend(fontsize=8)
+        ratio = [moles[e][0] / moles[e][1] for e in 'HCO']
+        right.axhline(1.0, ls='--')
+        right.plot([0, 1, 2], ratio, 'o')
+        right.set_xticks([0, 1, 2], ['H', 'C', 'O'])
+        right.set_ylabel('Mole ratio')
+        fig.tight_layout()
+        return fig
+
+    validation_plot(figure, 'ic_abundance_inventory')
 
 
 @pytest.fixture(scope='module')
@@ -260,7 +304,7 @@ def ocean_moles_ic_run(cached_spider_run):
 
 @pytest.mark.physics_invariant
 @pytest.mark.reference_pinned
-def test_ocean_moles_ic_converts_moles_to_mass(ocean_moles_ic_run):
+def test_ocean_moles_ic_converts_moles_to_mass(ocean_moles_ic_run, validation_plot):
     """IC_ATMOSPHERE 4 converts Earth-ocean mole counts to inventory mass.
 
     Anchor: the OCEAN_MOLES constant in constants.c (7.68894974e22 mol
@@ -270,11 +314,14 @@ def test_ocean_moles_ic_converts_moles_to_mass(ocean_moles_ic_run):
     """
     doc = read_output(ocean_moles_ic_run, 0)
 
+    stored, closed = [], []
     for volatile, oceans in MOLES_OCEANS.items():
         res = _volatile_reservoirs_kg(doc, volatile)
         expected = oceans * OCEAN_MOLES * MOLAR_MASS[volatile]  # kg
         # rel=1e-9: a closed-form product of three stored constants.
         assert res['initial_kg'] == pytest.approx(expected, rel=1e-9)
+        stored.append(res['initial_kg'])
+        closed.append(expected)
 
     # Molar-mass discrimination: reading the CO2 inventory with the CO
     # molar mass shifts the expected mass by the mass ratio (36%), far
@@ -287,6 +334,32 @@ def test_ocean_moles_ic_converts_moles_to_mass(ocean_moles_ic_run):
     # produces a positive, finite mass at the expected scale.
     assert 0 < co2['initial_kg'] < 1e21  # kg
     assert np.isfinite(co2['initial_kg'])
+
+    def figure():
+        import matplotlib.pyplot as plt
+
+        names = list(MOLES_OCEANS)
+        x = np.arange(len(names))
+        fig, ax = plt.subplots(figsize=(6, 4))
+        ax.bar(
+            x,
+            closed,
+            width=0.6,
+            alpha=0.35,
+            label='Moles $\\times$ OCEAN_MOLES $\\times$ molar mass',
+        )
+        ax.plot(x, stored, 'o', zorder=3, label='Stored initial_kg')
+        ax.plot(
+            [names.index('CO2')], [wrong], 'x', ms=10, label='CO$_2$ with the CO molar mass'
+        )
+        ax.set_xticks(x, names)
+        ax.set_yscale('log')
+        ax.set_ylabel('Initial inventory [kg]')
+        ax.legend(fontsize=8)
+        fig.tight_layout()
+        return fig
+
+    validation_plot(figure, 'ic_ocean_moles')
 
 
 @pytest.mark.physics_invariant

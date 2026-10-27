@@ -25,7 +25,9 @@ SOLID_LOG10_VISC = 21.0  # log10(Pa s)
 
 @pytest.mark.physics_invariant
 @pytest.mark.reference_pinned
-def test_viscosity_recovers_configured_end_members(blackbody_short, cached_spider_run):
+def test_viscosity_recovers_configured_end_members(
+    blackbody_short, cached_spider_run, validation_plot
+):
     """The phase-blended viscosity reaches both configured end members.
 
     Analytical anchor: in the single-phase limits the two-phase blend
@@ -76,6 +78,31 @@ def test_viscosity_recovers_configured_end_members(blackbody_short, cached_spide
     # Positivity: the blend must never produce a non-positive viscosity.
     assert np.all(visc_hot > 0)
     assert np.all(visc_cold > 0)
+
+    def figure():
+        import matplotlib.pyplot as plt
+
+        r_hot = data_si(doc_hot, 'radius_b') / 1e3
+        r_cold = data_si(doc_cold, 'radius_b') / 1e3
+        fig, ax = plt.subplots(figsize=(6, 4))
+        ax.axhline(MELT_LOG10_VISC, ls='--', label='melt_log10visc = 2')
+        ax.axhline(SOLID_LOG10_VISC, ls=':', label='solid_log10visc = 21')
+        ax.plot(r_hot, np.log10(visc_hot), label='Hot IC, all molten')
+        ax.plot(r_cold, np.log10(visc_cold), '-.', label='Cold IC, 1600 J kg$^{-1}$ K$^{-1}$')
+        ax.plot(
+            r_cold[solid],
+            np.log10(visc_cold[solid]),
+            'o',
+            zorder=3,
+            label='Nodes with $\\phi < 10^{-3}$',
+        )
+        ax.set_xlabel('Radius [km]')
+        ax.set_ylabel('log$_{10}$ viscosity [Pa s]')
+        ax.legend(fontsize=8)
+        fig.tight_layout()
+        return fig
+
+    validation_plot(figure, 'matprop_viscosity_end_members')
 
 
 @pytest.mark.physics_invariant

@@ -28,7 +28,9 @@ PRESCRIBED_FLUX = 1.0e5  # W/m2, SI value passed via -surface_bc_value
 
 @pytest.mark.physics_invariant
 @pytest.mark.reference_pinned
-def test_prescribed_flux_bc_echoes_value_and_inverts_emissivity(cached_spider_run):
+def test_prescribed_flux_bc_echoes_value_and_inverts_emissivity(
+    cached_spider_run, validation_plot
+):
     """SURFACE_BC 4 fixes the outgoing flux at the prescribed SI value.
 
     Anchor: analytical identity. The prescribed flux must appear
@@ -53,7 +55,10 @@ def test_prescribed_flux_bc_echoes_value_and_inverts_emissivity(cached_spider_ru
     # temperature would give ~8.4e5 W/m2, more than a factor of eight
     # above the prescribed value, so the pin discriminates the
     # SURFACE_BC dispatch and not a coincidental grey-body agreement.
-    grey = SIGMA * (t_surf**4 - TEQM**4)
+    def grey_law(t):
+        return SIGMA * (t**4 - TEQM**4)
+
+    grey = grey_law(t_surf)
     assert abs(PRESCRIBED_FLUX - grey) > 0.1 * grey
     # Emissivity inversion pin: ~0.12 here, clearly away from the
     # configured emissivity0 = 1.0 of the grey-body branch.
@@ -63,6 +68,29 @@ def test_prescribed_flux_bc_echoes_value_and_inverts_emissivity(cached_spider_ru
     # nondimensional leak would sit near unity.
     assert fatm > 0
     assert 1e2 < fatm < 1e9
+
+    def figure():
+        import matplotlib.pyplot as plt
+
+        t = np.linspace(1000.0, 3000.0, 41)
+        fig, ax = plt.subplots(figsize=(6, 4))
+        ax.plot(t, grey_law(t), label='Grey body, emissivity 1')
+        ax.plot(
+            t,
+            emissivity * grey_law(t),
+            '--',
+            label=f'Grey body, reported emissivity {emissivity:.3f}',
+        )
+        ax.axhline(PRESCRIBED_FLUX, ls=':', label='Prescribed flux 1e5 W m$^{-2}$')
+        ax.plot([t_surf], [fatm], 'o', zorder=3, label='Reported Fatm')
+        ax.set_yscale('log')
+        ax.set_xlabel('Surface temperature [K]')
+        ax.set_ylabel('Surface flux [W m$^{-2}$]')
+        ax.legend(fontsize=8)
+        fig.tight_layout()
+        return fig
+
+    validation_plot(figure, 'bc_prescribed_flux')
 
 
 @pytest.mark.physics_invariant
@@ -153,10 +181,14 @@ def entropy_bc_run(cached_spider_run):
     """
     return cached_spider_run(
         overrides=(
-            '-nstepsmacro', '1',
-            '-dtmacro', '10',
-            '-ic_surface_entropy', '2550',
-            '-ic_core_entropy', '2650',
+            '-nstepsmacro',
+            '1',
+            '-dtmacro',
+            '10',
+            '-ic_surface_entropy',
+            '2550',
+            '-ic_core_entropy',
+            '2650',
             '-ic_steady_state_energy',
         ),
         name='entropy_bc_steady',
@@ -165,7 +197,9 @@ def entropy_bc_run(cached_spider_run):
 
 @pytest.mark.physics_invariant
 @pytest.mark.reference_pinned
-def test_constant_entropy_bc_pins_the_initial_surface(entropy_bc_run, blackbody_short):
+def test_constant_entropy_bc_pins_the_initial_surface(
+    entropy_bc_run, blackbody_short, validation_plot
+):
     """ic_surface_entropy fixes the surface basic node exactly.
 
     Anchor: analytical identity. The constant-entropy boundary writes
@@ -178,15 +212,36 @@ def test_constant_entropy_bc_pins_the_initial_surface(entropy_bc_run, blackbody_
     s_b = data_si(read_output(entropy_bc_run, 0), 'S_b')  # J/kg/K
 
     # rel=1e-10: the value is assigned, not solved for.
-    assert s_b[0] == pytest.approx(2550.0, rel=1e-10)
+    s_surface = 2550.0
+    assert s_b[0] == pytest.approx(s_surface, rel=1e-10)
 
     # Discrimination guard: the default IC surface value differs by
     # ~50 J/kg/K, five orders above the pin tolerance.
     s_b_default = data_si(read_output(blackbody_short, 0), 'S_b')
-    assert abs(s_b_default[0] - 2550.0) > 40.0  # J/kg/K
+    assert abs(s_b_default[0] - s_surface) > 40.0  # J/kg/K
 
     # The core-side prescription seeds the deep profile before the
     # steady-state solve rebalances it; the result must stay physical
     # and within the entropy range of the loaded tables.
     assert np.all(s_b > 0)
     assert 2400.0 < s_b[-1] < 2700.0  # J/kg/K
+
+    def figure():
+        import matplotlib.pyplot as plt
+
+        r_km = data_si(read_output(entropy_bc_run, 0), 'radius_b') / 1e3
+        r_def = data_si(read_output(blackbody_short, 0), 'radius_b') / 1e3
+        fig, ax = plt.subplots(figsize=(6, 4))
+        ax.plot(r_km, s_b, label='Constant-entropy boundary, $t$ = 0')
+        ax.plot(r_def, s_b_default, '--', label='Default boundary, $t$ = 0')
+        ax.plot(
+            [r_km[0]], [s_surface], 's', mfc='none', ms=10, label='ic_surface_entropy = 2550'
+        )
+        ax.plot([r_km[0]], [s_b[0]], 'o', zorder=3, label='Surface node')
+        ax.set_xlabel('Radius [km]')
+        ax.set_ylabel('Entropy [J kg$^{-1}$ K$^{-1}$]')
+        ax.legend(fontsize=8)
+        fig.tight_layout()
+        return fig
+
+    validation_plot(figure, 'bc_constant_entropy_surface')
